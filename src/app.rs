@@ -29,7 +29,7 @@ pub async fn init_state() -> Result<AppState, String> {
     .ok()
     .and_then(|v| v.parse().ok())
     .unwrap_or(default_max);
-  let mut opts = ConnectOptions::new(database_url);
+  let mut opts = ConnectOptions::new(crate::db_url::normalize(&database_url));
   opts
     .max_connections(max_connections)
     .acquire_timeout(Duration::from_secs(10))

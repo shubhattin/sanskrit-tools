@@ -20,6 +20,7 @@
 		"format": "cargo fmt --all && bun run --cwd frontend format",
 		"seed": "bash scripts/seed.sh",
 		"db:dump": "bash scripts/db-dump.sh",
-		"start": "STATIC_DIR=frontend/.output/public cargo run --release --bin main"
+		"start": "STATIC_DIR=frontend/.output/public cargo run --release --bin main",
+		"db:push": "bun run --cwd schema migration:push"
 	}
 }

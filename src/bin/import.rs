@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
   let url = std::env::var("PG_DATABASE_URL")?;
   let pool = PgPoolOptions::new()
     .max_connections(4)
-    .connect(&url)
+    .connect(&sans_dict::db_url::normalize(&url))
     .await?;
 
   let (nsutra, ndhatu, nforms): (i64, i64, i64) = sqlx::query_as(

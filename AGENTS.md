@@ -15,7 +15,9 @@
 
 # Commands
 
-- `bun run db:generate` / `bun run db:migrate` – drizzle migrations (`schema/`).
+- `bun run db:generate` / `bun run db:migrate` – drizzle migrations (`schema/`). Prefix `DB_MODE=PROD` to target production (`PG_DATABASE_URL1`; see `schema/db-url.ts`).
+- `bun run db:push` exists (installs pg_trgm first) but **use `migrate` for production**: drizzle-kit cannot introspect `text COLLATE "C"`, so every push re-issues `ALTER COLUMN … TYPE` on 7 columns and rebuilds the `paradigm_forms` primary key (table rewrites + locks on a populated DB).
+- Production roles (PlanetScale): migrations / seeding / `pg_restore` need a role inheriting `postgres` (DDL, CREATE EXTENSION, `drizzle` schema); the API only needs `pg_read_all_data`; `pg_dump` works with `pg_read_all_data`.
 - `bun run import [-- --force] [slug ...]` – (re)import works; unchanged sources are skipped by hash. Bump `IMPORTER_VERSION` in `src/import/mod.rs` when parsing changes.
 - `bun run seed` – reproducible full seed of `PG_DATABASE_URL` (migrations + import + count check against `scripts/expected-counts.tsv`); `--url <db>` for another database, `--dump <file>` to restore a `bun run db:dump` file instead (no `dict_data` needed). After an intentional data change: `bash scripts/seed.sh --write-expected`.
 - `bun run dev:api` (axum on :5780), `bun run dev` (Vite on :3010, proxies `/api`).
@@ -24,7 +26,8 @@
 # Deploy (Vercel, mirrors ../tsc-links)
 
 - `vercel.json`: `bun run --cwd frontend build` → static SPA in `frontend/.output/public` (nitro preset pinned to `node-server`; only `public/` is deployed). `/api/*` → Rust function `api/vercel.rs` (`vercel_runtime`); every other path → `/_shell.html` (files win first).
-- Set `PG_DATABASE_URL` in the Vercel project. Seed the prod DB once with `bun run seed --url <prod-url>` (or `--dump`).
+- Set `PG_DATABASE_URL` in the Vercel project. Prod already has its schema: load data with `bun run db:dump && DB_MODE=PROD bun run seed -- --dump db/sans_dict.dump --data-only` (TRUNCATE + data in FK order + drizzle log + count check), using a role inheriting `postgres`. A plain `--dump` (with `--clean`) only suits an empty database whose extensions the role owns.
+- `sslrootcert=system` in connection strings (PlanetScale) is libpq-only: `schema/db-url.ts` and `src/db_url.rs` drop it for postgres.js / sqlx (still `sslmode=verify-full`); psql/pg_dump use the URL as is.
 - Self-host instead: `bun run build && bun run start` (axum serves SPA + API on :5780).
 
 # Conventions

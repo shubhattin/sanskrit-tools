@@ -1,15 +1,14 @@
 import type { Config } from 'drizzle-kit';
-import dotenv from 'dotenv';
+import { dbUrl } from './db-url';
 
-dotenv.config({ path: '../.env.local' });
-
+// Local by default; `DB_MODE=PROD` targets production (see db-url.ts).
 export default {
   schema: './schema.ts',
   out: './migrations',
   dialect: 'postgresql',
-  // snake_case columns: the Rust side uses hand-written SQL.
+  // snake_case columns (matches the SeaORM entities in ../src/entities).
   casing: 'snake_case',
   dbCredentials: {
-    url: process.env.PG_DATABASE_URL!,
+    url: dbUrl(),
   },
 } satisfies Config;

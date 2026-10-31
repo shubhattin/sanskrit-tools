@@ -7,8 +7,9 @@
 		"migration:generate": "drizzle-kit generate",
 		"migration:custom": "drizzle-kit generate --custom",
 		"migration:migrate": "drizzle-kit migrate",
-		"migration:push": "drizzle-kit push",
-		"migration:export": "drizzle-kit export"
+		"migration:push": "bun ./ensure-extensions.ts && drizzle-kit push",
+		"migration:export": "drizzle-kit export",
+		"ensure-extensions": "bun ./ensure-extensions.ts"
 	},
 	"devDependencies": {
 		"dotenv": "^17.4.2",
