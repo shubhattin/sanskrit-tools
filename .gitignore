@@ -10,3 +10,5 @@ dict_data
 .nitro
 frontend/dist
 /db/
+.vercel
+.env*

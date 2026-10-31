@@ -14,8 +14,8 @@
 # (`--refs --force`) → verify.
 # Dump mode:   pg_restore --clean (schema + data + drizzle migration log) → verify.
 # Data-only:   TRUNCATE our tables → drizzle log (schema `drizzle`) → data of
-#              schema `public` (parallel) → VACUUM ANALYZE → verify. Leaves
-#              extensions and table definitions untouched.
+#              schema `public` (sequential, dependency order) → VACUUM ANALYZE
+#              → verify. Leaves extensions and table definitions untouched.
 # Verify compares row counts per dictionary/table with scripts/expected-counts.tsv
 # and exits non-zero on any difference. Regenerate that file after an
 # intentional data change with: scripts/seed.sh --write-expected
@@ -58,11 +58,15 @@ order by 1, 2"
 
 # libpq tools (psql / pg_dump / pg_restore) need a CA for sslmode=verify-full:
 # use the system store unless the URL names one (PlanetScale URLs may omit it).
+# TCP keepalives keep long COPYs to distant servers (ap-south-1) alive
+# through NAT/proxies that drop idle connections.
 libpq_url() {
   local u="$1"
   if [[ "$u" == *sslmode=verify-* && "$u" != *sslrootcert=* ]]; then
     if [[ "$u" == *\?* ]]; then u="$u&sslrootcert=system"; else u="$u?sslrootcert=system"; fi
   fi
+  if [[ "$u" == *\?* ]]; then u="$u&keepalives=1&keepalives_idle=30&keepalives_interval=10&keepalives_count=5";
+  else u="$u?keepalives=1&keepalives_idle=30&keepalives_interval=10&keepalives_count=5"; fi
   printf '%s' "$u"
 }
 counts() { psql "$(libpq_url "$URL")" -XAt -F $'\t' -c "$COUNTS_SQL"; }
@@ -87,8 +91,9 @@ if [[ -n "$DUMP" && $DATA_ONLY -eq 1 ]]; then
   # `pg_restore --schema=X` restores objects in X but not X itself.
   psql "$L" -v ON_ERROR_STOP=1 -XAq -c "drop schema if exists drizzle cascade; create schema drizzle"
   pg_restore --no-owner --no-acl --exit-on-error --schema=drizzle -d "$L" "$DUMP"
-  # Foreign keys already exist, so load in dependency order; the two large,
-  # independent chains run side by side.
+  # Foreign keys already exist, so load in dependency order, strictly
+  # sequentially: one COPY at a time. Parallel chains plus any concurrent
+  # writer (a second seed run, a migrate) deadlocked on PlanetScale before.
   restore_tables() {
     for t in "$@"; do
       echo "    $t"
@@ -97,10 +102,7 @@ if [[ -n "$DUMP" && $DATA_ONLY -eq 1 ]]; then
   }
   echo "==> data"
   restore_tables dictionaries sutras dhatus paradigm_layouts
-  restore_tables entries entry_keys & chain1=$!
-  restore_tables paradigms paradigm_forms & chain2=$!
-  wait "$chain1"
-  wait "$chain2"
+  restore_tables entries entry_keys paradigms paradigm_forms
   echo "==> identity sequences"
   psql "$L" -v ON_ERROR_STOP=1 -XAq -c "
     select setval(pg_get_serial_sequence(t, 'id'), coalesce(m, 0) + 1, false)
