@@ -5,6 +5,8 @@ import type {
   DhatuDetail,
   Dictionary,
   EntryResponse,
+  Paradigm,
+  ParadigmSummary,
   SearchMode,
   SearchResponse,
   Suggestion,
@@ -145,5 +147,24 @@ export function dhatuQuery(id: number) {
   return queryOptions({
     queryKey: ['dhatu', id],
     queryFn: () => fetchJson<DhatuDetail>(`/api/dhatus/${id}`)
+  });
+}
+
+export function paradigmsQuery(q: string) {
+  return queryOptions({
+    queryKey: ['paradigms', q],
+    queryFn: () => {
+      const sp = new URLSearchParams({ q });
+      return fetchJson<ParadigmSummary[]>(`/api/paradigms?${sp.toString()}`);
+    },
+    staleTime: 1000 * 60 * 30
+  });
+}
+
+export function paradigmQuery(id: number) {
+  return queryOptions({
+    queryKey: ['paradigm', id],
+    queryFn: () => fetchJson<Paradigm>(`/api/paradigms/${id}`),
+    staleTime: 1000 * 60 * 30
   });
 }

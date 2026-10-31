@@ -9,7 +9,7 @@ use crate::state::AppState;
 use axum::Router;
 use axum::http::{StatusCode, Uri};
 use axum::response::IntoResponse;
-use sqlx::postgres::PgPoolOptions;
+use sea_orm::{ConnectOptions, Database};
 use std::time::Duration;
 use tower_http::compression::CompressionLayer;
 use tower_http::services::{ServeDir, ServeFile};
@@ -19,10 +19,28 @@ pub async fn init_state() -> Result<AppState, String> {
   let _ = dotenvy::dotenv();
   let database_url = std::env::var("PG_DATABASE_URL")
     .map_err(|_| "PG_DATABASE_URL must be set: missing environment variable".to_string())?;
-  let db = PgPoolOptions::new()
-    .max_connections(10)
+  // Serverless instances each hold their own pool: keep it small on Vercel.
+  let default_max = if std::env::var_os("VERCEL").is_some() {
+    2
+  } else {
+    10
+  };
+  let max_connections = std::env::var("DB_MAX_CONNECTIONS")
+    .ok()
+    .and_then(|v| v.parse().ok())
+    .unwrap_or(default_max);
+  let mut opts = ConnectOptions::new(database_url);
+  opts
+    .max_connections(max_connections)
     .acquire_timeout(Duration::from_secs(10))
-    .connect(&database_url)
+    .sqlx_logging(false);
+  if let Some(schema) = std::env::var("DATABASE_SCHEMA")
+    .ok()
+    .filter(|s| !s.trim().is_empty())
+  {
+    opts.set_schema_search_path(schema);
+  }
+  let db = Database::connect(opts)
     .await
     .map_err(|e| format!("failed to connect to database: {e}"))?;
   Ok(AppState { db })

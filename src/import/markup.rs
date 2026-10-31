@@ -162,6 +162,97 @@ pub fn sanitize_html(raw: &str) -> String {
   collapse_breaks(out.trim())
 }
 
+/// Like [`sanitize_html`], but `bword://key` links are resolved to a
+/// Devanagari query by `resolve` (unresolved links lose their target).
+pub fn sanitize_html_resolving(raw: &str, resolve: &dyn Fn(&str) -> Option<String>) -> String {
+  static BWORD: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<a\s+href="bword://([^"]*)"\s*>"#).unwrap());
+  let s = BWORD.replace_all(raw, |c: &regex::Captures| match resolve(&c[1]) {
+    Some(q) => format!(r#"<a href="bword://{}">"#, escape(&q)),
+    None => "<a>".to_string(),
+  });
+  sanitize_html(&s)
+}
+
+static COLOGNE_TOKEN: LazyLock<Regex> = LazyLock::new(|| {
+  Regex::new(
+    r#"(?s)\{#(?P<sa1>.*?)#\}|<s>(?P<sa2>.*?)</s>|\{@(?P<b>.*?)@\}|\{%(?P<i>.*?)%\}|<(?P<tag>ab|lex|ls|i)>(?P<inner>.*?)</(?:ab|lex|ls|i)>|<div n="(?P<div>[^"]*)">|\[Page(?P<page>[^\]]*)\]|(?P<brk>[ⒶⒷⒺⓃ])|(?P<sp>[ⒸⒹ¦])|<[^>]*>"#,
+  )
+  .unwrap()
+});
+
+/// Cologne CDSL markup (English→Sanskrit dictionaries) → (HTML, English text).
+/// Sanskrit (`{#..#}` / `<s>..</s>`, SLP1) becomes Devanagari `span.sa` and is
+/// excluded from the English text used for full-text search.
+pub fn cologne_to_html(raw: &str) -> (String, String) {
+  // Editorial corrections `{{old->new||date|by|url|note}}`: keep the corrected text.
+  static CORR: LazyLock<Regex> =
+    // `old` / `new` may themselves contain braces (`{?}`, `{#..#}`): match lazily
+    // up to the metadata separator `||` (or the closing `}}` when absent).
+    LazyLock::new(|| Regex::new(r"\{\{.*?->(.*?)(?:\|\|.*?)?\}\}").unwrap());
+  let raw = CORR.replace_all(raw, "$1");
+  let raw = raw.as_ref();
+  let mut html = String::new();
+  let mut en = String::new();
+  cologne_walk(raw, &mut html, &mut en);
+  let html = collapse_breaks(html.trim().trim_start_matches("<br>").trim());
+  static WS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
+  (html, WS.replace_all(en.trim(), " ").into_owned())
+}
+
+fn cologne_walk(raw: &str, html: &mut String, en: &mut String) {
+  let mut last = 0;
+  for c in COLOGNE_TOKEN.captures_iter(raw) {
+    let m = c.get(0).unwrap();
+    let text = &raw[last..m.start()];
+    html.push_str(&escape(text));
+    en.push_str(text);
+    last = m.end();
+    if let Some(sa) = c.name("sa1").or(c.name("sa2")) {
+      let deva = crate::translit::slp1_to_deva(sa.as_str());
+      html.push_str(&format!(r#"<span class="sa">{}</span>"#, escape(&deva)));
+      en.push(' ');
+    } else if let Some(b) = c.name("b") {
+      html.push_str("<b>");
+      cologne_walk(b.as_str(), html, en);
+      html.push_str("</b>");
+    } else if let Some(i) = c.name("i") {
+      html.push_str("<i>");
+      cologne_walk(i.as_str(), html, en);
+      html.push_str("</i>");
+    } else if let Some(inner) = c.name("inner") {
+      html.push_str("<i>");
+      cologne_walk(inner.as_str(), html, en);
+      html.push_str("</i>");
+    } else if let Some(d) = c.name("div") {
+      let d = d.as_str();
+      if d
+        .chars()
+        .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit())
+      {
+        html.push_str("<br>");
+      } else {
+        html.push(' ');
+      }
+      en.push(' ');
+    } else if let Some(p) = c.name("page") {
+      html.push_str(&format!(
+        r#"<span class="page">[p. {}]</span>"#,
+        escape(p.as_str().trim())
+      ));
+    } else if c.name("brk").is_some() {
+      html.push_str("<br>");
+      en.push(' ');
+    } else {
+      html.push(' ');
+      en.push(' ');
+    }
+  }
+  let text = &raw[last..];
+  html.push_str(&escape(text));
+  en.push_str(text);
+}
+
 /// Visible text of an HTML fragment.
 pub fn strip_tags(h: &str) -> String {
   static TAG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<[^>]*>").unwrap());
@@ -254,6 +345,22 @@ mod tests {
       "अग्नि m. fire , sacrificial (गार्हपत्य, आहवनीय)".into(),
     ]);
     assert_eq!(g, "m. ( Nir.)non-fire\nm. fire, sacrificial");
+  }
+
+  #[test]
+  fn cologne() {
+    let (h, en) =
+      cologne_to_html("{@Abandon@}¦,Ⓒ<lex>v. t.</lex>Ⓓ<s>tyaj</s> 1 <ab>P</ab>.Ⓝ{@[Abandon]ed@}");
+    assert_eq!(
+      h,
+      r#"<b>Abandon</b> , <i>v. t.</i> <span class="sa">त्यज्</span> 1 <i>P</i>.<br><b>[Abandon]ed</b>"#
+    );
+    assert_eq!(en, "Abandon , v. t. 1 P. [Abandon]ed");
+    let (h, _) = cologne_to_html(r#"BECOMINGNESS¦, {%s.%} {#yuktatA, OcityaM#}"#);
+    assert_eq!(
+      h,
+      r#"BECOMINGNESS , <i>s.</i> <span class="sa">युक्तता, औचित्यं</span>"#
+    );
   }
 
   #[test]

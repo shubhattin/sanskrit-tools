@@ -10,24 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as DhatuRouteImport } from './routes/dhatu'
 import { Route as SutraRouteImport } from './routes/sutra'
 import { Route as DhatuIndexRouteImport } from './routes/dhatu.index'
 import { Route as DhatuIdRouteImport } from './routes/dhatu.$id'
 import { Route as DictSlugRouteImport } from './routes/dict.$slug'
 import { Route as EntryIdRouteImport } from './routes/entry.$id'
+import { Route as ParadigmIdRouteImport } from './routes/paradigm.$id'
 import { Route as SutraIndexRouteImport } from './routes/sutra.index'
 import { Route as SutraIdRouteImport } from './routes/sutra.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DhatuRoute = DhatuRouteImport.update({
@@ -60,6 +55,11 @@ const EntryIdRoute = EntryIdRouteImport.update({
   path: '/entry/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParadigmIdRoute = ParadigmIdRouteImport.update({
+  id: '/paradigm/$id',
+  path: '/paradigm/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SutraIndexRoute = SutraIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,22 +73,22 @@ const SutraIdRoute = SutraIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
+  '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
+  '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/dhatu': typeof DhatuIndexRoute
   '/sutra': typeof SutraIndexRoute
@@ -96,12 +96,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
+  '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
@@ -110,34 +110,34 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/dhatu'
     | '/sutra'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
+    | '/paradigm/$id'
     | '/sutra/$id'
     | '/dhatu/'
     | '/sutra/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
+    | '/paradigm/$id'
     | '/sutra/$id'
     | '/dhatu'
     | '/sutra'
   id:
     | '__root__'
     | '/'
-    | '/about'
     | '/dhatu'
     | '/sutra'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
+    | '/paradigm/$id'
     | '/sutra/$id'
     | '/dhatu/'
     | '/sutra/'
@@ -145,11 +145,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   DhatuRoute: typeof DhatuRouteWithChildren
   SutraRoute: typeof SutraRouteWithChildren
   DictSlugRoute: typeof DictSlugRoute
   EntryIdRoute: typeof EntryIdRoute
+  ParadigmIdRoute: typeof ParadigmIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -159,13 +159,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dhatu': {
@@ -208,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/entry/$id'
       fullPath: '/entry/$id'
       preLoaderRoute: typeof EntryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paradigm/$id': {
+      id: '/paradigm/$id'
+      path: '/paradigm/$id'
+      fullPath: '/paradigm/$id'
+      preLoaderRoute: typeof ParadigmIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sutra/': {
@@ -253,11 +253,11 @@ const SutraRouteWithChildren = SutraRoute._addFileChildren(SutraRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   DhatuRoute: DhatuRouteWithChildren,
   SutraRoute: SutraRouteWithChildren,
   DictSlugRoute: DictSlugRoute,
   EntryIdRoute: EntryIdRoute,
+  ParadigmIdRoute: ParadigmIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

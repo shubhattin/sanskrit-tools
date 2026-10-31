@@ -1,8 +1,9 @@
 //! Shared application state (extractable via `State<AppState>`).
 
-use sqlx::postgres::PgPool;
+use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]
 pub struct AppState {
-  pub db: PgPool,
+  /// SeaORM connection (sqlx Postgres pool underneath).
+  pub db: DatabaseConnection,
 }

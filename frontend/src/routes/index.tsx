@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { searchString } from '@/lib/search-params';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpenTextIcon, SearchXIcon } from 'lucide-react';
 import { dictionariesQuery, searchQuery } from '@/lib/api/client';
 import type { SearchMode } from '@/lib/api/types';
 import { SearchBar } from '@/components/dict/search-bar';
 import { DictionaryGroupCard } from '@/components/dict/entry';
+import { FormParadigmDialog, ParadigmSourceBadge } from '@/components/dict/paradigm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,17 +29,18 @@ interface SearchSearch {
 
 export const Route = createFileRoute('/')({
   validateSearch: (search: Record<string, unknown>): SearchSearch => ({
-    q: typeof search.q === 'string' ? search.q : undefined,
+    q: searchString(search.q),
     mode: search.mode === 'en' ? 'en' : search.mode === 'sa' ? 'sa' : undefined,
-    dicts: typeof search.dicts === 'string' ? search.dicts : undefined
+    dicts: searchString(search.dicts)
   }),
   component: SearchPage
 });
 
 const EXAMPLES: { label: string; q: string; mode: SearchMode }[] = [
   { label: 'अग्नि', q: 'अग्नि', mode: 'sa' },
-  { label: 'agni', q: 'agni', mode: 'sa' },
-  { label: 'dharma', q: 'dharma', mode: 'sa' },
+  { label: 'रामेण', q: 'रामेण', mode: 'sa' },
+  { label: 'गतेन', q: 'गतेन', mode: 'sa' },
+  { label: 'भूत्वा', q: 'भूत्वा', mode: 'sa' },
   { label: 'bhavati', q: 'bhavati', mode: 'sa' },
   { label: 'fire (English)', q: 'fire', mode: 'en' }
 ];
@@ -286,39 +289,74 @@ function Results({
 }
 
 function FormsCard({ forms }: { forms: import('@/lib/api/types').FormAnalysis[] }) {
+  const [openForm, setOpenForm] = useState<import('@/lib/api/types').FormAnalysis | null>(null);
   return (
     <Card>
       <CardContent className="flex flex-col gap-2 p-4">
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           Inflected form → lemma
         </h2>
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col gap-2">
           {forms.map((f, i) => (
             <li
               key={`${f.form}-${f.lemma}-${i}`}
-              className="flex flex-wrap items-baseline gap-x-2 text-sm"
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
             >
               <span className="font-devanagari text-base font-semibold">{f.form}</span>
               <span aria-hidden className="text-muted-foreground">
                 →
               </span>
               <FormLemma lemma={f.lemma} />
-              <span className="text-xs text-muted-foreground">{f.analysis}</span>
+              {f.root ? (
+                <span className="text-xs text-muted-foreground">
+                  from <FormLemma lemma={f.root} small />
+                </span>
+              ) : null}
+              {f.analysis.split('; ').map((a) => (
+                <Badge key={a} variant="outline" className="font-devanagari font-normal">
+                  {a}
+                </Badge>
+              ))}
+              <ParadigmSourceBadge source={f.source} />
+              {f.paradigm_ids.length > 0 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setOpenForm(f)}
+                >
+                  Table
+                </Button>
+              ) : null}
             </li>
           ))}
         </ul>
       </CardContent>
+      {openForm ? (
+        <FormParadigmDialog
+          key={openForm.paradigm_ids.join(',')}
+          form={openForm}
+          open={openForm !== null}
+          onOpenChange={(v) => {
+            if (!v) setOpenForm(null);
+          }}
+        />
+      ) : null}
     </Card>
   );
 }
 
-function FormLemma({ lemma }: { lemma: string }) {
+function FormLemma({ lemma, small }: { lemma: string; small?: boolean }) {
   const display = useDisplayText(lemma);
   const navigate = useNavigate();
   return (
     <button
       type="button"
-      className="font-devanagari text-base font-semibold text-primary underline underline-offset-2"
+      className={
+        small
+          ? 'font-devanagari text-sm font-semibold text-primary underline underline-offset-2'
+          : 'font-devanagari text-base font-semibold text-primary underline underline-offset-2'
+      }
       onClick={() => void navigate({ to: '/', search: { q: lemma, mode: 'sa' } })}
     >
       {display}

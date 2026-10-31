@@ -11,8 +11,18 @@ tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.6", features = ["compression-gzip", "fs"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
-sqlx = { version = "0.8", default-features = false, features = [
+sea-orm = { version = "2.0", default-features = false, features = [
+    "macros",
     "runtime-tokio-rustls",
+    "sqlx-postgres",
+    "with-chrono",
+    "with-json",
+    "postgres-array",
+] }
+# The sqlx that SeaORM runs on; used directly only for bulk COPY in the importer.
+sqlx = { version = "0.9", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
     "postgres",
     "json",
     "macros",
@@ -28,10 +38,16 @@ unicode-normalization = "0.1"
 sha2 = "0.10"
 futures-util = "0.3"
 anyhow = "1"
+tower = "0.5"
+vercel_runtime = { version = "2", features = ["axum"] }
 
 [[bin]]
 name = "main"
 path = "src/main.rs"
+
+[[bin]]
+name = "vercel"
+path = "api/vercel.rs"
 
 [[bin]]
 name = "import"

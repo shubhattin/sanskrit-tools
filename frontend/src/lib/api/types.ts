@@ -44,8 +44,51 @@ export interface DictionaryHits {
 export interface FormAnalysis {
   form: string;
   lemma: string;
+  root: string | null;
   analysis: string;
+  source: ParadigmSource;
+  paradigm_ids: number[];
+  cells: number[][];
 }
+
+export type ParadigmSource =
+  | 'heritage_decl'
+  | 'heritage_kridanta'
+  | 'heritage_conj'
+  | 'jnu_tinanta';
+
+export interface ParadigmSummary {
+  id: number;
+  source: ParadigmSource;
+  lemma: string;
+  root: string | null;
+  label: string | null;
+}
+
+export type ParadigmTable =
+  | {
+      group: string | null;
+      title: string | null;
+      label: string | null;
+      cols: string[];
+      rows: { label: string; cells: string[][] }[];
+    }
+  | {
+      group: string | null;
+      title: string | null;
+      list: { label: string; text: string; forms: string[] }[];
+    };
+
+export interface Paradigm extends ParadigmSummary {
+  tables: ParadigmTable[];
+}
+
+export const PARADIGM_SOURCE_LABELS: Record<ParadigmSource, string> = {
+  heritage_decl: 'Declension',
+  heritage_kridanta: 'Kṛdanta',
+  heritage_conj: 'Conjugation',
+  jnu_tinanta: 'Tiṅanta (JNU)'
+};
 
 export interface SearchResponse {
   query: string;

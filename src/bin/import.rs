@@ -1,7 +1,7 @@
-//! `cargo run --release --bin import -- [--data dict_data] [--force] [slug ...]`
+//! `cargo run --release --bin import -- [--data dict_data] [--force] [--refs] [--forms] [slug ...]`
 //!
 //! Without slugs every work is imported. Reference tables (sūtras, dhātus,
-//! word forms) are rebuilt when empty or with `--refs`; rebuilding them forces
+//! inflection paradigms; `--forms` rebuilds only the paradigms) are rebuilt when empty or with `--refs`; rebuilding them forces
 //! the sūtra commentaries and dhātu works to be re-imported (their ids change).
 
 use anyhow::{Result, bail};
@@ -16,6 +16,7 @@ async fn main() -> Result<()> {
   let mut data = PathBuf::from("dict_data");
   let mut force = false;
   let mut refs = false;
+  let mut forms = false;
   let mut slugs = Vec::new();
   let mut args = std::env::args().skip(1);
   while let Some(a) = args.next() {
@@ -23,6 +24,7 @@ async fn main() -> Result<()> {
       "--data" => data = PathBuf::from(args.next().expect("--data <dir>")),
       "--force" => force = true,
       "--refs" => refs = true,
+      "--forms" => forms = true,
       s if s.starts_with('-') => bail!("unknown flag {s}"),
       s => slugs.push(s.to_string()),
     }
@@ -34,7 +36,7 @@ async fn main() -> Result<()> {
     .await?;
 
   let (nsutra, ndhatu, nforms): (i64, i64, i64) = sqlx::query_as(
-    "select (select count(*) from sutras), (select count(*) from dhatus), (select count(*) from word_forms)",
+    "select (select count(*) from sutras), (select count(*) from dhatus), (select count(*) from paradigms)",
   )
   .fetch_one(&pool)
   .await?;
@@ -47,8 +49,8 @@ async fn main() -> Result<()> {
     import::import_dhatus(&pool, &data).await?;
     rebuilt = true;
   }
-  if refs || nforms == 0 {
-    import::import_word_forms(&pool, &data).await?;
+  if refs || forms || nforms == 0 {
+    import::import_paradigms(&pool, &data).await?;
   }
   let ctx = import::load_ctx(&pool).await?;
 
@@ -71,6 +73,7 @@ async fn main() -> Result<()> {
     );
     import::import_source(&pool, &data, src, &ctx, force || (rebuilt && dependent)).await?;
   }
-  sqlx::query("analyze").execute(&pool).await?;
+  // Re-imports delete + re-insert rows; reclaim that space for reuse.
+  sqlx::query("vacuum analyze").execute(&pool).await?;
   Ok(())
 }

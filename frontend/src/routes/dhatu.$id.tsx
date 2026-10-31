@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { EntryHeadword, EntrySenses, DhatuHeadword } from '@/components/dict/entry';
+import { InflectionSection } from '@/components/dict/paradigm';
 
 export const Route = createFileRoute('/dhatu/$id')({
   component: DhatuDetailPage
@@ -118,6 +119,7 @@ function DhatuDetailPage() {
           </dl>
         </CardContent>
       </Card>
+      <InflectionSection query={dhatu.root} />
       {works.length === 0 ? (
         <Empty>
           <EmptyHeader>

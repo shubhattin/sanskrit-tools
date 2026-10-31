@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { searchInt, searchString } from '@/lib/search-params';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeftIcon, ArrowRightIcon, SearchIcon } from 'lucide-react';
 import { browseQuery } from '@/lib/api/client';
@@ -15,8 +16,8 @@ import { useDisplayTexts } from '@/components/script/display-script';
 
 export const Route = createFileRoute('/dict/$slug')({
   validateSearch: (search: Record<string, unknown>): { seq?: number; q?: string } => ({
-    seq: typeof search.seq === 'string' ? Number(search.seq) : undefined,
-    q: typeof search.q === 'string' ? search.q : undefined
+    seq: searchInt(search.seq),
+    q: searchString(search.q)
   }),
   component: DictBrowsePage
 });

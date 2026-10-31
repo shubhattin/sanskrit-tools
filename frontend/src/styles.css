@@ -138,6 +138,9 @@
 .sense-html a[data-q]:hover {
   text-decoration-thickness: 2px;
 }
+.sense-html .sa {
+  font-family: 'Noto Sans Devanagari Variable', 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
 .sense-html mark {
   background: color-mix(in oklch, var(--primary) 22%, transparent);
   color: inherit;

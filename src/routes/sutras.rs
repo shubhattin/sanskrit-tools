@@ -1,16 +1,17 @@
 //! Aṣṭādhyāyī sūtras with their commentaries.
 
-use super::{ApiError, ApiResult, DictEntries, ENTRY_COLS, Entry};
+use super::{ApiError, ApiResult, DictEntries, Entry};
+use crate::entities::{entries, sutras};
 use crate::state::AppState;
 use crate::translit::{has_devanagari, query_keys};
 use axum::Json;
 use axum::extract::{Path, Query, State};
 use regex::Regex;
+use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 use std::sync::LazyLock;
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize)]
 pub struct Sutra {
   id: String,
   adhyaya: i16,
@@ -19,7 +20,17 @@ pub struct Sutra {
   text: String,
 }
 
-const COLS: &str = "id, adhyaya, pada, num, text";
+impl From<sutras::Model> for Sutra {
+  fn from(m: sutras::Model) -> Self {
+    Sutra {
+      id: m.id,
+      adhyaya: m.adhyaya,
+      pada: m.pada,
+      num: m.num,
+      text: m.text,
+    }
+  }
+}
 
 #[derive(Deserialize)]
 pub struct ListParams {
@@ -43,41 +54,39 @@ fn number_prefix(q: &str) -> Option<String> {
   })
 }
 
+const LIST_LIMIT: usize = 200;
+
 pub async fn list(
   State(state): State<AppState>,
   Query(p): Query<ListParams>,
 ) -> ApiResult<Vec<Sutra>> {
   let q = p.q.unwrap_or_default();
   let q = q.trim();
-  let rows: Vec<Sutra> = if q.is_empty() {
-    sqlx::query_as(&format!("select {COLS} from sutras order by id limit 200"))
-      .fetch_all(&state.db)
-      .await?
+  let base = sutras::Entity::find().order_by_asc(sutras::Column::Id);
+  let rows: Vec<sutras::Model> = if q.is_empty() {
+    base.limit(LIST_LIMIT as u64).all(&state.db).await?
   } else if let Some(prefix) = number_prefix(q) {
-    sqlx::query_as(&format!(
-      "select {COLS} from sutras where id like $1 || '%' order by id limit 200"
-    ))
-    .bind(prefix)
-    .fetch_all(&state.db)
-    .await?
+    base
+      .filter(sutras::Column::Id.starts_with(&prefix))
+      .limit(LIST_LIMIT as u64)
+      .all(&state.db)
+      .await?
   } else {
     let key = query_keys(q).into_iter().next().unwrap_or_default();
-    let text = if has_devanagari(q) {
-      q.to_string()
-    } else {
-      String::new()
-    };
-    sqlx::query_as(&format!(
-      "select {COLS} from sutras
-       where ($1 <> '' and text_slp1 like '%' || $1 || '%') or ($2 <> '' and text like '%' || $2 || '%')
-       order by (text_slp1 like $1 || '%') desc, id limit 200"
-    ))
-    .bind(key)
-    .bind(text)
-    .fetch_all(&state.db)
-    .await?
+    let mut cond = Condition::any();
+    if !key.is_empty() {
+      cond = cond.add(sutras::Column::TextSlp1.contains(&key));
+    }
+    if has_devanagari(q) {
+      cond = cond.add(sutras::Column::Text.contains(q));
+    }
+    // Only ~4k sūtras: rank sūtras *starting* with the query first, in Rust.
+    let mut rows = base.filter(cond).all(&state.db).await?;
+    rows.sort_by_key(|r| !r.text_slp1.starts_with(&key));
+    rows.truncate(LIST_LIMIT);
+    rows
   };
-  Ok(Json(rows))
+  Ok(Json(rows.into_iter().map(Sutra::from).collect()))
 }
 
 #[derive(Serialize)]
@@ -95,32 +104,34 @@ pub async fn detail(
   let id = number_prefix(&id)
     .filter(|p| !p.ends_with('.'))
     .unwrap_or(id);
-  let sutra: Sutra = sqlx::query_as(&format!("select {COLS} from sutras where id = $1"))
-    .bind(&id)
-    .fetch_optional(&state.db)
+  let sutra = sutras::Entity::find_by_id(id.clone())
+    .one(&state.db)
     .await?
     .ok_or_else(|| ApiError::not_found("sūtra not found"))?;
-  let prev: Option<(String,)> =
-    sqlx::query_as("select id from sutras where id < $1 order by id desc limit 1")
-      .bind(&id)
-      .fetch_optional(&state.db)
-      .await?;
-  let next: Option<(String,)> =
-    sqlx::query_as("select id from sutras where id > $1 order by id limit 1")
-      .bind(&id)
-      .fetch_optional(&state.db)
-      .await?;
-  let entries: Vec<Entry> = sqlx::query_as(&format!(
-    "select {ENTRY_COLS} from entries e where e.sutra_id = $1 order by e.dictionary_id, e.seq"
-  ))
-  .bind(&id)
-  .fetch_all(&state.db)
-  .await?;
+  let prev = sutras::Entity::find()
+    .filter(sutras::Column::Id.lt(&id))
+    .order_by_desc(sutras::Column::Id)
+    .one(&state.db)
+    .await?;
+  let next = sutras::Entity::find()
+    .filter(sutras::Column::Id.gt(&id))
+    .order_by_asc(sutras::Column::Id)
+    .one(&state.db)
+    .await?;
+  let entries: Vec<Entry> = entries::Entity::find()
+    .filter(entries::Column::SutraId.eq(&id))
+    .order_by_asc(entries::Column::DictionaryId)
+    .order_by_asc(entries::Column::Seq)
+    .all(&state.db)
+    .await?
+    .into_iter()
+    .map(Entry::from)
+    .collect();
   let dicts = super::all_dictionaries(&state).await?;
   Ok(Json(SutraDetail {
-    sutra,
-    prev: prev.map(|r| r.0),
-    next: next.map(|r| r.0),
+    sutra: sutra.into(),
+    prev: prev.map(|r| r.id),
+    next: next.map(|r| r.id),
     commentaries: super::group_by_dictionary(&dicts, entries),
   }))
 }

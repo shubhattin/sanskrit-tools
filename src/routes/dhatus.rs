@@ -1,14 +1,16 @@
 //! Dhātupāṭha roots and the dhātu works that discuss them.
 
-use super::{ApiError, ApiResult, DictEntries, ENTRY_COLS, Entry};
+use super::{ApiError, ApiResult, DictEntries, ENTRY_SELECT, Entry, stmt};
+use crate::entities::{dhatus, entries};
 use crate::state::AppState;
 use crate::translit::{deva_key, query_keys, root_variants};
 use axum::Json;
 use axum::extract::{Path, Query, State};
+use sea_orm::sea_query::Expr;
+use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize)]
 pub struct Dhatu {
   id: i32,
   number: String,
@@ -19,12 +21,23 @@ pub struct Dhatu {
   pada: Option<String>,
   it: Option<String>,
   extra: Option<String>,
-  #[serde(skip)]
-  root_slp1: String,
 }
 
-const COLS: &str = "id, number, upadesha, root, artha, gana, pada, it, extra, root_slp1";
-const ORDER: &str = "gana, nullif(split_part(number, '.', 2), '')::int nulls last, seq";
+impl From<dhatus::Model> for Dhatu {
+  fn from(m: dhatus::Model) -> Self {
+    Dhatu {
+      id: m.id,
+      number: m.number,
+      upadesha: m.upadesha,
+      root: m.root,
+      artha: m.artha,
+      gana: m.gana,
+      pada: m.pada,
+      it: m.it,
+      extra: m.extra,
+    }
+  }
+}
 
 #[derive(Deserialize)]
 pub struct ListParams {
@@ -39,19 +52,30 @@ pub async fn list(
   let q = p.q.unwrap_or_default();
   let q = q.trim().to_string();
   let keys = if q.is_empty() { vec![] } else { query_keys(&q) };
-  let rows: Vec<Dhatu> = sqlx::query_as(&format!(
-    "select {COLS} from dhatus
-     where ($1::smallint is null or gana = $1)
-       and ($2 = '' or root_slp1 = any($3) or root_slp1 like ($3)[1] || '%'
-            or number = $2 or upadesha like '%' || $2 || '%' or artha like '%' || $2 || '%')
-     order by (root_slp1 = any($3)) desc, {ORDER} limit 300"
-  ))
-  .bind(p.gana)
-  .bind(&q)
-  .bind(&keys)
-  .fetch_all(&state.db)
-  .await?;
-  Ok(Json(rows))
+  let mut query = dhatus::Entity::find()
+    .order_by_asc(dhatus::Column::Gana)
+    // Dhātupāṭha number within the gaṇa (`1.1147` → 1147)
+    .order_by_asc(Expr::cust("nullif(split_part(number, '.', 2), '')::int"))
+    .order_by_asc(dhatus::Column::Seq)
+    .limit(2500);
+  if let Some(g) = p.gana {
+    query = query.filter(dhatus::Column::Gana.eq(g));
+  }
+  if !q.is_empty() {
+    let mut cond = Condition::any()
+      .add(dhatus::Column::RootSlp1.is_in(keys.clone()))
+      .add(dhatus::Column::Number.eq(&q))
+      .add(dhatus::Column::Upadesha.contains(&q))
+      .add(dhatus::Column::Artha.contains(&q));
+    if let Some(k) = keys.first() {
+      cond = cond.add(dhatus::Column::RootSlp1.starts_with(k));
+    }
+    query = query.filter(cond);
+  }
+  let mut rows = query.all(&state.db).await?;
+  // Exact root matches first (stable: keeps Dhātupāṭha order otherwise).
+  rows.sort_by_key(|r| !keys.contains(&r.root_slp1));
+  Ok(Json(rows.into_iter().map(Dhatu::from).collect()))
 }
 
 #[derive(Serialize)]
@@ -61,28 +85,32 @@ pub struct DhatuDetail {
 }
 
 pub async fn detail(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<DhatuDetail> {
-  let dhatu: Dhatu = sqlx::query_as(&format!("select {COLS} from dhatus where id = $1"))
-    .bind(id)
-    .fetch_optional(&state.db)
+  let dhatu = dhatus::Entity::find_by_id(id)
+    .one(&state.db)
     .await?
     .ok_or_else(|| ApiError::not_found("dhātu not found"))?;
   // Entries linked to this root, plus unlinked dhātu-work entries whose key
   // matches the root (ambiguous roots are not linked at import time).
   let keys = root_variants(&dhatu.root_slp1, &deva_key(&dhatu.upadesha));
-  let entries: Vec<Entry> = sqlx::query_as(&format!(
-    "select {ENTRY_COLS} from entries e join dictionaries d on d.id = e.dictionary_id
-     where d.kind = 'dhatu_work' and d.slug <> 'dhatupatha' and (
-       e.dhatu_id = $1 or (e.dhatu_id is null and exists (
-         select 1 from entry_keys k where k.entry_id = e.id and k.key_slp1 = any($2))))
-     order by d.sort_order, e.seq limit 200"
-  ))
-  .bind(id)
-  .bind(&keys)
-  .fetch_all(&state.db)
-  .await?;
+  let entries: Vec<Entry> = entries::Entity::find()
+    .from_raw_sql(stmt(
+      &format!(
+        "select {ENTRY_SELECT} from entries e join dictionaries d on d.id = e.dictionary_id
+         where d.kind = 'dhatu_work' and d.slug <> 'dhatupatha' and (
+           e.dhatu_id = $1 or (e.dhatu_id is null and exists (
+             select 1 from entry_keys k where k.entry_id = e.id and k.key_slp1 = any($2))))
+         order by d.sort_order, e.seq limit 200"
+      ),
+      vec![id.into(), keys.into()],
+    ))
+    .all(&state.db)
+    .await?
+    .into_iter()
+    .map(Entry::from)
+    .collect();
   let dicts = super::all_dictionaries(&state).await?;
   Ok(Json(DhatuDetail {
-    dhatu,
+    dhatu: dhatu.into(),
     works: super::group_by_dictionary(&dicts, entries),
   }))
 }

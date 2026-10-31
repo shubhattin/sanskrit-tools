@@ -9,3 +9,4 @@ dict_data
 .tanstack
 .nitro
 frontend/dist
+/db/

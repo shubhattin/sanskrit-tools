@@ -29,6 +29,10 @@ const config = defineConfig({
     // (applies in dev and in the node-server build; same-origin deploys
     // never hit it because axum serves /api itself).
     nitro({
+      // Pinned: on Vercel (VERCEL=1) nitro would auto-switch to its `vercel`
+      // preset and emit `.vercel/output` instead. We deploy only the static
+      // `.output/public` (see root vercel.json); `/api` is the Rust function.
+      preset: 'node-server',
       inlineDynamicImports: true,
       traceDeps: ['lipilekhika*'],
       routeRules: {

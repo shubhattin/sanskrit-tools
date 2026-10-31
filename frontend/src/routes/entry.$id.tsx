@@ -14,6 +14,7 @@ import {
   EmptyTitle
 } from '@/components/ui/empty';
 import { EntryHeadword, EntrySenses } from '@/components/dict/entry';
+import { InflectionSection } from '@/components/dict/paradigm';
 
 export const Route = createFileRoute('/entry/$id')({
   component: EntryPage
@@ -130,6 +131,7 @@ function EntryPage() {
           </div>
         </CardContent>
       </Card>
+      <InflectionSection query={entry.headword} />
       <BrowseNearby slug={dictionary.slug} seq={entry.seq} currentId={entry.id} />
     </div>
   );

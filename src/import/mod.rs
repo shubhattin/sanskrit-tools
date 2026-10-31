@@ -5,6 +5,7 @@
 //! is unchanged, unless `--force`.
 
 pub mod markup;
+pub mod paradigms;
 pub mod sources;
 pub mod stardict;
 
@@ -19,7 +20,7 @@ use std::path::Path;
 use std::time::Instant;
 
 /// Bump when parsing/normalization changes so every work is re-imported.
-pub const IMPORTER_VERSION: &str = "6";
+pub const IMPORTER_VERSION: &str = "9";
 
 // ------------------------------------------------------------ COPY helpers
 
@@ -173,34 +174,138 @@ pub async fn import_dhatus(pool: &PgPool, dir: &Path) -> Result<Vec<i32>> {
   Ok(ids.into_iter().map(|r| r.0).collect())
 }
 
-pub async fn import_word_forms(pool: &PgPool, dir: &Path) -> Result<()> {
-  let forms = sources::parse_jnu_forms(dir)?;
-  let mut tx = pool.begin().await?;
-  sqlx::query("delete from word_forms where source = 'jnu_tinanta'")
-    .execute(&mut *tx)
-    .await?;
+async fn copy_paradigms(
+  tx: &mut Transaction<'_, Postgres>,
+  source: &str,
+  seq0: usize,
+  items: &[paradigms::Paradigm],
+  layouts: &mut HashMap<String, i32>,
+) -> Result<usize> {
+  // Declension / kṛdanta tables share a few layouts: store only their forms.
+  let use_layouts = matches!(source, "heritage_decl" | "heritage_kridanta");
   let mut data = String::new();
-  for f in &forms {
+  for (i, p) in items.iter().enumerate() {
+    let root_key = p.root.as_deref().map(deva_key);
+    let (tables, layout_id, forms) = match use_layouts
+      .then(|| paradigms::split_layout(&p.tables))
+      .flatten()
+    {
+      Some((layout, forms)) => {
+        let text = layout.to_string();
+        let key = format!("{:x}", Sha256::digest(text.as_bytes()))[..32].to_string();
+        let id = match layouts.get(&key) {
+          Some(id) => *id,
+          None => {
+            let (id,): (i32,) = sqlx::query_as(
+              "insert into paradigm_layouts (key, layout) values ($1, $2::jsonb)
+               on conflict (key) do update set key = excluded.key returning id",
+            )
+            .bind(&key)
+            .bind(&text)
+            .fetch_one(&mut **tx)
+            .await?;
+            layouts.insert(key, id);
+            id
+          }
+        };
+        (None, Some(id.to_string()), Some(forms))
+      }
+      None => (Some(p.tables.to_string()), None, None),
+    };
     let mut r = Row::new();
-    let paradigm = f.paradigm.to_string();
-    r.f(Some("jnu_tinanta"))
-      .f(Some(&f.form))
-      .f(Some(&deva_key(&f.form)))
-      .f(Some(&f.lemma))
-      .f(Some(&deva_key(&f.lemma)))
-      .f(Some(&f.analysis))
-      .f(Some(&paradigm));
+    r.f(Some(source))
+      .f(Some(&(seq0 + i).to_string()))
+      .f(Some(&p.lemma))
+      .f(Some(&deva_key(&p.lemma)))
+      .f(p.root.as_deref())
+      .f(root_key.as_deref())
+      .f(p.label.as_deref())
+      .f(tables.as_deref())
+      .f(layout_id.as_deref())
+      .f(forms.as_deref());
     r.end();
     data.push_str(&r.0);
   }
   copy_in(
-    &mut tx,
-    "COPY word_forms (source, form, form_slp1, lemma, lemma_slp1, analysis, paradigm) FROM STDIN",
+    tx,
+    "COPY paradigms (source, seq, lemma, lemma_slp1, root, root_slp1, label, tables, layout_id, forms) FROM STDIN",
     data,
   )
   .await?;
-  tx.commit().await?;
-  eprintln!("word_forms (jnu_tinanta): {}", forms.len());
+  let ids: Vec<(i32, i32)> = sqlx::query_as(
+    "select seq, id from paradigms where source = $1 and seq >= $2 and seq < $3 order by seq",
+  )
+  .bind(source)
+  .bind(seq0 as i32)
+  .bind((seq0 + items.len()) as i32)
+  .fetch_all(&mut **tx)
+  .await?;
+  let mut data = String::new();
+  let mut n = 0usize;
+  for (seq, id) in ids {
+    let p = &items[seq as usize - seq0];
+    for (form, cells) in &p.forms {
+      let cells = format!(
+        "{{{}}}",
+        cells
+          .iter()
+          .map(|c| c.to_string())
+          .collect::<Vec<_>>()
+          .join(",")
+      );
+      let mut r = Row::new();
+      r.f(Some(&id.to_string())).f(Some(form)).f(Some(&cells));
+      r.end();
+      data.push_str(&r.0);
+      n += 1;
+    }
+  }
+  copy_in(
+    tx,
+    "COPY paradigm_forms (paradigm_id, form_slp1, cells) FROM STDIN",
+    data,
+  )
+  .await?;
+  Ok(n)
+}
+
+/// Rebuild all inflection tables (Heritage declension / kṛdanta / conjugation
+/// and JNU tiṅanta). One transaction per source.
+pub async fn import_paradigms(pool: &PgPool, dir: &Path) -> Result<()> {
+  let mut sources: Vec<(&str, Vec<&str>)> = Vec::new();
+  for (src, base) in paradigms::HERITAGE_FILES {
+    match sources.iter_mut().find(|(s, _)| s == src) {
+      Some((_, v)) => v.push(base),
+      None => sources.push((src, vec![base])),
+    }
+  }
+  sources.push(("jnu_tinanta", vec![]));
+  let mut layouts: HashMap<String, i32> = HashMap::new();
+  for (source, files) in sources {
+    let t0 = Instant::now();
+    let mut tx = pool.begin().await?;
+    sqlx::query("delete from paradigms where source = $1")
+      .bind(source)
+      .execute(&mut *tx)
+      .await?;
+    let (mut seq, mut nforms) = (0usize, 0usize);
+    if source == "jnu_tinanta" {
+      let items = paradigms::parse_jnu(dir)?;
+      nforms += copy_paradigms(&mut tx, source, seq, &items, &mut layouts).await?;
+      seq += items.len();
+    } else {
+      for base in files {
+        let items = paradigms::parse_heritage_file(dir, base, source == "heritage_conj")?;
+        nforms += copy_paradigms(&mut tx, source, seq, &items, &mut layouts).await?;
+        seq += items.len();
+      }
+    }
+    tx.commit().await?;
+    eprintln!(
+      "paradigms {source:<18} {seq:>7} tables {nforms:>8} forms in {:.1?}",
+      t0.elapsed()
+    );
+  }
   Ok(())
 }
 
@@ -307,10 +412,11 @@ pub async fn import_source(
   let mut linked_dhatu = 0usize;
   for (seq, rec) in recs.iter_mut().enumerate() {
     if let Some(sid) = &rec.sutra_id {
-      if let Some(t) = ctx.sutra_text.get(sid) {
-        rec.headword = t.clone();
-      } else {
-        rec.sutra_id = None;
+      match ctx.sutra_text.get(sid) {
+        // Commentaries are headed by the sūtra itself (Kāśikā reading).
+        Some(t) if matches!(src.kind, sources::Kind::SutraCommentary) => rec.headword = t.clone(),
+        Some(_) => {}
+        None => rec.sutra_id = None,
       }
     }
     let dhatu_id = match (rec.dhatu_index, &rec.dhatu_root_key) {

@@ -27,9 +27,23 @@ Heritage, JNU, Simon Wiles' BHSD).
 | madhaviya-dhatuvrtti, kshiratarangini, dhatupradipa, krdanta-rupa-mala | | linked to a dhātu only when the root is unambiguous |
 | kashika, nyasa, laghu-kaumudi, balamanorama, tattvabodhini (+ `sutras`) | keyed by sūtra number | ॒…॑ misused as quotes → ‘…’; U+FFFD (lost glyphs) shown as ◌, not guessed |
 | rv-padapatha, rv-padasvara, bloomfield, purana-index | concordances | |
-| `word_forms` | Grammar/jnu-tiNanta | conjugated form → root + paradigm |
+| mw-heritage | MW/mw-heritage_du_sanskrit_san-eng (HTML) | reordered into MW book order; `bword://` links resolved via `.syn` (~75%); source lacks a few headwords (e.g. अग्नि) |
+| ganapatha | Panini/gaNapAThaH/mUlam/gaNapATha.csv | 241 gaṇas, linked to their sūtra; members are search keys |
+| apte-en, mw-en, borooah-en | dict_data/cologne/{ae,mwe,bor}.txt | English→Sanskrit (Cologne csl-orig, pinned commit + sha256: `scripts/fetch-cologne.sh`); SLP1 → Devanagari |
+| `paradigms` + `paradigm_forms` | Heritage Declension A1–A5 (`heritage_decl`), B (`heritage_kridanta`, stem@root), Grammar (`heritage_conj`), JNU tiṅanta (`jnu_tinanta`) | 381,578 tables, 6,272,161 form→table rows; noun/kṛdanta tables store only forms + one of 5 shared layouts |
 
-## Not yet imported (phase 2)
-- MW Heritage edition (HTML, 193k entries).
-- Heritage declension (A1–A5, B) and conjugation tables → `word_forms` (nominal form lookup, e.g. रामेण → राम).
-- Gaṇapāṭha (`Panini/gaNapAThaH/mUlam/gaNapATha.csv`).
+## Not imported (duplicates of imported data)
+- Heritage `san-eng` files (same tables as `san-san`, English labels), `vachaspatyam`/`kalpadruma` HK
+  editions, `mw-itrans-rom`, `MW-bi`/`Apte-bi` (same text, ITRANS keys + noisy English reverse keys),
+  `apte-prAtipadikam-sa` (used only for stem keys), `purANa-index` (non-Devanagari), `rv-padapATha-hk`
+  (empty TSV; same as -dev), `kalpadruma-prathamA` (subset with prathamā headwords).
+- `mUlam/` raw sources (balamanorama.txt, *-dump.txt, rv-base TITUS html/text).
+
+## Known data caveats
+- Sūtra numbers follow the bundle's numbering (3,962 sūtras; e.g. 1.1 has 74, 8.4 has 67) and can be
+  off by one against the common ashtadhyayi.com numbering (3,981). All five commentaries share it.
+- Lost glyphs (U+FFFD) in Nyāsa / Tattvabodhinī / Bālamanoramā are shown as ◌, not guessed.
+- The Heritage MW edition lacks some headwords present in MW (e.g. अग्नि).
+
+## Size (sans_dict, after `vacuum full`)
+~1.97 GB: paradigm_forms 804 MB, entries 597 MB, paradigms 416 MB, entry_keys 144 MB.

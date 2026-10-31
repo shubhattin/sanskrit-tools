@@ -111,6 +111,24 @@ pub fn all() -> Vec<Source> {
       },
     },
     Source {
+      slug: "mw-heritage",
+      name: "Monier-Williams (Sanskrit Heritage edition)",
+      short_name: "MW-H",
+      kind: Kind::Lexicon,
+      src_lang: "sa",
+      tgt_lang: "en",
+      description: "Monier-Williams as adapted for the Sanskrit Heritage site by Pawan Goyal and Gérard Huet (2014): merged homonyms, cleaner formatting, cross-links.",
+      attribution: "Sanskrit Heritage (Gérard Huet, Pawan Goyal); StarDict by Thubtenrigzin.",
+      sort_order: 12,
+      files: &[
+        "MW/mw-heritage_du_sanskrit_san-eng/mw-heritage_du_sanskrit_san-eng.idx",
+        "MW/mw-heritage_du_sanskrit_san-eng/mw-heritage_du_sanskrit_san-eng.dict.dz",
+        "MW/mw-heritage_du_sanskrit_san-eng/mw-heritage_du_sanskrit_san-eng.syn",
+        "MW/mw-sa/mw-sa.tsv",
+      ],
+      parse: parse_mw_heritage,
+    },
+    Source {
       slug: "apte",
       name: "Apte Practical Sanskrit-English Dictionary",
       short_name: "Apte",
@@ -264,6 +282,45 @@ pub fn all() -> Vec<Source> {
       parse: parse_computer,
     },
     Source {
+      slug: "apte-en",
+      name: "Apte Student's English-Sanskrit Dictionary",
+      short_name: "Apte E-S",
+      kind: Kind::Lexicon,
+      src_lang: "en",
+      tgt_lang: "sa",
+      description: "V. S. Apte, The Student's English-Sanskrit Dictionary (1884). Search in English mode.",
+      attribution: "Cologne Digital Sanskrit Dictionaries (csl-orig `ae`).",
+      sort_order: 91,
+      files: &["cologne/ae.txt"],
+      parse: |d| cologne_en(d, "cologne/ae.txt"),
+    },
+    Source {
+      slug: "mw-en",
+      name: "Monier-Williams English-Sanskrit Dictionary",
+      short_name: "MW E-S",
+      kind: Kind::Lexicon,
+      src_lang: "en",
+      tgt_lang: "sa",
+      description: "Monier Williams, A Dictionary, English and Sanskrit (1851). Search in English mode.",
+      attribution: "Cologne Digital Sanskrit Dictionaries (csl-orig `mwe`).",
+      sort_order: 92,
+      files: &["cologne/mwe.txt"],
+      parse: |d| cologne_en(d, "cologne/mwe.txt"),
+    },
+    Source {
+      slug: "borooah-en",
+      name: "Borooah English-Sanskrit Dictionary",
+      short_name: "Borooah",
+      kind: Kind::Lexicon,
+      src_lang: "en",
+      tgt_lang: "sa",
+      description: "Anundoram Borooah, A Practical English-Sanskrit Dictionary (1877). Search in English mode.",
+      attribution: "Cologne Digital Sanskrit Dictionaries (csl-orig `bor`).",
+      sort_order: 93,
+      files: &["cologne/bor.txt"],
+      parse: |d| cologne_en(d, "cologne/bor.txt"),
+    },
+    Source {
       slug: "dhatupatha",
       name: "Pāṇinīya Dhātupāṭha",
       short_name: "धातुपाठः",
@@ -332,6 +389,19 @@ pub fn all() -> Vec<Source> {
       sort_order: 140,
       files: &["Other/kRdanta-rUpa-mAlA/kRdanta-rUpa-mAlA.tsv"],
       parse: |d| dhatu_work_tsv(d, "Other/kRdanta-rUpa-mAlA/kRdanta-rUpa-mAlA.tsv"),
+    },
+    Source {
+      slug: "ganapatha",
+      name: "Gaṇapāṭhaḥ",
+      short_name: "गणपाठः",
+      kind: Kind::Thesaurus,
+      src_lang: "sa",
+      tgt_lang: "sa",
+      description: "Pāṇinian gaṇas: each word-list with its governing sūtra. Searching a member word shows the gaṇas it belongs to.",
+      attribution: SC,
+      sort_order: 190,
+      files: &["Panini/gaNapAThaH/mUlam/gaNapATha.csv"],
+      parse: parse_ganapatha,
     },
     Source {
       slug: "kashika",
@@ -1086,22 +1156,6 @@ pub fn parse_sutras(dir: &Path) -> Result<Vec<(String, String)>> {
   Ok(v)
 }
 
-#[cfg(test)]
-mod tests {
-  use super::split_upadesha;
-  #[test]
-  fn upadesha() {
-    let s = |x: &str| split_upadesha(x);
-    assert_eq!(s("भू सत्तायाम्"), ("भू".into(), "सत्तायाम्".into()));
-    assert_eq!(s("आपॢ (आपॢ)लम्भने"), ("आपॢ".into(), "लम्भने".into()));
-    assert_eq!(
-      s("ओलडि [ओलडि]उत्क्षेपने ; उलडि इत्यन्ये"),
-      ("ओलडि".into(), "उत्क्षेपने ; उलडि इत्यन्ये".into())
-    );
-    assert_eq!(s("लगि- [गत्यर्थः]"), ("लगि".into(), "गत्यर्थः".into()));
-  }
-}
-
 // ---------------------------------------------------------------- concordances
 
 fn parse_rv_padapatha(dir: &Path) -> Result<Vec<Rec>> {
@@ -1171,36 +1225,163 @@ fn parse_purana(dir: &Path) -> Result<Vec<Rec>> {
   )
 }
 
-// ---------------------------------------------------------------- word forms
+// ---------------------------------------------------------------- added works
 
-pub struct Form {
-  pub form: String,
-  pub lemma: String,
-  pub analysis: String,
-  pub paradigm: Value,
+/// Heritage MW: StarDict HTML (sorted), reordered into MW book order by the
+/// mw-sa headword sequence; `bword://` keys resolved through the `.syn` file.
+fn parse_mw_heritage(dir: &Path) -> Result<Vec<Rec>> {
+  let sd = stardict::load(
+    &dir.join("MW/mw-heritage_du_sanskrit_san-eng/mw-heritage_du_sanskrit_san-eng"),
+  )?;
+  let mut syn: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
+  for (k, i) in &sd.syn {
+    if let Some((hw, _)) = sd.entries.get(*i) {
+      syn.entry(k.as_str()).or_insert(hw.as_str());
+    }
+  }
+  let mut order: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+  for (i, (h, _)) in read_tsv(dir, "MW/mw-sa/mw-sa.tsv")?.into_iter().enumerate() {
+    order.entry(deva_key(&h)).or_insert(i);
+  }
+  let resolve = |k: &str| syn.get(k).map(|h| crate::translit::nfc(h));
+  let mut rows: Vec<(usize, usize, String, String)> = sd
+    .entries
+    .iter()
+    .enumerate()
+    .map(|(i, (w, p))| {
+      let w = crate::translit::nfc(w);
+      let body = markup::sanitize_html_resolving(p.trim_end().trim_end_matches("••"), &resolve);
+      (
+        order.get(&deva_key(&w)).copied().unwrap_or(usize::MAX),
+        i,
+        w,
+        body,
+      )
+    })
+    .collect();
+  rows.sort_by_key(|r| (r.0, r.1));
+  Ok(
+    group(rows.into_iter().map(|(_, _, w, b)| (w, b)).collect())
+      .into_iter()
+      .map(|(h, senses)| {
+        let gloss_en = Some(markup::english_gloss(&senses));
+        Rec {
+          headword: h,
+          senses,
+          gloss_en,
+          ..Default::default()
+        }
+      })
+      .collect(),
+  )
 }
 
-/// JNU tiṅanta: key = conjugated form; body = `root (artha, gaṇa, pada, lakāra)\n 3×3 forms`.
-pub fn parse_jnu_forms(dir: &Path) -> Result<Vec<Form>> {
-  let rows = read_tsv(dir, "Grammar/jnu-tiNanta/jnu-tiNanta.tsv")?;
-  static HEAD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\s*(\S+)\s*\(([^)]*)\)").unwrap());
+/// `name`sūtra`१।१।२७`member। member। …`
+fn parse_ganapatha(dir: &Path) -> Result<Vec<Rec>> {
+  let p = dir.join("Panini/gaNapAThaH/mUlam/gaNapATha.csv");
+  let text = std::fs::read_to_string(&p).with_context(|| format!("reading {p:?}"))?;
   let mut out = Vec::new();
-  for (form, body) in rows {
-    let body = markup::unescape_tsv(&body);
-    let mut lines = body.split('\n');
-    let Some(c) = lines.next().and_then(|l| HEAD.captures(l)) else {
+  for line in text.lines().filter(|l| !l.trim().is_empty()) {
+    let f: Vec<&str> = line.split('`').map(str::trim).collect();
+    if f.len() < 4 {
       continue;
+    }
+    let name = crate::translit::nfc(f[0]);
+    let num = deva_digits(f[2]).replace('।', ".");
+    let sutra_id = {
+      let p: Vec<&str> = num.split('.').collect();
+      (p.len() == 3)
+        .then(|| {
+          p[2]
+            .parse::<u32>()
+            .ok()
+            .map(|n| format!("{}.{}.{:03}", p[0], p[1], n))
+        })
+        .flatten()
     };
-    let paradigm: Vec<Vec<String>> = lines
-      .map(|l| l.split_whitespace().map(String::from).collect::<Vec<_>>())
-      .filter(|r| !r.is_empty())
+    let members: Vec<String> = f[3]
+      .split('।')
+      .map(|m| crate::translit::nfc(m.trim()))
+      .filter(|m| !m.is_empty() && *m != name)
       .collect();
-    out.push(Form {
-      form,
-      lemma: c[1].to_string(),
-      analysis: c[2].trim().to_string(),
-      paradigm: json!(paradigm),
+    let links = members
+      .iter()
+      .map(|m| xref(m, ""))
+      .collect::<Vec<_>>()
+      .join(" · ");
+    let keys = members
+      .iter()
+      .map(|m| (deva_key(m), KeyKind::Variant))
+      .filter(|(k, _)| !k.is_empty())
+      .collect();
+    out.push(Rec {
+      headword: name,
+      senses: vec![
+        format!(
+          r#"<b>{}</b> <span class="ref">{}</span>"#,
+          escape(f[1]),
+          escape(f[2])
+        ),
+        links,
+      ],
+      sutra_id,
+      data: Some(json!({ "members": members.len() })),
+      keys,
+      ..Default::default()
     });
   }
   Ok(out)
+}
+
+/// Cologne csl-orig English→Sanskrit file: `<L>…<k2>headword` … `<LEND>`.
+fn cologne_en(dir: &Path, rel: &str) -> Result<Vec<Rec>> {
+  let p = dir.join(rel);
+  let text = std::fs::read_to_string(&p)
+    .with_context(|| format!("reading {p:?} (run scripts/fetch-cologne.sh)"))?;
+  static HEAD: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^<L>[^<]*(?:<[a-z0-9]+>[^<]*)*?<k2>([^<\n]*)").unwrap());
+  let mut out = Vec::new();
+  let mut cur: Option<(String, Vec<&str>)> = None;
+  for line in text.lines() {
+    if line.starts_with("<L>") {
+      let hw = HEAD
+        .captures(line)
+        .map(|c| c[1].trim().to_string())
+        .unwrap_or_default();
+      cur = Some((hw, Vec::new()));
+    } else if line.starts_with("<LEND>") {
+      if let Some((hw, body)) = cur.take() {
+        let joined = body.join("\n").replace("-\n-", "").replace('\n', " ");
+        let (html, en) = markup::cologne_to_html(&joined);
+        if !hw.is_empty() && !html.is_empty() {
+          out.push(Rec {
+            gloss_en: Some(format!("{hw}\n{en}")),
+            headword: hw,
+            senses: vec![html],
+            no_headword_key: true,
+            ..Default::default()
+          });
+        }
+      }
+    } else if let Some((_, body)) = cur.as_mut() {
+      body.push(line);
+    }
+  }
+  Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::split_upadesha;
+  #[test]
+  fn upadesha() {
+    let s = |x: &str| split_upadesha(x);
+    assert_eq!(s("भू सत्तायाम्"), ("भू".into(), "सत्तायाम्".into()));
+    assert_eq!(s("आपॢ (आपॢ)लम्भने"), ("आपॢ".into(), "लम्भने".into()));
+    assert_eq!(
+      s("ओलडि [ओलडि]उत्क्षेपने ; उलडि इत्यन्ये"),
+      ("ओलडि".into(), "उत्क्षेपने ; उलडि इत्यन्ये".into())
+    );
+    assert_eq!(s("लगि- [गत्यर्थः]"), ("लगि".into(), "गत्यर्थः".into()));
+  }
 }

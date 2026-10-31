@@ -17,6 +17,9 @@
 		"build": "bun run --cwd frontend build",
 		"check": "bun run --cwd frontend check",
 		"lint": "bun run --cwd frontend lint",
-		"format": "cargo fmt --all && bun run --cwd frontend format"
+		"format": "cargo fmt --all && bun run --cwd frontend format",
+		"seed": "bash scripts/seed.sh",
+		"db:dump": "bash scripts/db-dump.sh",
+		"start": "STATIC_DIR=frontend/.output/public cargo run --release --bin main"
 	}
 }

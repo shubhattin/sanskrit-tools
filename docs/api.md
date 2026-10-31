@@ -48,11 +48,30 @@ interface DictionaryHits {
   total: number;            // hits in this dictionary (entries may be truncated)
 }
 
-interface FormAnalysis {     // inflected-form → lemma (from JNU tiṅanta)
+interface FormAnalysis {     // inflected form → stem / root (Heritage tables + JNU tiṅanta)
   form: string;              // Devanagari
-  lemma: string;             // Devanagari root/stem
-  analysis: string;          // e.g. 'भ्वादिगण, परस्मै, लट्'
+  lemma: string;             // stem (declension) or root (conjugation)
+  root: string | null;       // verbal root of a kṛdanta stem (गत → गम्)
+  analysis: string;          // e.g. 'पुमान् · तृतीया · एकः; नपुंसकम् · तृतीया · एकः'
+  source: ParadigmSource;
+  paradigm_ids: number[];    // tables containing the form (first = primary)
+  cells: number[][];         // cell numbers of the form, parallel to paradigm_ids
 }
+
+type ParadigmSource = 'heritage_decl' | 'heritage_kridanta' | 'heritage_conj' | 'jnu_tinanta';
+
+interface ParadigmSummary { id: number; source: ParadigmSource; lemma: string; root: string | null;
+  label: string | null; }   // label: gender (पुमान्/स्त्री/नपुंसकम्), 'गणः १', or JNU analysis
+
+// Cells are numbered 0,1,2,… row-major across `tables` in order; each list item is one cell.
+type ParadigmTable =
+  | { group: string | null; title: string | null; label: string | null;
+      cols: string[]; rows: { label: string; cells: string[][] }[] }   // a cell may hold 0..n forms
+  | { group: string | null; title: string | null;
+      list: { label: string; text: string; forms: string[] }[] };     // kṛdanta / avyaya lists
+interface Paradigm extends ParadigmSummary { tables: ParadigmTable[]; }
+// Conjugations: `group` = derivation (अप्रत्ययान्तधातु, णिच्, सन्, यङ्, कृदन्त, अव्यय …),
+// `title` = lakāra (लट्, लङ् …), `label` = voice (परस्मैपदे / आत्मनेपदे / कर्मणि).
 
 interface SearchResponse {
   query: string;
@@ -90,9 +109,12 @@ interface DhatuDetail { dhatu: Dhatu; works: { dictionary: Dictionary; entries: 
 | GET | `/api/dictionaries/{slug}/browse` | `seq` (center, default 0), `before` (default 15), `after` (default 30); or `q` to jump to a headword | `{ dictionary: Dictionary, items: BrowseItem[], center: number }` (`center` = seq jumped to) |
 | GET | `/api/sutras` | `q` optional (number prefix like `1.1` or text) | `Sutra[]` (max 200) |
 | GET | `/api/sutras/{id}` | – | `SutraDetail` |
-| GET | `/api/dhatus` | `q` optional, `gana` optional | `Dhatu[]` (max 300) |
+| GET | `/api/dhatus` | `q` optional, `gana` optional | `Dhatu[]` (whole list, ≤ 2,282) |
 | GET | `/api/dhatus/{id}` | – | `DhatuDetail` |
+| GET | `/api/paradigms` | `q` (stem or root, any script) | `ParadigmSummary[]` (stem's declensions; for a root also its conjugation and all kṛdanta stems; max 300) |
+| GET | `/api/paradigms/{id}` | – | `Paradigm` |
 
 Search input may be Devanagari, IAST, Harvard-Kyoto, ITRANS, SLP1 or lipilekhika "Normal";
 the server normalizes it. `mode=en` runs English full-text over Sanskrit→English lexicons and
-English headwords (computer terms).
+English headwords (computer terms, Apte / Monier-Williams / Borooah English→Sanskrit).
+In `en` mode English→Sanskrit works come first and an exact English headword ranks highest.

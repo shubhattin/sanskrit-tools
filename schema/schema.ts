@@ -177,24 +177,66 @@ export const entryKeys = pgTable(
   ],
 );
 
-/** Inflected form → lemma (JNU tiṅanta now; Heritage declensions later). */
-export const wordForms = pgTable(
-  'word_forms',
+/**
+ * Shared table structure (labels, columns, row labels, empty cell arrays) for
+ * paradigms that store only their forms (`paradigms.forms`). Declension and
+ * kṛdanta tables use a handful of layouts, so labels are not repeated per row.
+ */
+export const paradigmLayouts = pgTable('paradigm_layouts', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  /** sha256 (first 32 hex chars) of the layout JSON, the dedup key */
+  key: varchar({ length: 32 }).notNull().unique(),
+  layout: jsonb().notNull(),
+});
+
+/**
+ * One inflection table set: a declined stem (per gender), a kṛdanta stem
+ * (with its root) or a conjugated root (all derivations/lakāras/voices).
+ * Display structure (`docs/api.md`, `Paradigm.tables`) is either stored whole
+ * in `tables`, or as `layout_id` + `forms` (cells in order joined by `|`,
+ * forms within a cell by `,`). Cells are numbered row-major across all tables;
+ * `paradigm_forms.cells` points at those numbers.
+ */
+export const paradigms = pgTable(
+  'paradigms',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    /** e.g. `jnu_tinanta` */
+    /** `heritage_decl` | `heritage_kridanta` | `heritage_conj` | `jnu_tinanta` */
     source: varchar({ length: 32 }).notNull(),
-    form: text().notNull(),
-    formSlp1: textC().notNull(),
+    /** Order within the source */
+    seq: integer().notNull(),
     lemma: text().notNull(),
     lemmaSlp1: textC().notNull(),
-    /** Human-readable analysis, e.g. `सत्तायाम्, भ्वादिगण, परस्मै, लट्` */
-    analysis: text().notNull(),
-    /** Full paradigm as rows of forms (3×3 for tiṅanta) */
-    paradigm: jsonb(),
+    /** Verbal root for kṛdanta stems */
+    root: text(),
+    rootSlp1: textC(),
+    /** Gender (पुमान् / स्त्री / नपुंसकम्), gaṇa (गणः १) or JNU analysis */
+    label: text(),
+    /** Full display structure (when not layout-based) */
+    tables: jsonb(),
+    layoutId: integer().references(() => paradigmLayouts.id),
+    /** Cell contents for layout-based paradigms */
+    forms: text(),
   },
   (t) => [
-    index('word_forms_form_idx').on(t.formSlp1),
-    index('word_forms_lemma_idx').on(t.lemmaSlp1),
+    uniqueIndex('paradigms_source_seq_idx').on(t.source, t.seq),
+    index('paradigms_lemma_idx').on(t.lemmaSlp1),
+    index('paradigms_root_idx').on(t.rootSlp1),
+  ],
+);
+
+/** Inflected form → paradigm, with the cell numbers where it occurs. */
+export const paradigmForms = pgTable(
+  'paradigm_forms',
+  {
+    paradigmId: integer()
+      .notNull()
+      .references(() => paradigms.id, { onDelete: 'cascade' }),
+    formSlp1: textC().notNull(),
+    cells: smallint().array().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.paradigmId, t.formSlp1] }),
+    index('paradigm_forms_form_idx').on(t.formSlp1),
   ],
 );

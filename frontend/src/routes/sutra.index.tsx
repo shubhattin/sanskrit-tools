@@ -1,4 +1,5 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { searchString } from '@/lib/search-params';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpenTextIcon, SearchIcon } from 'lucide-react';
 import { sutrasQuery } from '@/lib/api/client';
@@ -19,7 +20,7 @@ import { SutraText } from '@/components/dict/entry';
 
 export const Route = createFileRoute('/sutra/')({
   validateSearch: (search: Record<string, unknown>): { q?: string } => ({
-    q: typeof search.q === 'string' ? search.q : undefined
+    q: searchString(search.q)
   }),
   component: SutraListPage
 });

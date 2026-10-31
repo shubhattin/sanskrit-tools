@@ -1,6 +1,6 @@
 # Stack
 
-- Rust (axum + sqlx) JSON API at the repo root; data importer in the same crate.
+- Rust JSON API at the repo root (axum + SeaORM 2, entities in `src/entities/`); data importer in the same crate (bulk COPY via sqlx 0.9, the same sqlx SeaORM runs on).
 - Drizzle schema (source of truth for the DB) in `schema/`; Postgres database `sans_dict`.
 - TanStack Start (React 19, React Compiler, shadcn base-nova, Tailwind 4) SPA in `frontend/`.
 - Raw data: `dict_data/` (StarDict + TSV, git-ignored). Analysis of every source: `docs/data.md`.
@@ -8,16 +8,24 @@
 # Structure
 
 - `src/translit.rs` – SLP1 / loose search keys (vidyut-lipi, lipilekhika "Normal" input).
-- `src/import/` – `sources.rs` (registry + per-work parsers), `markup.rs` (source text → sanitized HTML), `stardict.rs`, `mod.rs` (COPY loader).
-- `src/routes/` – API handlers; contract in `docs/api.md` (keep it in sync with the frontend types in `frontend/src/lib/api/`).
+- `src/import/` – `sources.rs` (registry + per-work parsers), `paradigms.rs` (Heritage/JNU inflection tables), `markup.rs` (source text → sanitized HTML), `stardict.rs`, `mod.rs` (COPY loader).
+- `src/entities/` – SeaORM entities mirroring `schema/schema.ts` (drizzle stays the only migration system; update both together).
+- `src/routes/` – API handlers (entity queries; Postgres-specific SQL as typed raw `Statement`s + `FromQueryResult`); contract in `docs/api.md` (keep it in sync with the frontend types in `frontend/src/lib/api/`).
 - `schema/schema.ts` – tables; migrations in `schema/migrations/` (snake_case columns).
 
 # Commands
 
 - `bun run db:generate` / `bun run db:migrate` – drizzle migrations (`schema/`).
 - `bun run import [-- --force] [slug ...]` – (re)import works; unchanged sources are skipped by hash. Bump `IMPORTER_VERSION` in `src/import/mod.rs` when parsing changes.
+- `bun run seed` – reproducible full seed of `PG_DATABASE_URL` (migrations + import + count check against `scripts/expected-counts.tsv`); `--url <db>` for another database, `--dump <file>` to restore a `bun run db:dump` file instead (no `dict_data` needed). After an intentional data change: `bash scripts/seed.sh --write-expected`.
 - `bun run dev:api` (axum on :5780), `bun run dev` (Vite on :3010, proxies `/api`).
 - `cargo test --lib`, `cargo fmt`, `bun run check`, `bun run lint`, `bun run format`.
+
+# Deploy (Vercel, mirrors ../tsc-links)
+
+- `vercel.json`: `bun run --cwd frontend build` → static SPA in `frontend/.output/public` (nitro preset pinned to `node-server`; only `public/` is deployed). `/api/*` → Rust function `api/vercel.rs` (`vercel_runtime`); every other path → `/_shell.html` (files win first).
+- Set `PG_DATABASE_URL` in the Vercel project. Seed the prod DB once with `bun run seed --url <prod-url>` (or `--dump`).
+- Self-host instead: `bun run build && bun run start` (axum serves SPA + API on :5780).
 
 # Conventions
 

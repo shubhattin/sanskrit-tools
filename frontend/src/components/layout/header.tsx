@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
   BookOpenTextIcon,
-  InfoIcon,
   MoonIcon,
   ScrollTextIcon,
   SearchIcon,
@@ -23,8 +22,7 @@ import { cn } from '@/lib/utils';
 const NAV = [
   { to: '/', label: 'Search', icon: SearchIcon, exact: true },
   { to: '/sutra', label: 'Sūtras', icon: ScrollTextIcon, exact: false },
-  { to: '/dhatu', label: 'Dhātus', icon: LeafIcon, exact: false },
-  { to: '/about', label: 'About', icon: InfoIcon, exact: false }
+  { to: '/dhatu', label: 'Dhātus', icon: LeafIcon, exact: false }
 ] as const;
 
 function ThemeToggle() {

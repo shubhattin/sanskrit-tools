@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { searchInt, searchString } from '@/lib/search-params';
 import { useQuery } from '@tanstack/react-query';
 import { LeafIcon, SearchIcon } from 'lucide-react';
 import { dhatusQuery } from '@/lib/api/client';
@@ -26,16 +27,33 @@ import { DhatuHeadword } from '@/components/dict/entry';
 
 export const Route = createFileRoute('/dhatu/')({
   validateSearch: (search: Record<string, unknown>): { q?: string; gana?: number } => ({
-    q: typeof search.q === 'string' ? search.q : undefined,
-    gana:
-      typeof search.gana === 'string' && /^[0-9]+$/.test(search.gana)
-        ? Number(search.gana)
-        : undefined
+    q: searchString(search.q),
+    gana: (() => {
+      const g = searchInt(search.gana);
+      return g && g >= 1 && g <= 10 ? g : undefined;
+    })()
   }),
   component: DhatuListPage
 });
 
-const GANAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+const GANA_NAMES = [
+  'भ्वादिः',
+  'अदादिः',
+  'जुहोत्यादिः',
+  'दिवादिः',
+  'स्वादिः',
+  'तुदादिः',
+  'रुधादिः',
+  'तनादिः',
+  'क्र्यादिः',
+  'चुरादिः'
+] as const;
+
+/** Base UI Select renders the label of the selected value from `items`. */
+const GANA_ITEMS: Record<string, string> = {
+  all: 'All gaṇas',
+  ...Object.fromEntries(GANA_NAMES.map((name, i) => [String(i + 1), `${i + 1} · ${name}`]))
+};
 
 function DhatuListPage() {
   const search = Route.useSearch();
@@ -80,17 +98,17 @@ function DhatuListPage() {
           </InputGroup>
         </form>
         <Select
+          items={GANA_ITEMS}
           value={search.gana ? String(search.gana) : 'all'}
-          onValueChange={(v) => set({ gana: v === 'all' ? 0 : Number(v) })}
+          onValueChange={(v) => set({ gana: !v || v === 'all' ? 0 : Number(v) })}
         >
-          <SelectTrigger className="w-36" aria-label="Filter by gaṇa">
+          <SelectTrigger className="h-10 w-48 rounded-xl" aria-label="Filter by gaṇa">
             <SelectValue placeholder="Gaṇa" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All gaṇas</SelectItem>
-            {GANAS.map((g) => (
-              <SelectItem key={g} value={String(g)}>
-                Gaṇa {g}
+            {Object.entries(GANA_ITEMS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -130,7 +148,7 @@ function DhatuListPage() {
             {list.data.map((d) => (
               <li key={d.id}>
                 <Link to="/dhatu/$id" params={{ id: String(d.id) }}>
-                  <Card className="transition-colors hover:border-primary/50">
+                  <Card className="py-0 transition-colors hover:border-primary/50">
                     <CardContent className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-3 sm:p-4">
                       <Badge variant="secondary" className="shrink-0 tabular-nums">
                         {d.number}
