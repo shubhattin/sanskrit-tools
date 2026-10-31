@@ -109,21 +109,23 @@ function Landing({ dictionariesLoading }: { dictionariesLoading: boolean }) {
   const dictsQuery = useQuery(dictionariesQuery());
   const navigate = useNavigate();
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2 py-4 text-center sm:py-8">
-        <p className="font-devanagari text-4xl font-bold sm:text-5xl">शब्दकोशः</p>
-        <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3 py-6 text-center sm:py-10">
+        <p className="font-devanagari text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+          शब्दकोशः
+        </p>
+        <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
           Search across Sanskrit lexicons, thesauri, dhātu works and sūtra commentaries. Type in
           Devanagari, IAST, Harvard-Kyoto, ITRANS or SLP1 — or enable Lipi Lekhika typing and type
           phonetically.
         </p>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           {EXAMPLES.map((ex) => (
             <Button
               key={ex.label}
               variant="outline"
               size="sm"
-              className="font-devanagari"
+              className="rounded-full font-devanagari hover:border-primary/60 hover:text-primary"
               onClick={() =>
                 void navigate({
                   to: '/',
@@ -139,18 +141,18 @@ function Landing({ dictionariesLoading }: { dictionariesLoading: boolean }) {
           ))}
         </div>
       </div>
-      <section aria-label="Dictionaries" className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+      <section aria-label="Dictionaries" className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold tracking-widest text-muted-foreground uppercase">
           Dictionaries
         </h2>
         {dictionariesLoading || !dictsQuery.data ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-24" />
+              <Skeleton key={i} className="h-28" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {dictsQuery.data.map((d) => (
               <Link
                 key={d.slug}
@@ -159,19 +161,23 @@ function Landing({ dictionariesLoading }: { dictionariesLoading: boolean }) {
                 search={{}}
                 className="block"
               >
-                <Card className="h-full transition-colors hover:border-primary/50">
-                  <CardContent className="flex flex-col gap-1 p-4">
+                <Card className="h-full transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md">
+                  <CardContent className="flex flex-col gap-1.5 p-5">
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="font-bold">
+                      <Badge variant="secondary" className="shrink-0 font-bold">
                         {d.short_name}
                       </Badge>
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {d.entry_count.toLocaleString('en-IN')} entries
                       </span>
                     </div>
-                    <p className="truncate text-sm font-semibold">{d.name}</p>
+                    <p className="truncate text-sm font-semibold" title={d.name}>
+                      {d.name}
+                    </p>
                     {d.description ? (
-                      <p className="line-clamp-2 text-xs text-muted-foreground">{d.description}</p>
+                      <p className="line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">
+                        {d.description}
+                      </p>
                     ) : null}
                   </CardContent>
                 </Card>
