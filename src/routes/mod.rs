@@ -13,30 +13,30 @@ pub mod sutras;
 use crate::entities::{dictionaries, entries, enums};
 use crate::state::AppState;
 use axum::Json;
-use axum::Router;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::get;
 use sea_orm::sea_query::{ArrayType, Value};
 use sea_orm::{ColumnTrait, DbBackend, DbErr, EntityTrait, QueryFilter, QueryOrder, Statement};
 use serde::Serialize;
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
 
-pub fn router() -> Router<AppState> {
-  Router::new()
-    .route("/api/dictionaries", get(browse::list_dictionaries))
-    .route("/api/dictionaries/{slug}/browse", get(browse::browse))
-    .route("/api/entries/{id}", get(browse::entry))
-    .route("/api/search", get(search::search))
-    .route("/api/suggest", get(search::suggest))
-    .route("/api/sutras", get(sutras::list))
-    .route("/api/sutras/{id}", get(sutras::detail))
-    .route("/api/dhatus", get(dhatus::list))
-    .route("/api/dhatus/{id}", get(dhatus::detail))
-    .route("/api/paradigms", get(paradigms::list))
-    .route("/api/paradigms/{id}", get(paradigms::detail))
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::new()
+    .merge(browse::openapi_router())
+    .merge(search::openapi_router())
+    .merge(sutras::openapi_router())
+    .merge(dhatus::openapi_router())
+    .merge(paradigms::openapi_router())
 }
 
 pub struct ApiError(pub StatusCode, pub String);
+
+/// JSON error body (`{ "error": string }`) — also the OpenAPI error schema.
+#[derive(Serialize, ToSchema)]
+pub struct ErrorBody {
+  pub error: String,
+}
 
 impl ApiError {
   pub fn bad_request(msg: impl Into<String>) -> Self {
@@ -79,7 +79,7 @@ pub fn int_array(v: Option<&Vec<i32>>) -> Value {
 pub const ENTRY_SELECT: &str =
   "e.id, e.dictionary_id, e.seq, e.headword, e.senses, e.data, e.sutra_id, e.dhatu_id, e.gloss_en";
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, ToSchema)]
 pub struct Dictionary {
   pub id: i32,
   pub slug: String,
@@ -112,7 +112,7 @@ impl From<dictionaries::Model> for Dictionary {
   }
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, ToSchema)]
 pub struct Entry {
   pub id: i32,
   pub dictionary_id: i32,
@@ -153,7 +153,7 @@ pub async fn all_dictionaries(state: &AppState) -> Result<Vec<Dictionary>, DbErr
   )
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct DictEntries {
   pub dictionary: Dictionary,
   pub entries: Vec<Entry>,

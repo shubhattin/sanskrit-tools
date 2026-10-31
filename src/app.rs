@@ -13,6 +13,8 @@ use sea_orm::{ConnectOptions, Database};
 use std::time::Duration;
 use tower_http::compression::CompressionLayer;
 use tower_http::services::{ServeDir, ServeFile};
+use utoipa::OpenApi;
+use utoipa_axum::router::OpenApiRouter;
 
 pub async fn init_state() -> Result<AppState, String> {
   let _ = dotenvy::from_filename(".env.local");
@@ -53,8 +55,15 @@ async fn api_not_found(uri: Uri) -> impl IntoResponse {
   )
 }
 
+/// Composed OpenAPI-aware router (used for the OpenAPI document and serving).
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::with_openapi(crate::openapi::ApiDoc::openapi())
+    .merge(crate::routes::openapi_router())
+}
+
 pub fn router(state: AppState) -> Router {
-  let api = crate::routes::router()
+  let api: Router<AppState> = openapi_router().into();
+  let api = api
     .route("/api/{*rest}", axum::routing::any(api_not_found))
     .with_state(state);
   let app = match std::env::var("STATIC_DIR").ok().filter(|s| !s.is_empty()) {

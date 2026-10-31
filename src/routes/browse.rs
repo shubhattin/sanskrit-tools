@@ -8,17 +8,50 @@ use axum::Json;
 use axum::extract::{Path, Query, State};
 use sea_orm::{ColumnTrait, EntityTrait, FromQueryResult, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
 
+/// OpenAPI route registration (paths served by [`crate::app::router`] (API stable)).
+pub fn openapi_router() -> OpenApiRouter<crate::state::AppState> {
+  OpenApiRouter::new()
+    .routes(routes!(list_dictionaries))
+    .routes(routes!(entry))
+    .routes(routes!(browse))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/dictionaries",
+    operation_id = "dictionaries.list",
+    tag = "dictionaries",
+    responses(
+        (status = 200, description = "All dictionaries", body = Vec<Dictionary>),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn list_dictionaries(State(state): State<AppState>) -> ApiResult<Vec<Dictionary>> {
   Ok(Json(super::all_dictionaries(&state).await?))
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct EntryResponse {
   entry: Entry,
   dictionary: Dictionary,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/entries/{id}",
+    operation_id = "entries.get",
+    tag = "dictionaries",
+    params(("id" = i32, Path, description = "Entry id")),
+    responses(
+        (status = 200, description = "Entry with its dictionary", body = EntryResponse),
+        (status = 404, description = "Entry not found", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn entry(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<EntryResponse> {
   let entry = entries::Entity::find_by_id(id)
     .one(&state.db)
@@ -42,14 +75,14 @@ pub struct BrowseParams {
   q: Option<String>,
 }
 
-#[derive(Serialize, FromQueryResult)]
+#[derive(Serialize, FromQueryResult, ToSchema)]
 pub struct BrowseItem {
   id: i32,
   seq: i32,
   headword: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct BrowseResponse {
   dictionary: Dictionary,
   items: Vec<BrowseItem>,
@@ -62,6 +95,24 @@ struct MinSeq {
   seq: Option<i32>,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/dictionaries/{slug}/browse",
+    operation_id = "dictionaries.browse",
+    tag = "dictionaries",
+    params(
+        ("slug" = String, Path, description = "Dictionary slug"),
+        ("seq" = Option<i32>, Query, description = "Center seq (default 0)"),
+        ("before" = Option<i32>, Query, description = "Entries before center (default 15, max 200)"),
+        ("after" = Option<i32>, Query, description = "Entries after center (default 30, max 200)"),
+        ("q" = Option<String>, Query, description = "Jump to headword instead of seq"),
+    ),
+    responses(
+        (status = 200, description = "Book-order window", body = BrowseResponse),
+        (status = 404, description = "Dictionary or headword not found", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn browse(
   State(state): State<AppState>,
   Path(slug): Path<String>,

@@ -2,6 +2,7 @@ pub mod app;
 pub mod db_url;
 pub mod entities;
 pub mod import;
+pub mod openapi;
 pub mod routes;
 pub mod state;
 pub mod translit;

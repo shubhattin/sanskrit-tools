@@ -11,8 +11,18 @@ use sea_orm::{
   ColumnTrait, Condition, EntityTrait, FromQueryResult, QueryFilter, QueryOrder, QuerySelect,
 };
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
 
-#[derive(Serialize, FromQueryResult)]
+/// OpenAPI route registration (paths served by [`crate::app::router`] (API stable)).
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::new()
+    .routes(routes!(list))
+    .routes(routes!(detail))
+}
+
+#[derive(Serialize, FromQueryResult, ToSchema)]
 pub struct ParadigmSummary {
   id: i32,
   source: String,
@@ -21,7 +31,7 @@ pub struct ParadigmSummary {
   label: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct Paradigm {
   id: i32,
   source: String,
@@ -38,6 +48,18 @@ pub struct ListParams {
 
 /// Paradigms whose stem is the query, plus — when the query is a root — its
 /// conjugation and all kṛdanta stems derived from it.
+#[utoipa::path(
+    get,
+    path = "/api/paradigms",
+    operation_id = "paradigms.list",
+    tag = "paradigms",
+    params(("q" = Option<String>, Query, description = "Stem or root in any script")),
+    responses(
+        (status = 200, description = "Matching paradigms (max 300)", body = Vec<ParadigmSummary>),
+        (status = 400, description = "Missing query", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn list(
   State(state): State<AppState>,
   Query(p): Query<ListParams>,
@@ -85,6 +107,18 @@ pub async fn list(
   Ok(Json(rows))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/paradigms/{id}",
+    operation_id = "paradigms.get",
+    tag = "paradigms",
+    params(("id" = i32, Path, description = "Paradigm id")),
+    responses(
+        (status = 200, description = "Inflection tables", body = Paradigm),
+        (status = 404, description = "Paradigm not found", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn detail(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<Paradigm> {
   let p = paradigms::Entity::find_by_id(id)
     .one(&state.db)

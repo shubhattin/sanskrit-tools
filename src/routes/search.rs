@@ -16,6 +16,16 @@ use sea_orm::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
+
+/// OpenAPI route registration (paths served by [`crate::app::router`] (API stable)).
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::new()
+    .routes(routes!(search))
+    .routes(routes!(suggest))
+}
 
 #[derive(Deserialize)]
 pub struct SearchParams {
@@ -25,23 +35,23 @@ pub struct SearchParams {
   limit: Option<i64>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct EntryHit {
   #[serde(flatten)]
   entry: Entry,
   #[serde(rename = "match")]
-  match_kind: &'static str,
+  match_kind: String,
   snippet: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct DictionaryHits {
   dictionary: Dictionary,
   entries: Vec<EntryHit>,
   total: i64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct FormAnalysis {
   /// The analysed form (Devanagari)
   form: String,
@@ -157,11 +167,11 @@ async fn analyze_forms(state: &AppState, keys: &[String]) -> Result<Vec<FormAnal
   Ok(out)
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct SearchResponse {
   query: String,
   slp1: Vec<String>,
-  mode: &'static str,
+  mode: String,
   groups: Vec<DictionaryHits>,
   forms: Vec<FormAnalysis>,
   did_you_mean: Vec<String>,
@@ -226,6 +236,23 @@ struct KeyRow {
   key_slp1: String,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/search",
+    operation_id = "search.query",
+    tag = "search",
+    params(
+        ("q" = String, Query, description = "Query in Devanagari, IAST, Harvard-Kyoto, ITRANS, SLP1 or lipilekhika Normal"),
+        ("mode" = Option<String>, Query, description = "sa (default) or en (English full-text)"),
+        ("dicts" = Option<String>, Query, description = "Comma-separated dictionary slugs (optional)"),
+        ("limit" = Option<i64>, Query, description = "Hits per dictionary (default 20, max 100)"),
+    ),
+    responses(
+        (status = 200, description = "Search hits grouped by dictionary", body = SearchResponse),
+        (status = 400, description = "Missing or invalid query", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn search(
   State(state): State<AppState>,
   Query(p): Query<SearchParams>,
@@ -348,7 +375,7 @@ pub async fn search(
   Ok(Json(SearchResponse {
     query: q.to_string(),
     slp1: keys,
-    mode: "sa",
+    mode: "sa".to_string(),
     groups,
     forms,
     did_you_mean,
@@ -406,7 +433,7 @@ async fn load_groups(
           seq,
           EntryHit {
             entry,
-            match_kind: MATCH_RANK[*rank],
+            match_kind: MATCH_RANK[*rank].to_string(),
             snippet: None,
           },
         ));
@@ -504,7 +531,7 @@ async fn english(
       .filter(|e| e.dictionary_id == d.id)
       .map(|e| EntryHit {
         entry: e.clone(),
-        match_kind: "fulltext",
+        match_kind: "fulltext".to_string(),
         snippet: snippets.get(&e.id).cloned(),
       })
       .collect();
@@ -519,7 +546,7 @@ async fn english(
   Ok(Json(SearchResponse {
     query: q.to_string(),
     slp1: vec![],
-    mode: "en",
+    mode: "en".to_string(),
     groups,
     forms: vec![],
     did_you_mean: vec![],
@@ -538,13 +565,27 @@ struct SuggestRow {
   count: i64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct Suggestion {
   headword: String,
   slp1: String,
   count: i64,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/suggest",
+    operation_id = "search.suggest",
+    tag = "search",
+    params(
+        ("q" = Option<String>, Query, description = "Prefix to autocomplete"),
+        ("limit" = Option<i64>, Query, description = "Max suggestions (default 12, max 50)"),
+    ),
+    responses(
+        (status = 200, description = "Prefix autocomplete", body = Vec<Suggestion>),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn suggest(
   State(state): State<AppState>,
   Query(p): Query<SuggestParams>,

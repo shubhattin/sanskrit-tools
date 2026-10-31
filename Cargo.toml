@@ -29,6 +29,8 @@ sqlx = { version = "0.9", default-features = false, features = [
     "chrono",
 ] }
 chrono = { version = "0.4", features = ["serde"] }
+utoipa = { version = "5", features = ["axum_extras", "macros"] }
+utoipa-axum = "0.2"
 vidyut-lipi = "0.2"
 lipilekhika = "1.1.2"
 regex = "1"
@@ -52,6 +54,10 @@ path = "api/vercel.rs"
 [[bin]]
 name = "import"
 path = "src/bin/import.rs"
+
+[[bin]]
+name = "gen-openapi"
+path = "src/bin/gen_openapi.rs"
 
 [profile.release]
 codegen-units = 1

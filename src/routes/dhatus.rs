@@ -9,8 +9,18 @@ use axum::extract::{Path, Query, State};
 use sea_orm::sea_query::Expr;
 use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
 
-#[derive(Serialize)]
+/// OpenAPI route registration (paths served by [`crate::app::router`] (API stable)).
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::new()
+    .routes(routes!(list))
+    .routes(routes!(detail))
+}
+
+#[derive(Serialize, ToSchema)]
 pub struct Dhatu {
   id: i32,
   number: String,
@@ -45,6 +55,20 @@ pub struct ListParams {
   gana: Option<i16>,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/dhatus",
+    operation_id = "dhatus.list",
+    tag = "dhatus",
+    params(
+        ("q" = Option<String>, Query, description = "Root, upadesha, artha or number filter"),
+        ("gana" = Option<i16>, Query, description = "Filter by gana (1-10)"),
+    ),
+    responses(
+        (status = 200, description = "Dhatupatha roots (whole list, max 2500)", body = Vec<Dhatu>),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn list(
   State(state): State<AppState>,
   Query(p): Query<ListParams>,
@@ -78,12 +102,24 @@ pub async fn list(
   Ok(Json(rows.into_iter().map(Dhatu::from).collect()))
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct DhatuDetail {
   dhatu: Dhatu,
   works: Vec<DictEntries>,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/dhatus/{id}",
+    operation_id = "dhatus.get",
+    tag = "dhatus",
+    params(("id" = i32, Path, description = "Dhatu id")),
+    responses(
+        (status = 200, description = "Dhatu with discussing works", body = DhatuDetail),
+        (status = 404, description = "Dhatu not found", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn detail(State(state): State<AppState>, Path(id): Path<i32>) -> ApiResult<DhatuDetail> {
   let dhatu = dhatus::Entity::find_by_id(id)
     .one(&state.db)

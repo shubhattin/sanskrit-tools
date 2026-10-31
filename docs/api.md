@@ -3,6 +3,13 @@
 Dev: axum listens on `http://127.0.0.1:5780`; the Vite dev server proxies `/api` there.
 All responses are JSON. Errors: `{ "error": string }` with a 4xx/5xx status.
 
+Machine-readable spec: `frontend/openapi/schema.json` (utoipa, served from the
+same `#[utoipa::path]` handlers — no drift by construction). Regenerate after
+any route change with `bash scripts/sync-api.sh`; the frontend consumes only
+the generated client in `frontend/src/lib/api/generated/`, with narrow
+facades in `frontend/src/lib/api/types.ts`. `bun run check` fails if the
+generated client is stale.
+
 ## Types
 
 ```ts

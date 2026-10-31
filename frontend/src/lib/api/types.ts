@@ -1,55 +1,35 @@
-// Typed mirror of docs/api.md. Keep in sync with the Rust axum contract.
+// Typed mirror of docs/api.md, derived from the backend OpenAPI spec.
+// Source of truth: `frontend/openapi/schema.json` (regenerate with
+// `bash scripts/sync-api.sh`; `bun run check` verifies freshness).
+// DTOs come from `./generated/types.gen`; the few fields the schema leaves
+// wide (string/unknown) are narrowed back to the unions the UI relies on.
 
-export type DictKind = 'lexicon' | 'thesaurus' | 'dhatu_work' | 'sutra_commentary' | 'concordance';
-export type Lang = 'sa' | 'en' | 'hi';
+import type {
+  Entry as GenEntry,
+  EntryResponse as GenEntryResponse,
+  FormAnalysis as GenFormAnalysis,
+  Paradigm as GenParadigm,
+  ParadigmSummary as GenParadigmSummary,
+  DictionaryHits as GenDictionaryHits,
+  SearchResponse as GenSearchResponse
+} from './generated/types.gen';
+
+export type {
+  DictKind,
+  Lang,
+  Dictionary,
+  DictEntries,
+  BrowseItem,
+  BrowseResponse,
+  Suggestion,
+  Sutra,
+  SutraDetail,
+  Dhatu,
+  DhatuDetail
+} from './generated/types.gen';
+
 export type SearchMode = 'sa' | 'en';
 export type MatchKind = 'exact' | 'form' | 'prefix' | 'fuzzy' | 'fulltext';
-
-export interface Dictionary {
-  id: number;
-  slug: string;
-  name: string;
-  short_name: string;
-  kind: DictKind;
-  src_lang: Lang;
-  tgt_lang: Lang;
-  description: string | null;
-  attribution: string | null;
-  entry_count: number;
-  sort_order: number;
-}
-
-export interface Entry {
-  id: number;
-  dictionary_id: number;
-  seq: number;
-  headword: string;
-  senses: string[];
-  data: Record<string, unknown> | null;
-  sutra_id: string | null;
-  dhatu_id: number | null;
-}
-
-export interface EntryHit extends Entry {
-  match: MatchKind;
-  snippet: string | null;
-}
-
-export interface DictionaryHits {
-  dictionary: Dictionary;
-  entries: EntryHit[];
-  total: number;
-}
-
-export interface FormAnalysis {
-  form: string;
-  lemma: string;
-  root: string | null;
-  analysis: string;
-  source: ParadigmSource;
-  paradigm_ids: number[];
-  cells: number[][];
-}
 
 export type ParadigmSource =
   | 'heritage_decl'
@@ -57,13 +37,32 @@ export type ParadigmSource =
   | 'heritage_conj'
   | 'jnu_tinanta';
 
-export interface ParadigmSummary {
-  id: number;
+// Backend serializes `data` as an object or null; the schema leaves it
+// `unknown`, so narrow it back for `Object.entries` / `DataList` consumers.
+export type Entry = Omit<GenEntry, 'data'> & {
+  data: Record<string, unknown> | null;
+};
+
+export type EntryHit = Entry & {
+  match: MatchKind;
+  snippet: string | null;
+};
+
+export type DictionaryHits = Omit<GenDictionaryHits, 'entries'> & {
+  entries: EntryHit[];
+};
+
+export type EntryResponse = Omit<GenEntryResponse, 'entry'> & {
+  entry: Entry;
+};
+
+export type FormAnalysis = Omit<GenFormAnalysis, 'source'> & {
   source: ParadigmSource;
-  lemma: string;
-  root: string | null;
-  label: string | null;
-}
+};
+
+export type ParadigmSummary = Omit<GenParadigmSummary, 'source'> & {
+  source: ParadigmSource;
+};
 
 export type ParadigmTable =
   | {
@@ -79,9 +78,18 @@ export type ParadigmTable =
       list: { label: string; text: string; forms: string[] }[];
     };
 
-export interface Paradigm extends ParadigmSummary {
+// `tables` is `serde_json::Value` on the backend; the UI renders the
+// `ParadigmTable[]` shape documented in docs/api.md.
+export type Paradigm = Omit<GenParadigm, 'source' | 'tables'> & {
+  source: ParadigmSource;
   tables: ParadigmTable[];
-}
+};
+
+export type SearchResponse = Omit<GenSearchResponse, 'mode' | 'groups' | 'forms'> & {
+  mode: SearchMode;
+  groups: DictionaryHits[];
+  forms: FormAnalysis[];
+};
 
 export const PARADIGM_SOURCE_LABELS: Record<ParadigmSource, string> = {
   heritage_decl: 'Declension',
@@ -90,70 +98,7 @@ export const PARADIGM_SOURCE_LABELS: Record<ParadigmSource, string> = {
   jnu_tinanta: 'Tiṅanta (JNU)'
 };
 
-export interface SearchResponse {
-  query: string;
-  slp1: string[];
-  mode: SearchMode;
-  groups: DictionaryHits[];
-  forms: FormAnalysis[];
-  did_you_mean: string[];
-}
-
-export interface Suggestion {
-  headword: string;
-  slp1: string;
-  count: number;
-}
-
-export interface BrowseItem {
-  id: number;
-  seq: number;
-  headword: string;
-}
-
-export interface BrowseResponse {
-  dictionary: Dictionary;
-  items: BrowseItem[];
-}
-
-export interface Sutra {
-  id: string;
-  adhyaya: number;
-  pada: number;
-  num: number;
-  text: string;
-}
-
-export interface SutraDetail {
-  sutra: Sutra;
-  prev: string | null;
-  next: string | null;
-  commentaries: { dictionary: Dictionary; entries: Entry[] }[];
-}
-
-export interface Dhatu {
-  id: number;
-  number: string;
-  upadesha: string;
-  root: string;
-  artha: string;
-  gana: number;
-  pada: string | null;
-  it: string | null;
-  extra: string | null;
-}
-
-export interface DhatuDetail {
-  dhatu: Dhatu;
-  works: { dictionary: Dictionary; entries: Entry[] }[];
-}
-
-export interface EntryResponse {
-  entry: Entry;
-  dictionary: Dictionary;
-}
-
-export const DICT_KIND_LABELS: Record<DictKind, string> = {
+export const DICT_KIND_LABELS: Record<import('./generated/types.gen').DictKind, string> = {
   lexicon: 'Lexicons',
   thesaurus: 'Thesauri',
   dhatu_work: 'Dhātu works',
@@ -161,7 +106,7 @@ export const DICT_KIND_LABELS: Record<DictKind, string> = {
   concordance: 'Concordances'
 };
 
-export const DICT_KIND_ORDER: DictKind[] = [
+export const DICT_KIND_ORDER: import('./generated/types.gen').DictKind[] = [
   'lexicon',
   'thesaurus',
   'dhatu_work',

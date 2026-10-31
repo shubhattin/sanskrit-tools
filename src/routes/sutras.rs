@@ -10,8 +10,18 @@ use regex::Regex;
 use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
+use utoipa::ToSchema;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
 
-#[derive(Serialize)]
+/// OpenAPI route registration (paths served by [`crate::app::router`] (API stable)).
+pub fn openapi_router() -> OpenApiRouter<AppState> {
+  OpenApiRouter::new()
+    .routes(routes!(list))
+    .routes(routes!(detail))
+}
+
+#[derive(Serialize, ToSchema)]
 pub struct Sutra {
   id: String,
   adhyaya: i16,
@@ -56,6 +66,17 @@ fn number_prefix(q: &str) -> Option<String> {
 
 const LIST_LIMIT: usize = 200;
 
+#[utoipa::path(
+    get,
+    path = "/api/sutras",
+    operation_id = "sutras.list",
+    tag = "sutras",
+    params(("q" = Option<String>, Query, description = "Number prefix (e.g. 1.1) or text")),
+    responses(
+        (status = 200, description = "Sutras (max 200)", body = Vec<Sutra>),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn list(
   State(state): State<AppState>,
   Query(p): Query<ListParams>,
@@ -89,7 +110,7 @@ pub async fn list(
   Ok(Json(rows.into_iter().map(Sutra::from).collect()))
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct SutraDetail {
   sutra: Sutra,
   prev: Option<String>,
@@ -97,6 +118,18 @@ pub struct SutraDetail {
   commentaries: Vec<DictEntries>,
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/sutras/{id}",
+    operation_id = "sutras.get",
+    tag = "sutras",
+    params(("id" = String, Path, description = "Sutra id (e.g. 1.1.001)")),
+    responses(
+        (status = 200, description = "Sutra with commentaries", body = SutraDetail),
+        (status = 404, description = "Sutra not found", body = super::ErrorBody),
+        (status = 500, description = "Database error", body = super::ErrorBody),
+    )
+)]
 pub async fn detail(
   State(state): State<AppState>,
   Path(id): Path<String>,

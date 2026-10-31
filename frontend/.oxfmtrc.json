@@ -18,8 +18,10 @@
     ".tanstack",
     ".nitro",
     ".output",
+    "openapi/schema.json",
     "src/routeTree.gen.ts",
     "src/components/ui",
+    "src/lib/api/generated",
     "bun.lock"
   ]
 }

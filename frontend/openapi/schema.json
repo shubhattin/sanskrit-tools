@@ -1,0 +1,1227 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanskrit Dictionary API",
+    "description": "Read-only dictionary API: lexicons, thesauri, dhatu works, sutra commentaries, paradigms.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/dhatus": {
+      "get": {
+        "tags": [
+          "dhatus"
+        ],
+        "operationId": "dhatus.list",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Root, upadesha, artha or number filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "gana",
+            "in": "query",
+            "description": "Filter by gana (1-10)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dhatupatha roots (whole list, max 2500)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Dhatu"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dhatus/{id}": {
+      "get": {
+        "tags": [
+          "dhatus"
+        ],
+        "operationId": "dhatus.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Dhatu id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dhatu with discussing works",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DhatuDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Dhatu not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dictionaries": {
+      "get": {
+        "tags": [
+          "dictionaries"
+        ],
+        "operationId": "dictionaries.list",
+        "responses": {
+          "200": {
+            "description": "All dictionaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Dictionary"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dictionaries/{slug}/browse": {
+      "get": {
+        "tags": [
+          "dictionaries"
+        ],
+        "operationId": "dictionaries.browse",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Dictionary slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seq",
+            "in": "query",
+            "description": "Center seq (default 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "description": "Entries before center (default 15, max 200)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "Entries after center (default 30, max 200)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Jump to headword instead of seq",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book-order window",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Dictionary or headword not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entries/{id}": {
+      "get": {
+        "tags": [
+          "dictionaries"
+        ],
+        "operationId": "entries.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Entry id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entry with its dictionary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entry not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/paradigms": {
+      "get": {
+        "tags": [
+          "paradigms"
+        ],
+        "summary": "Paradigms whose stem is the query, plus — when the query is a root — its\nconjugation and all kṛdanta stems derived from it.",
+        "operationId": "paradigms.list",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Stem or root in any script",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching paradigms (max 300)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParadigmSummary"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/paradigms/{id}": {
+      "get": {
+        "tags": [
+          "paradigms"
+        ],
+        "operationId": "paradigms.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Paradigm id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inflection tables",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paradigm"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paradigm not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "operationId": "search.query",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Query in Devanagari, IAST, Harvard-Kyoto, ITRANS, SLP1 or lipilekhika Normal",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "sa (default) or en (English full-text)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dicts",
+            "in": "query",
+            "description": "Comma-separated dictionary slugs (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Hits per dictionary (default 20, max 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search hits grouped by dictionary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/suggest": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "operationId": "search.suggest",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Prefix to autocomplete",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Max suggestions (default 12, max 50)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prefix autocomplete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Suggestion"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sutras": {
+      "get": {
+        "tags": [
+          "sutras"
+        ],
+        "operationId": "sutras.list",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Number prefix (e.g. 1.1) or text",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sutras (max 200)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sutra"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sutras/{id}": {
+      "get": {
+        "tags": [
+          "sutras"
+        ],
+        "operationId": "sutras.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Sutra id (e.g. 1.1.001)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sutra with commentaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SutraDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sutra not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BrowseItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "seq",
+          "headword"
+        ],
+        "properties": {
+          "headword": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "BrowseResponse": {
+        "type": "object",
+        "required": [
+          "dictionary",
+          "items",
+          "center"
+        ],
+        "properties": {
+          "center": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The seq the window is centered on (the jump target when `q` was given)"
+          },
+          "dictionary": {
+            "$ref": "#/components/schemas/Dictionary"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrowseItem"
+            }
+          }
+        }
+      },
+      "Dhatu": {
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "upadesha",
+          "root",
+          "artha",
+          "gana"
+        ],
+        "properties": {
+          "artha": {
+            "type": "string"
+          },
+          "extra": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "gana": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "it": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "number": {
+            "type": "string"
+          },
+          "pada": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "root": {
+            "type": "string"
+          },
+          "upadesha": {
+            "type": "string"
+          }
+        }
+      },
+      "DhatuDetail": {
+        "type": "object",
+        "required": [
+          "dhatu",
+          "works"
+        ],
+        "properties": {
+          "dhatu": {
+            "$ref": "#/components/schemas/Dhatu"
+          },
+          "works": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictEntries"
+            }
+          }
+        }
+      },
+      "DictEntries": {
+        "type": "object",
+        "required": [
+          "dictionary",
+          "entries"
+        ],
+        "properties": {
+          "dictionary": {
+            "$ref": "#/components/schemas/Dictionary"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            }
+          }
+        }
+      },
+      "DictKind": {
+        "type": "string",
+        "enum": [
+          "lexicon",
+          "thesaurus",
+          "dhatu_work",
+          "sutra_commentary",
+          "concordance"
+        ]
+      },
+      "Dictionary": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "short_name",
+          "kind",
+          "src_lang",
+          "tgt_lang",
+          "entry_count",
+          "sort_order"
+        ],
+        "properties": {
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entry_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DictKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "short_name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "src_lang": {
+            "$ref": "#/components/schemas/Lang"
+          },
+          "tgt_lang": {
+            "$ref": "#/components/schemas/Lang"
+          }
+        }
+      },
+      "DictionaryHits": {
+        "type": "object",
+        "required": [
+          "dictionary",
+          "entries",
+          "total"
+        ],
+        "properties": {
+          "dictionary": {
+            "$ref": "#/components/schemas/Dictionary"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntryHit"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Entry": {
+        "type": "object",
+        "required": [
+          "id",
+          "dictionary_id",
+          "seq",
+          "headword",
+          "senses"
+        ],
+        "properties": {
+          "data": {},
+          "dhatu_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "dictionary_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "headword": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "senses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sutra_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "EntryHit": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Entry"
+          },
+          {
+            "type": "object",
+            "required": [
+              "match"
+            ],
+            "properties": {
+              "match": {
+                "type": "string"
+              },
+              "snippet": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "EntryResponse": {
+        "type": "object",
+        "required": [
+          "entry",
+          "dictionary"
+        ],
+        "properties": {
+          "dictionary": {
+            "$ref": "#/components/schemas/Dictionary"
+          },
+          "entry": {
+            "$ref": "#/components/schemas/Entry"
+          }
+        }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "description": "JSON error body (`{ \"error\": string }`) — also the OpenAPI error schema.",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "FormAnalysis": {
+        "type": "object",
+        "required": [
+          "form",
+          "lemma",
+          "analysis",
+          "source",
+          "paradigm_ids",
+          "cells"
+        ],
+        "properties": {
+          "analysis": {
+            "type": "string",
+            "description": "e.g. `पुमान् · तृतीया · एकः; नपुंसकम् · तृतीया · एकः`"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "description": "Cell numbers of the form in each paradigm (parallel to `paradigm_ids`)"
+          },
+          "form": {
+            "type": "string",
+            "description": "The analysed form (Devanagari)"
+          },
+          "lemma": {
+            "type": "string"
+          },
+          "paradigm_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "Paradigms containing the form (first is the primary one)"
+          },
+          "root": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Verbal root for kṛdanta stems"
+          },
+          "source": {
+            "type": "string",
+            "description": "`heritage_decl` | `heritage_kridanta` | `heritage_conj` | `jnu_tinanta`"
+          }
+        }
+      },
+      "Lang": {
+        "type": "string",
+        "enum": [
+          "sa",
+          "en",
+          "hi"
+        ]
+      },
+      "Paradigm": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "lemma",
+          "tables"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lemma": {
+            "type": "string"
+          },
+          "root": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "tables": {}
+        }
+      },
+      "ParadigmSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "lemma"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lemma": {
+            "type": "string"
+          },
+          "root": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": [
+          "query",
+          "slp1",
+          "mode",
+          "groups",
+          "forms",
+          "did_you_mean"
+        ],
+        "properties": {
+          "did_you_mean": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormAnalysis"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictionaryHits"
+            }
+          },
+          "mode": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "slp1": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Suggestion": {
+        "type": "object",
+        "required": [
+          "headword",
+          "slp1",
+          "count"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "headword": {
+            "type": "string"
+          },
+          "slp1": {
+            "type": "string"
+          }
+        }
+      },
+      "Sutra": {
+        "type": "object",
+        "required": [
+          "id",
+          "adhyaya",
+          "pada",
+          "num",
+          "text"
+        ],
+        "properties": {
+          "adhyaya": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "id": {
+            "type": "string"
+          },
+          "num": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pada": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "SutraDetail": {
+        "type": "object",
+        "required": [
+          "sutra",
+          "commentaries"
+        ],
+        "properties": {
+          "commentaries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DictEntries"
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prev": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sutra": {
+            "$ref": "#/components/schemas/Sutra"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "dictionaries",
+      "description": "Dictionaries, entries, book-order browsing"
+    },
+    {
+      "name": "search",
+      "description": "Sanskrit / English search and autocomplete"
+    },
+    {
+      "name": "sutras",
+      "description": "Astadhyayi sutras and commentaries"
+    },
+    {
+      "name": "dhatus",
+      "description": "Dhatupatha roots and dhatu works"
+    },
+    {
+      "name": "paradigms",
+      "description": "Inflection tables"
+    }
+  ]
+}
