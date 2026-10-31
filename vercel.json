@@ -19,6 +19,7 @@
   ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/vercel" },
+    { "source": "/", "destination": "/_shell.html" },
     { "source": "/:path*", "destination": "/_shell.html" }
   ]
 }
