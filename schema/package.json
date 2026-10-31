@@ -1,0 +1,19 @@
+{
+	"name": "schema",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"migration:generate": "drizzle-kit generate",
+		"migration:custom": "drizzle-kit generate --custom",
+		"migration:migrate": "drizzle-kit migrate",
+		"migration:push": "drizzle-kit push",
+		"migration:export": "drizzle-kit export"
+	},
+	"devDependencies": {
+		"dotenv": "^17.4.2",
+		"drizzle-kit": "^0.31.10",
+		"drizzle-orm": "^0.45.2",
+		"postgres": "^3.4.9"
+	}
+}

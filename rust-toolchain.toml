@@ -1,0 +1,4 @@
+# SeaORM 2 / sqlx 0.9 require rustc >= 1.94 (Vercel images may ship older).
+[toolchain]
+channel = "1.94"
+profile = "minimal"

@@ -1,0 +1,22 @@
+{
+	"name": "sans-dict",
+	"version": "0.0.1",
+	"private": true,
+	"workspaces": [
+		"frontend",
+		"schema"
+	],
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --cwd frontend dev",
+		"dev:api": "cargo watch -w src/ -x 'run --bin main'",
+		"import": "cargo run --release --bin import --",
+		"sync-api": "bash scripts/sync-api.sh",
+		"db:generate": "bun run --cwd schema migration:generate",
+		"db:migrate": "bun run --cwd schema migration:migrate",
+		"build": "bun run --cwd frontend build",
+		"check": "bun run --cwd frontend check",
+		"lint": "bun run --cwd frontend lint",
+		"format": "cargo fmt --all && bun run --cwd frontend format"
+	}
+}

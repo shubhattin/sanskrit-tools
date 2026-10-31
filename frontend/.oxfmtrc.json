@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "semi": true,
+  "endOfLine": "lf",
+  "useTabs": false,
+  "trailingComma": "none",
+  "printWidth": 100,
+  "sortPackageJson": false,
+  "sortTailwindcss": {
+    "stylesheet": "./src/styles.css",
+    "functions": ["cn", "cva"]
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "build",
+    "dist",
+    ".tanstack",
+    ".nitro",
+    ".output",
+    "src/routeTree.gen.ts",
+    "src/components/ui",
+    "bun.lock"
+  ]
+}

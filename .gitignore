@@ -1,1 +1,11 @@
+/target
+node_modules
+.vercel/
+.env
+.env.*
+!.env.example
 dict_data
+.output
+.tanstack
+.nitro
+frontend/dist
