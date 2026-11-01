@@ -1,7 +1,8 @@
 //! App initialisation + router composition.
 //!
 //! - `/api/*`: read-only JSON API ([`crate::routes`], contract in `docs/api.md`), plus the
-//!   dictionary agent under `/api/agent/*` (`docs/agent.md`).
+//!   dictionary agent under `/api/agent/*` (`docs/agent.md`, admin-only via
+//!   [`crate::auth::require_admin`]).
 //! - Everything else: the built frontend from `STATIC_DIR` (SPA fallback to
 //!   its shell HTML) when set; otherwise 404. In dev Vite serves the frontend
 //!   and proxies `/api` here.
@@ -9,6 +10,7 @@
 use crate::state::AppState;
 use axum::Router;
 use axum::http::{StatusCode, Uri};
+use axum::middleware;
 use axum::response::IntoResponse;
 use sea_orm::{ConnectOptions, Database};
 use std::time::Duration;
@@ -44,8 +46,29 @@ pub async fn init_state() -> Result<AppState, String> {
   let db = Database::connect(opts)
     .await
     .map_err(|e| format!("failed to connect to database: {e}"))?;
+  // Better Auth server origin: the Rust API forwards the request cookie to its
+  // `get-session`, and the frontend's auth client talks to it directly. The
+  // same name the frontend reads (`VITE_BETTER_AUTH_URL`); `tsc-links` calls it
+  // `PUBLIC_BETTER_AUTH_URL`, which still works here as a fallback.
+  let better_auth_url = [
+    "VITE_BETTER_AUTH_URL",
+    "PUBLIC_BETTER_AUTH_URL",
+    "BETTER_AUTH_URL",
+  ]
+  .iter()
+  .filter_map(|k| std::env::var(k).ok())
+  .map(|v| v.trim().trim_end_matches('/').to_string())
+  .find(|v| !v.is_empty())
+  .ok_or("VITE_BETTER_AUTH_URL must be set: missing environment variable".to_string())?;
+  if !better_auth_url.starts_with("http://") && !better_auth_url.starts_with("https://") {
+    return Err("VITE_BETTER_AUTH_URL must be set: expected an http(s) URL".to_string());
+  }
+  let http = reqwest::Client::builder()
+    .timeout(Duration::from_secs(10))
+    .build()
+    .map_err(|e| format!("failed to build HTTP client: {e}"))?;
   // Caches the 29-row dictionary list (refreshed with a TTL on read).
-  AppState::new(db)
+  AppState::new(db, http, better_auth_url)
     .await
     .map_err(|e| format!("failed to load dictionaries: {e}"))
 }
@@ -65,8 +88,13 @@ pub fn openapi_router() -> OpenApiRouter<AppState> {
 
 pub fn router(state: AppState) -> Router {
   let api: Router<AppState> = openapi_router().into();
+  // The agent searches paid chat models on every turn: admin-only, like tsc-links.
+  let agent = crate::routes::agent::router().route_layer(middleware::from_fn_with_state(
+    state.clone(),
+    crate::auth::require_admin,
+  ));
   let api = api
-    .merge(crate::routes::agent::router())
+    .merge(agent)
     .route("/api/{*rest}", axum::routing::any(api_not_found))
     .with_state(state);
   let app = match std::env::var("STATIC_DIR").ok().filter(|s| !s.is_empty()) {
