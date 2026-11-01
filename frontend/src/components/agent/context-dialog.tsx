@@ -203,7 +203,7 @@ export function ContextDialog({
   const contextQuery = useQuery({ ...agentContextQuery(dicts), enabled: open });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85dvh] max-w-5xl flex-col">
+      <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>Context</DialogTitle>
           <DialogDescription>Exactly what the model receives on every turn.</DialogDescription>

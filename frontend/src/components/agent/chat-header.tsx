@@ -82,7 +82,12 @@ function DictionariesButton() {
           </ul>
         )}
         <div className="border-t pt-3">
-          <DictionaryPicker dictionaries={dictionaries} selected={selected} prefs={prefs} />
+          <DictionaryPicker
+            dictionaries={dictionaries}
+            selected={selected}
+            prefs={prefs}
+            formsLocked
+          />
         </div>
       </PopoverContent>
     </Popover>

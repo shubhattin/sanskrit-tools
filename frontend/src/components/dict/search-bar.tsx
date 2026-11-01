@@ -217,7 +217,12 @@ export function SearchBar({
               </button>
             ))}
           </div>
-          <DictionaryPicker dictionaries={dictionaries} selected={selected} prefs={prefs} />
+          <DictionaryPicker
+            dictionaries={dictionaries}
+            selected={selected}
+            prefs={prefs}
+            mode={value.mode}
+          />
           <SearchOptions prefs={prefs} mode={value.mode} />
           <span
             className="ml-auto hidden items-center gap-1.5 pr-1 text-[11px] leading-none text-muted-foreground sm:flex"
