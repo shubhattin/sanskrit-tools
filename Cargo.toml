@@ -39,9 +39,19 @@ ammonia = "4"
 unicode-normalization = "0.1"
 sha2 = "0.10"
 futures-util = "0.3"
+futures-channel = "0.3"
 anyhow = "1"
 tower = "0.5"
 vercel_runtime = { version = "2", features = ["axum"] }
+# Dictionary agent: aisdk's tool loop (git main: async tools + streamed tool events,
+# custom LanguageModel support — not in the 0.5.2 release) over our OpenRouter model.
+aisdk = { git = "https://github.com/lazy-hq/aisdk", rev = "c590512", default-features = false, features = ["language-model-request"] }
+async-trait = "0.1"
+schemars = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+eventsource-stream = "0.2"
+tokio-util = "0.7"
+uuid = { version = "1", features = ["v4"] }
 
 [[bin]]
 name = "main"

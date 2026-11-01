@@ -4,6 +4,8 @@
 //! Generated columns (`entries.search_en`) are not mapped: they are only used
 //! inside full-text SQL.
 
+pub mod agent_chats;
+pub mod agent_messages;
 pub mod dhatus;
 pub mod dictionaries;
 pub mod entries;

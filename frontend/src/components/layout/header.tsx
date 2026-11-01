@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useRouterState } from '@tanstack/react-router';
 import { useIsFetching } from '@tanstack/react-query';
 import {
+  BotIcon,
   LeafIcon,
   MenuIcon,
   MonitorIcon,
@@ -42,7 +43,14 @@ const NAV = [
     icon: ScrollTextIcon,
     exact: false
   },
-  { to: '/dhatu', label: 'Dhātus', hint: 'Verbal roots by gaṇa', icon: LeafIcon, exact: false }
+  { to: '/dhatu', label: 'Dhātus', hint: 'Verbal roots by gaṇa', icon: LeafIcon, exact: false },
+  {
+    to: '/agent',
+    label: 'Agent',
+    hint: 'Ask about words, roots, sūtras',
+    icon: BotIcon,
+    exact: false
+  }
 ] as const;
 
 const THEMES: { v: Theme; label: string; icon: typeof SunIcon }[] = [

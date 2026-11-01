@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgentRouteRouteImport } from './routes/agent/route'
 import { Route as DhatuRouteImport } from './routes/dhatu'
 import { Route as SutraRouteImport } from './routes/sutra'
+import { Route as AgentIndexRouteImport } from './routes/agent/index'
+import { Route as AgentChatIdRouteImport } from './routes/agent/$chatId'
 import { Route as DhatuIndexRouteImport } from './routes/dhatu.index'
 import { Route as DhatuIdRouteImport } from './routes/dhatu.$id'
 import { Route as DictSlugRouteImport } from './routes/dict.$slug'
@@ -25,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentRouteRoute = AgentRouteRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DhatuRoute = DhatuRouteImport.update({
   id: '/dhatu',
   path: '/dhatu',
@@ -34,6 +42,16 @@ const SutraRoute = SutraRouteImport.update({
   id: '/sutra',
   path: '/sutra',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AgentIndexRoute = AgentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgentRouteRoute,
+} as any)
+const AgentChatIdRoute = AgentChatIdRouteImport.update({
+  id: '/$chatId',
+  path: '/$chatId',
+  getParentRoute: () => AgentRouteRoute,
 } as any)
 const DhatuIndexRoute = DhatuIndexRouteImport.update({
   id: '/',
@@ -73,36 +91,44 @@ const SutraIdRoute = SutraIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRouteRouteWithChildren
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
+  '/agent/$chatId': typeof AgentChatIdRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/agent/': typeof AgentIndexRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agent/$chatId': typeof AgentChatIdRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/agent': typeof AgentIndexRoute
   '/dhatu': typeof DhatuIndexRoute
   '/sutra': typeof SutraIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agent': typeof AgentRouteRouteWithChildren
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
+  '/agent/$chatId': typeof AgentChatIdRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/agent/': typeof AgentIndexRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
 }
@@ -110,41 +136,50 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agent'
     | '/dhatu'
     | '/sutra'
+    | '/agent/$chatId'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/agent/'
     | '/dhatu/'
     | '/sutra/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agent/$chatId'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/agent'
     | '/dhatu'
     | '/sutra'
   id:
     | '__root__'
     | '/'
+    | '/agent'
     | '/dhatu'
     | '/sutra'
+    | '/agent/$chatId'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/agent/'
     | '/dhatu/'
     | '/sutra/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentRouteRoute: typeof AgentRouteRouteWithChildren
   DhatuRoute: typeof DhatuRouteWithChildren
   SutraRoute: typeof SutraRouteWithChildren
   DictSlugRoute: typeof DictSlugRoute
@@ -161,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agent': {
+      id: '/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AgentRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dhatu': {
       id: '/dhatu'
       path: '/dhatu'
@@ -174,6 +216,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/sutra'
       preLoaderRoute: typeof SutraRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/agent/': {
+      id: '/agent/'
+      path: '/'
+      fullPath: '/agent/'
+      preLoaderRoute: typeof AgentIndexRouteImport
+      parentRoute: typeof AgentRouteRoute
+    }
+    '/agent/$chatId': {
+      id: '/agent/$chatId'
+      path: '/$chatId'
+      fullPath: '/agent/$chatId'
+      preLoaderRoute: typeof AgentChatIdRouteImport
+      parentRoute: typeof AgentRouteRoute
     }
     '/dhatu/': {
       id: '/dhatu/'
@@ -227,6 +283,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AgentRouteRouteChildren {
+  AgentChatIdRoute: typeof AgentChatIdRoute
+  AgentIndexRoute: typeof AgentIndexRoute
+}
+
+const AgentRouteRouteChildren: AgentRouteRouteChildren = {
+  AgentChatIdRoute: AgentChatIdRoute,
+  AgentIndexRoute: AgentIndexRoute,
+}
+
+const AgentRouteRouteWithChildren = AgentRouteRoute._addFileChildren(
+  AgentRouteRouteChildren,
+)
+
 interface DhatuRouteChildren {
   DhatuIdRoute: typeof DhatuIdRoute
   DhatuIndexRoute: typeof DhatuIndexRoute
@@ -253,6 +323,7 @@ const SutraRouteWithChildren = SutraRoute._addFileChildren(SutraRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentRouteRoute: AgentRouteRouteWithChildren,
   DhatuRoute: DhatuRouteWithChildren,
   SutraRoute: SutraRouteWithChildren,
   DictSlugRoute: DictSlugRoute,

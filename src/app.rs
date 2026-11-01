@@ -1,6 +1,7 @@
 //! App initialisation + router composition.
 //!
-//! - `/api/*`: read-only JSON API ([`crate::routes`], contract in `docs/api.md`).
+//! - `/api/*`: read-only JSON API ([`crate::routes`], contract in `docs/api.md`), plus the
+//!   dictionary agent under `/api/agent/*` (`docs/agent.md`).
 //! - Everything else: the built frontend from `STATIC_DIR` (SPA fallback to
 //!   its shell HTML) when set; otherwise 404. In dev Vite serves the frontend
 //!   and proxies `/api` here.
@@ -65,6 +66,7 @@ pub fn openapi_router() -> OpenApiRouter<AppState> {
 pub fn router(state: AppState) -> Router {
   let api: Router<AppState> = openapi_router().into();
   let api = api
+    .merge(crate::routes::agent::router())
     .route("/api/{*rest}", axum::routing::any(api_not_found))
     .with_state(state);
   let app = match std::env::var("STATIC_DIR").ok().filter(|s| !s.is_empty()) {

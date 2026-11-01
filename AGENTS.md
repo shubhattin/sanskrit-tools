@@ -10,6 +10,7 @@
 - `src/translit.rs` – SLP1 / loose search keys (vidyut-lipi, lipilekhika "Normal" input).
 - `src/import/` – `sources.rs` (registry + per-work parsers), `paradigms.rs` (Heritage/JNU inflection tables), `markup.rs` (source text → sanitized HTML), `stardict.rs`, `mod.rs` (COPY loader).
 - `src/entities/` – SeaORM entities mirroring `schema/schema.ts` (drizzle stays the only migration system; update both together).
+- `src/agent/` – dictionary agent (`/agent`): aisdk (git rev) tool loop over our OpenRouter Responses-API model (`openrouter.rs`: reasoning-item replay, top-level `cache_control` for Anthropic, cost), dictionary tools calling the API handlers (`tools.rs`), web search through OpenAI's native `web_search` tool (`web_search.rs`), AI SDK UI stream encoder (`ui_stream.rs`), storage (`store.rs`). Routes in `src/routes/agent.rs` (outside OpenAPI); contract `docs/agent.md` (keep in sync with `frontend/src/lib/agent/`).
 - `src/routes/` – API handlers (entity queries; Postgres-specific SQL as typed raw `Statement`s + `FromQueryResult`); contract in `docs/api.md` (keep it in sync with the frontend types in `frontend/src/lib/api/`).
 - `schema/schema.ts` – tables; migrations in `schema/migrations/` (snake_case columns).
 
@@ -26,7 +27,7 @@
 # Deploy (Vercel, mirrors ../tsc-links)
 
 - `vercel.json`: `bun run --cwd frontend build` → static SPA in `frontend/.output/public` (nitro preset pinned to `node-server`; only `public/` is deployed). `/api/*` → Rust function `api/vercel.rs` (`vercel_runtime`); every other path → `/_shell.html` (files win first).
-- Set `PG_DATABASE_URL` in the Vercel project. Prod already has its schema: load data with `bun run db:dump && DB_MODE=PROD bun run seed -- --dump db/sans_dict.dump --data-only` (TRUNCATE + data in FK order + drizzle log + count check), using a role inheriting `postgres`. A plain `--dump` (with `--clean`) only suits an empty database whose extensions the role owns.
+- Set `PG_DATABASE_URL`, `OPENROUTER_API_KEY` and `OPENAI_API_KEY` (agent chat models + web search) in the Vercel project. Prod already has its schema: load data with `bun run db:dump && DB_MODE=PROD bun run seed -- --dump db/sans_dict.dump --data-only` (TRUNCATE + data in FK order + drizzle log + count check), using a role inheriting `postgres`. A plain `--dump` (with `--clean`) only suits an empty database whose extensions the role owns.
 - `sslrootcert=system` in connection strings (PlanetScale) is libpq-only: `schema/db-url.ts` and `src/db_url.rs` drop it for postgres.js / sqlx (still `sslmode=verify-full`); psql/pg_dump use the URL as is.
 - Self-host instead: `bun run build && bun run start` (axum serves SPA + API on :5780).
 
