@@ -26,6 +26,8 @@ import {
   SheetTitle
 } from '@/components/ui/sheet';
 import { useTheme, type Theme } from '@/components/theme-provider';
+import { AccountButton } from '@/components/auth/account-button';
+import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -100,10 +102,11 @@ function ThemeToggle() {
   );
 }
 
-function MobileNav() {
+function MobileNav({ showAgent }: { showAgent: boolean }) {
   const [open, setOpen] = useState(false);
   const isActive = useIsActive();
   const { theme, setTheme } = useTheme();
+  const nav = showAgent ? NAV : NAV.filter((item) => item.to !== '/agent');
   return (
     <>
       <Button
@@ -125,7 +128,7 @@ function MobileNav() {
             </div>
           </SheetHeader>
           <nav aria-label="Primary" className="flex flex-col gap-1 p-3">
-            {NAV.map(({ to, label, hint, icon: Icon, exact }) => {
+            {nav.map(({ to, label, hint, icon: Icon, exact }) => {
               const active = isActive(to, exact);
               return (
                 <Link
@@ -210,10 +213,14 @@ function LoadingBar() {
 
 export function Header() {
   const isActive = useIsActive();
+  // The agent is admin-gated: hide its link until a session resolves to a user.
+  const { data } = authClient.useSession();
+  const showAgent = (data?.user ?? null) !== null;
+  const nav = showAgent ? NAV : NAV.filter((item) => item.to !== '/agent');
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-6">
-        <MobileNav />
+        <MobileNav showAgent={showAgent} />
         <Link
           to="/"
           search={{}}
@@ -229,7 +236,7 @@ export function Header() {
           </span>
         </Link>
         <nav aria-label="Primary" className="ml-4 hidden items-center gap-1 md:flex">
-          {NAV.map(({ to, label, icon: Icon, exact }) => {
+          {nav.map(({ to, label, icon: Icon, exact }) => {
             const active = isActive(to, exact);
             return (
               <Link
@@ -251,6 +258,7 @@ export function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-1">
           <ThemeToggle />
+          <AccountButton />
         </div>
       </div>
       <LoadingBar />
