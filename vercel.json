@@ -7,7 +7,7 @@
   "regions": ["bom1"],
   "functions": {
     "api/vercel.rs": {
-      "maxDuration": 30,
+      "maxDuration": 300,
       "regions": ["bom1"]
     }
   },

@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   customType,
   index,
   integer,
@@ -239,4 +240,50 @@ export const paradigmForms = pgTable(
     primaryKey({ columns: [t.paradigmId, t.formSlp1] }),
     index('paradigm_forms_form_idx').on(t.formSlp1),
   ],
+);
+
+/** One conversation with the dictionary agent (`/agent/$chatId`). */
+export const agentChats = pgTable(
+  'agent_chats',
+  {
+    /** Same id `useChat` uses on the client. */
+    id: text().primaryKey(),
+    title: text().notNull().default(''),
+    /** Model of the latest turn (`gpt-6-luna` | `claude-sonnet-5.5`); can change mid-chat. */
+    model: text().notNull(),
+    /** Dictionary slugs the agent searches by default (the reader's search preference). */
+    dicts: text().array().notNull().default(sql`'{}'::text[]`),
+    /** True while a reply is being generated (possibly after the tab was closed). */
+    streaming: boolean().notNull().default(false),
+    /** Set by Stop; the generating request (on whichever instance) polls it and aborts. */
+    stopRequestedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** Bumped on every turn; sorts the sidebar. */
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('agent_chats_updated_at_idx').on(t.updatedAt)],
+);
+
+/**
+ * AI SDK `UIMessage`s, stored as-is: text, reasoning (with the provider's
+ * `reasoning_details` for replay), tool calls with input + output, sources.
+ */
+export const agentMessages = pgTable(
+  'agent_messages',
+  {
+    id: text().primaryKey(),
+    chatId: text()
+      .notNull()
+      .references(() => agentChats.id, { onDelete: 'cascade' }),
+    /** `user` | `assistant` */
+    role: text().notNull(),
+    /** `UIMessage.parts` */
+    parts: jsonb().notNull(),
+    /** `UIMessage.metadata`: model, cost (USD), token usage, web searches */
+    metadata: jsonb(),
+    /** Order within the chat */
+    position: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('agent_messages_chat_id_position_idx').on(t.chatId, t.position)],
 );

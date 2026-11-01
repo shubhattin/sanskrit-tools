@@ -114,12 +114,18 @@ const triggerClass =
 export function DictionaryPicker({
   dictionaries,
   selected,
-  prefs
+  prefs,
+  mode,
+  formsLocked
 }: {
   dictionaries: Dictionary[];
   /** Resolved selection (known slugs only). */
   selected: string[];
   prefs: SearchPrefs;
+  /** Sanskrit/English mode: shows the interactive "Find inflected forms" row. */
+  mode?: 'sa' | 'en';
+  /** Shows a checked, disabled row: the reader can't switch it off here. */
+  formsLocked?: boolean;
 }) {
   const [filter, setFilter] = useState('');
   const total = dictionaries.length;
@@ -218,6 +224,38 @@ export function DictionaryPicker({
             />
           </div>
         </div>
+        {mode ? (
+          <div className="border-b px-2 py-1.5">
+            <Label
+              className={cn(
+                'flex cursor-pointer items-start gap-2.5 rounded-lg p-1.5 font-normal hover:bg-muted',
+                mode === 'en' && 'opacity-60'
+              )}
+            >
+              <Checkbox
+                className="mt-0.5"
+                checked={prefs.forms}
+                onCheckedChange={(v) => setSearchPrefs({ forms: v === true })}
+                aria-label="Find inflected forms"
+              />
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="flex items-center gap-1.5 text-xs font-medium">
+                  <SparklesIcon className="size-3.5 text-amber-500" aria-hidden />
+                  Find inflected forms
+                </span>
+                <span className="text-[11px] leading-relaxed text-muted-foreground">
+                  <span className="font-devanagari">रामेण</span> →{' '}
+                  <span className="font-devanagari">राम</span>, with paradigm tables.
+                  {mode === 'en' ? ' (Sanskrit mode only.)' : null}
+                </span>
+              </span>
+            </Label>
+          </div>
+        ) : formsLocked ? (
+          <p className="border-b px-3 py-1.5 text-[11px] text-muted-foreground">
+            Inflected forms always on
+          </p>
+        ) : null}
         <div className="flex max-h-[min(60vh,26rem)] flex-col gap-3 overflow-y-auto overscroll-contain p-2">
           {dictionaries.length === 0 ? (
             <div

@@ -1,3 +1,4 @@
+pub mod agent;
 pub mod app;
 pub mod db_url;
 pub mod entities;

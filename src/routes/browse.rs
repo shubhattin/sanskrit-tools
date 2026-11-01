@@ -181,7 +181,7 @@ pub async fn browse(
     .all(&state.db)
     .await?;
   Ok(Json(BrowseResponse {
-    dictionary: dictionary.into(),
+    dictionary,
     items,
     center,
   }))

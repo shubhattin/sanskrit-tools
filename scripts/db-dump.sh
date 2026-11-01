@@ -23,7 +23,9 @@ libpq_url() {
 mkdir -p "$(dirname "$OUT")"
 # Only our objects: tables in `public`, the drizzle migration log, and pg_trgm.
 # (Excludes provider objects such as PlanetScale's `pscale_extensions` / hypopg.)
+# Agent chats are per-database user data, not dictionary data: schema only.
 pg_dump -Fc -Z 9 --no-owner --no-acl \
   --schema=public --schema=drizzle --extension=pg_trgm \
+  --exclude-table-data='public.agent_*' \
   -f "$OUT" "$(libpq_url "$PG_DATABASE_URL")"
 echo "wrote $OUT ($(du -h "$OUT" | cut -f1))"

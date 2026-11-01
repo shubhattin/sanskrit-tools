@@ -4,6 +4,7 @@
 //! statements ([`stmt`] + `FromQueryResult`) where Postgres-specific SQL is
 //! needed (trigram similarity, full-text ranking, array binds, CTEs).
 
+pub mod agent;
 pub mod browse;
 pub mod dhatus;
 pub mod paradigms;
