@@ -6,7 +6,7 @@
 //! English mode: full-text search over `entries.search_en`.
 
 use super::{ApiError, ApiResult, Dictionary, Entry, int_array, stmt};
-use crate::entities::{dictionaries, entries, entry_keys, enums::Lang};
+use crate::entities::{entries, entry_keys, enums::Lang};
 use crate::state::AppState;
 use crate::translit::{ending_variants, loose_key, query_keys, root_variants, slp1_to_deva};
 use axum::Json;
@@ -179,25 +179,6 @@ pub struct SearchResponse {
 
 const MATCH_RANK: [&str; 5] = ["exact", "form", "fuzzy", "prefix", "fulltext"];
 
-async fn dict_filter(state: &AppState, dicts: &Option<String>) -> Result<Option<Vec<i32>>, DbErr> {
-  let Some(d) = dicts.as_deref().filter(|d| !d.trim().is_empty()) else {
-    return Ok(None);
-  };
-  let slugs: Vec<String> = d
-    .split(',')
-    .map(|s| s.trim().to_string())
-    .filter(|s| !s.is_empty())
-    .collect();
-  let ids: Vec<i32> = dictionaries::Entity::find()
-    .select_only()
-    .column(dictionaries::Column::Id)
-    .filter(dictionaries::Column::Slug.is_in(slugs))
-    .into_tuple()
-    .all(&state.db)
-    .await?;
-  Ok(Some(ids))
-}
-
 #[derive(Clone, Copy)]
 enum KeyColumn {
   Slp1,
@@ -266,8 +247,9 @@ pub async fn search(
     return Err(ApiError::bad_request("q is too long"));
   }
   let limit = p.limit.unwrap_or(20).clamp(1, 100);
-  let dicts = dict_filter(&state, &p.dicts).await?;
+  // Cached (no DB): the 29-row dictionary list plus a pure slug→ids lookup.
   let all_dicts = super::all_dictionaries(&state).await?;
+  let dicts = super::dictionary_ids(&all_dicts, &p.dicts);
 
   if p.mode.as_deref() == Some("en") {
     return english(&state, q, limit, &dicts, all_dicts).await;
@@ -282,15 +264,16 @@ pub async fn search(
       }
     };
 
-  // 1. exact
-  add(
-    match_keys(&state, KeyColumn::Slp1, &keys, &dicts).await?,
-    "exact",
-    &mut hits,
+  // 1. exact key hits and 2. inflected-form analysis are independent —
+  // run them concurrently (each holds its own pool connection).
+  let (exact_rows, forms) = tokio::join!(
+    match_keys(&state, KeyColumn::Slp1, &keys, &dicts),
+    analyze_forms(&state, &keys),
   );
+  add(exact_rows?, "exact", &mut hits);
 
   // 2. inflected forms → lemma (and root for kṛdanta / conjugation); ending variants
-  let forms = analyze_forms(&state, &keys).await?;
+  let forms = forms?;
   let mut form_keys: Vec<String> = Vec::new();
   for f in &forms {
     let mut ks = root_variants(&f.lemma_slp1, &f.lemma_slp1);
@@ -359,8 +342,8 @@ pub async fn search(
     let rows = KeyRow::find_by_statement(stmt(
       "select key_slp1 from (
          select key_slp1, similarity(key_loose, $1) as sim from entry_keys
-         where key_loose % $1 order by sim desc limit 60) t
-       group by key_slp1 order by max(sim) desc limit 8",
+         where key_loose % $1 order by sim desc, key_slp1 limit 60) t
+       group by key_slp1 order by max(sim) desc, key_slp1 limit 8",
       vec![l.clone().into()],
     ))
     .all(&state.db)

@@ -1,7 +1,7 @@
 //! Dictionary list, single entry, and book-order browsing.
 
 use super::{ApiError, ApiResult, Dictionary, Entry, stmt};
-use crate::entities::{dictionaries, entries};
+use crate::entities::entries;
 use crate::state::AppState;
 use crate::translit::{loose_key, query_keys};
 use axum::Json;
@@ -57,13 +57,17 @@ pub async fn entry(State(state): State<AppState>, Path(id): Path<i32>) -> ApiRes
     .one(&state.db)
     .await?
     .ok_or_else(|| ApiError::not_found("entry not found"))?;
-  let dictionary = dictionaries::Entity::find_by_id(entry.dictionary_id)
-    .one(&state.db)
+  // Served from the cached dictionary list: no second round trip.
+  let dictionary = state
+    .dictionaries()
     .await?
+    .iter()
+    .find(|d| d.id == entry.dictionary_id)
+    .cloned()
     .ok_or_else(|| ApiError::not_found("dictionary not found"))?;
   Ok(Json(EntryResponse {
     entry: entry.into(),
-    dictionary: dictionary.into(),
+    dictionary,
   }))
 }
 
@@ -118,10 +122,13 @@ pub async fn browse(
   Path(slug): Path<String>,
   Query(p): Query<BrowseParams>,
 ) -> ApiResult<BrowseResponse> {
-  let dictionary = dictionaries::Entity::find()
-    .filter(dictionaries::Column::Slug.eq(&slug))
-    .one(&state.db)
+  // Served from the cached dictionary list: no round trip for slug → row.
+  let dictionary = state
+    .dictionaries()
     .await?
+    .iter()
+    .find(|d| d.slug == slug)
+    .cloned()
     .ok_or_else(|| ApiError::not_found("dictionary not found"))?;
   let before = p.before.unwrap_or(15).clamp(0, 200);
   let after = p.after.unwrap_or(30).clamp(0, 200);

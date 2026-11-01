@@ -21,16 +21,14 @@ pub async fn init_state() -> Result<AppState, String> {
   let _ = dotenvy::dotenv();
   let database_url = std::env::var("PG_DATABASE_URL")
     .map_err(|_| "PG_DATABASE_URL must be set: missing environment variable".to_string())?;
-  // Serverless instances each hold their own pool: keep it small on Vercel.
-  let default_max = if std::env::var_os("VERCEL").is_some() {
-    2
-  } else {
-    10
-  };
+  // Production goes through PgBouncer (pooler port 6432), which multiplexes
+  // server connections, so per-instance pools can be generous: parallel
+  // handler queries each hold a connection. Direct connections (local dev,
+  // import) use the same default; override with DB_MAX_CONNECTIONS.
   let max_connections = std::env::var("DB_MAX_CONNECTIONS")
     .ok()
     .and_then(|v| v.parse().ok())
-    .unwrap_or(default_max);
+    .unwrap_or(10);
   let mut opts = ConnectOptions::new(crate::db_url::normalize(&database_url));
   opts
     .max_connections(max_connections)
@@ -45,7 +43,10 @@ pub async fn init_state() -> Result<AppState, String> {
   let db = Database::connect(opts)
     .await
     .map_err(|e| format!("failed to connect to database: {e}"))?;
-  Ok(AppState { db })
+  // Caches the 29-row dictionary list (refreshed with a TTL on read).
+  AppState::new(db)
+    .await
+    .map_err(|e| format!("failed to load dictionaries: {e}"))
 }
 
 async fn api_not_found(uri: Uri) -> impl IntoResponse {

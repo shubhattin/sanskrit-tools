@@ -139,16 +139,42 @@ impl From<entries::Model> for Entry {
   }
 }
 
-pub async fn all_dictionaries(state: &AppState) -> Result<Vec<Dictionary>, DbErr> {
+/// Raw dictionary-list read (one tiny query). Runs once at startup and on
+/// cache refresh — never on the request hot path; use
+/// [`AppState::dictionaries`] / [`all_dictionaries`] instead.
+pub async fn load_dictionaries(db: &sea_orm::DatabaseConnection) -> Result<Vec<Dictionary>, DbErr> {
   Ok(
     dictionaries::Entity::find()
       .filter(dictionaries::Column::EntryCount.gt(0))
       .order_by_asc(dictionaries::Column::SortOrder)
       .order_by_asc(dictionaries::Column::Id)
-      .all(&state.db)
+      .all(db)
       .await?
       .into_iter()
       .map(Dictionary::from)
+      .collect(),
+  )
+}
+
+/// Cached dictionary list (see [`AppState::dictionaries`]).
+pub async fn all_dictionaries(state: &AppState) -> Result<Vec<Dictionary>, DbErr> {
+  Ok(state.dictionaries().await?.as_ref().clone())
+}
+
+/// Resolve a comma-separated `dicts` filter against the cached dictionary
+/// list — pure lookup, no DB round trip (replaces the old slug→ids query).
+pub fn dictionary_ids(cached: &[Dictionary], specs: &Option<String>) -> Option<Vec<i32>> {
+  let d = specs.as_deref().filter(|d| !d.trim().is_empty())?;
+  let slugs: Vec<&str> = d
+    .split(',')
+    .map(|s| s.trim())
+    .filter(|s| !s.is_empty())
+    .collect();
+  Some(
+    cached
+      .iter()
+      .filter(|row| slugs.iter().any(|s| *s == row.slug))
+      .map(|row| row.id)
       .collect(),
   )
 }

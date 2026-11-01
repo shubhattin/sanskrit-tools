@@ -137,29 +137,27 @@ pub async fn detail(
   let id = number_prefix(&id)
     .filter(|p| !p.ends_with('.'))
     .unwrap_or(id);
-  let sutra = sutras::Entity::find_by_id(id.clone())
-    .one(&state.db)
-    .await?
-    .ok_or_else(|| ApiError::not_found("sūtra not found"))?;
-  let prev = sutras::Entity::find()
-    .filter(sutras::Column::Id.lt(&id))
-    .order_by_desc(sutras::Column::Id)
-    .one(&state.db)
-    .await?;
-  let next = sutras::Entity::find()
-    .filter(sutras::Column::Id.gt(&id))
-    .order_by_asc(sutras::Column::Id)
-    .one(&state.db)
-    .await?;
-  let entries: Vec<Entry> = entries::Entity::find()
-    .filter(entries::Column::SutraId.eq(&id))
-    .order_by_asc(entries::Column::DictionaryId)
-    .order_by_asc(entries::Column::Seq)
-    .all(&state.db)
-    .await?
-    .into_iter()
-    .map(Entry::from)
-    .collect();
+  // All four reads are independent given the id — run them concurrently.
+  let (sutra, prev, next, entries) = tokio::join!(
+    sutras::Entity::find_by_id(id.clone()).one(&state.db),
+    sutras::Entity::find()
+      .filter(sutras::Column::Id.lt(&id))
+      .order_by_desc(sutras::Column::Id)
+      .one(&state.db),
+    sutras::Entity::find()
+      .filter(sutras::Column::Id.gt(&id))
+      .order_by_asc(sutras::Column::Id)
+      .one(&state.db),
+    entries::Entity::find()
+      .filter(entries::Column::SutraId.eq(&id))
+      .order_by_asc(entries::Column::DictionaryId)
+      .order_by_asc(entries::Column::Seq)
+      .all(&state.db),
+  );
+  let sutra = sutra?.ok_or_else(|| ApiError::not_found("sūtra not found"))?;
+  let prev = prev?;
+  let next = next?;
+  let entries: Vec<Entry> = entries?.into_iter().map(Entry::from).collect();
   let dicts = super::all_dictionaries(&state).await?;
   Ok(Json(SutraDetail {
     sutra: sutra.into(),
