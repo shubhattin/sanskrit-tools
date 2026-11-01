@@ -13,6 +13,16 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { BrandIcon } from './brand-icon';
 
 function SignInMenuItems({
@@ -24,7 +34,7 @@ function SignInMenuItems({
 }) {
   return (
     <>
-      <DropdownMenuItem disabled={pending !== null} onSelect={() => onSignIn('google')}>
+      <DropdownMenuItem disabled={pending !== null} onClick={() => onSignIn('google')}>
         {pending === 'google' ? (
           <span
             className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
@@ -35,7 +45,7 @@ function SignInMenuItems({
         )}{' '}
         Continue with Google
       </DropdownMenuItem>
-      <DropdownMenuItem disabled={pending !== null} onSelect={() => onSignIn('github')}>
+      <DropdownMenuItem disabled={pending !== null} onClick={() => onSignIn('github')}>
         {pending === 'github' ? (
           <span
             className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
@@ -60,6 +70,7 @@ export function AccountButton() {
   const { data, isPending } = authClient.useSession();
   const [signInPending, setSignInPending] = useState<'google' | 'github' | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   // Skeleton until the session resolves (avoids a log-in/avatar flash).
   if (isPending && !data) {
@@ -121,47 +132,71 @@ export function AccountButton() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            className="ml-0.5 grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full ring-1 ring-foreground/10 transition hover:ring-foreground/25"
-            aria-label="Account"
-            title={user.email ?? user.name ?? 'Account'}
-          >
-            {user.image ? (
-              <UserImage src={user.image} alt={user.name ?? user.email ?? 'Account'} />
-            ) : (
-              <span className="grid size-full place-items-center bg-muted text-muted-foreground">
-                <UserIcon className="size-4" aria-hidden />
-              </span>
-            )}
-          </button>
-        }
-      />
-      <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
-            {user.name ? (
-              <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
-            ) : null}
-            {user.email ? (
-              <span className="truncate text-xs text-muted-foreground">{user.email}</span>
-            ) : null}
-            {isAdmin(user) ? (
-              <span className="mt-1 text-[11px] font-medium tracking-wide text-primary uppercase">
-                Admin
-              </span>
-            ) : null}
-          </DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={signingOut} onSelect={() => void signOut()}>
-          <LogOutIcon className="size-4" aria-hidden /> Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="ml-0.5 grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full ring-1 ring-foreground/10 transition hover:ring-foreground/25"
+              aria-label="Account"
+              title={user.email ?? user.name ?? 'Account'}
+            >
+              {user.image ? (
+                <UserImage src={user.image} alt={user.name ?? user.email ?? 'Account'} />
+              ) : (
+                <span className="grid size-full place-items-center bg-muted text-muted-foreground">
+                  <UserIcon className="size-4" aria-hidden />
+                </span>
+              )}
+            </button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+              {user.name ? (
+                <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
+              ) : null}
+              {user.email ? (
+                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+              ) : null}
+              {isAdmin(user) ? (
+                <span className="mt-1 text-[11px] font-medium tracking-wide text-primary uppercase">
+                  Admin
+                </span>
+              ) : null}
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem disabled={signingOut} onClick={() => setConfirmSignOut(true)}>
+            <LogOutIcon className="size-4" aria-hidden /> Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <AlertDialog open={confirmSignOut} onOpenChange={setConfirmSignOut}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to sign in again to use the agent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={signingOut}
+              onClick={() => {
+                setConfirmSignOut(false);
+                void signOut();
+              }}
+            >
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
