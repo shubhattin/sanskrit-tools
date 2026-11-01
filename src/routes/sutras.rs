@@ -45,6 +45,8 @@ impl From<sutras::Model> for Sutra {
 #[derive(Deserialize)]
 pub struct ListParams {
   q: Option<String>,
+  /// `1`: the whole list (≈4k rows) for on-device filtering; ignores `q`.
+  all: Option<String>,
 }
 
 /// `1`, `1.1`, `1.1.1`, `1.1.001` → id prefix (`1.1.001`, or `1.1.` for a pāda).
@@ -71,7 +73,10 @@ const LIST_LIMIT: usize = 200;
     path = "/api/sutras",
     operation_id = "sutras.list",
     tag = "sutras",
-    params(("q" = Option<String>, Query, description = "Number prefix (e.g. 1.1) or text")),
+    params(
+        ("q" = Option<String>, Query, description = "Number prefix (e.g. 1.1) or text"),
+        ("all" = Option<String>, Query, description = "1 returns every sūtra (q ignored, no limit)"),
+    ),
     responses(
         (status = 200, description = "Sutras (max 200)", body = Vec<Sutra>),
         (status = 500, description = "Database error", body = super::ErrorBody),
@@ -84,6 +89,10 @@ pub async fn list(
   let q = p.q.unwrap_or_default();
   let q = q.trim();
   let base = sutras::Entity::find().order_by_asc(sutras::Column::Id);
+  if matches!(p.all.as_deref(), Some("1" | "true")) {
+    let rows = base.all(&state.db).await?;
+    return Ok(Json(rows.into_iter().map(Sutra::from).collect()));
+  }
   let rows: Vec<sutras::Model> = if q.is_empty() {
     base.limit(LIST_LIMIT as u64).all(&state.db).await?
   } else if let Some(prefix) = number_prefix(q) {

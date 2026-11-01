@@ -440,6 +440,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "forms",
+            "in": "query",
+            "description": "Inflected-form analysis: 1 (default) or 0 to skip it",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -541,6 +550,15 @@
             "name": "q",
             "in": "query",
             "description": "Number prefix (e.g. 1.1) or text",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "description": "1 returns every sūtra (q ignored, no limit)",
             "required": false,
             "schema": {
               "type": "string"

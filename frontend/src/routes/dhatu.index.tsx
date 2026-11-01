@@ -115,9 +115,13 @@ function DhatuListPage() {
         </Select>
       </div>
       {list.isPending ? (
-        <div className="flex flex-col gap-2" aria-label="Loading dhātus">
+        <div
+          className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3"
+          role="status"
+          aria-label="Loading dhātus"
+        >
           {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-12" />
+            <Skeleton key={i} className="h-14 rounded-xl" />
           ))}
         </div>
       ) : list.isError ? (
@@ -144,11 +148,11 @@ function DhatuListPage() {
           <p className="text-sm text-muted-foreground tabular-nums" role="status">
             {list.data.length} dhātus
           </p>
-          <ol className="flex flex-col gap-2">
+          <ol className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
             {list.data.map((d) => (
               <li key={d.id}>
-                <Link to="/dhatu/$id" params={{ id: String(d.id) }}>
-                  <Card className="py-0 transition-colors hover:border-primary/50">
+                <Link to="/dhatu/$id" params={{ id: String(d.id) }} className="block h-full">
+                  <Card className="h-full py-0 transition-all hover:-translate-y-px hover:border-primary/50 hover:shadow-md">
                     <CardContent className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-3 sm:p-4">
                       <Badge variant="secondary" className="shrink-0 tabular-nums">
                         {d.number}

@@ -226,7 +226,8 @@ export const zSearchQueryQuery = z.object({
     q: z.string(),
     mode: z.string().optional(),
     dicts: z.string().optional(),
-    limit: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' }).optional()
+    limit: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' }).optional(),
+    forms: z.string().optional()
 });
 
 /**
@@ -245,7 +246,8 @@ export const zSearchSuggestQuery = z.object({
 export const zSearchSuggestResponse = z.array(zSuggestion);
 
 export const zSutrasListQuery = z.object({
-    q: z.string().optional()
+    q: z.string().optional(),
+    all: z.string().optional()
 });
 
 /**

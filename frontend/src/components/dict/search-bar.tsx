@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { SearchIcon } from 'lucide-react';
+import { ArrowRightIcon, CornerDownLeftIcon, SearchIcon, XIcon } from 'lucide-react';
 import { Command, CommandItem, CommandList } from '@/components/ui/command';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
-import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
+import { Skeleton } from '@/components/ui/skeleton';
 import { suggestQuery } from '@/lib/api/client';
 import type { Dictionary, SearchMode } from '@/lib/api/types';
+import type { SearchPrefs } from '@/lib/search-prefs';
 import { useLipiInput } from '@/components/lipi/typing';
-import { LipiToggle } from '@/components/lipi/toggle';
-import { SearchSettingsPopover } from '@/components/dict/filter';
-import { useDisplayText } from '@/components/script/display-script';
+import { DictionaryPicker, SearchOptions } from '@/components/dict/filter';
+import { cn } from '@/lib/utils';
 
 function useDebounced(value: string, delayMs: number): string {
   const [debounced, setDebounced] = useState(value);
@@ -24,17 +23,25 @@ function useDebounced(value: string, delayMs: number): string {
 export interface SearchBarValue {
   q: string;
   mode: SearchMode;
-  dicts: string[];
 }
+
+const MODES = [
+  { v: 'sa', label: 'संस्कृतम्', short: 'सं', title: 'Search Sanskrit headwords' },
+  { v: 'en', label: 'English', short: 'En', title: 'Search English meanings' }
+] as const;
 
 export function SearchBar({
   value,
   dictionaries,
+  selected,
+  prefs,
   autoFocus,
   onSubmit
 }: {
   value: SearchBarValue;
   dictionaries: Dictionary[];
+  selected: string[];
+  prefs: SearchPrefs;
   autoFocus?: boolean;
   onSubmit: (next: SearchBarValue) => void;
 }) {
@@ -47,24 +54,27 @@ export function SearchBar({
     setText(value.q);
   }
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const lipiProps = useLipiInput(text, setText);
-  const debounced = useDebounced(text, 200);
-  const suggest = useQuery({
-    ...suggestQuery(debounced.trim()),
-    enabled: open && debounced.trim().length > 0
-  });
+  const { props: lipiProps, enabled: lipiOn } = useLipiInput(text, setText, value.mode === 'sa');
+  const debounced = useDebounced(text, 180);
+  const suggestOn = value.mode === 'sa' && open && debounced.trim().length > 0;
+  const suggest = useQuery({ ...suggestQuery(debounced.trim()), enabled: suggestOn });
+  const suggestions = suggest.data ?? [];
 
   // `/` focuses search from anywhere (unless already typing in a field).
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
       if (e.key === '/' && !typing) {
         e.preventDefault();
         inputRef.current?.focus();
+        inputRef.current?.select();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -82,11 +92,12 @@ export function SearchBar({
 
   const submit = (q: string) => {
     setOpen(false);
+    setActive(-1);
     inputRef.current?.blur();
-    onSubmit({ q, mode: value.mode, dicts: value.dicts });
+    onSubmit({ q, mode: value.mode });
   };
 
-  const suggestions = suggest.data ?? [];
+  const showSuggest = suggestOn && (suggest.isPending || suggestions.length > 0);
 
   return (
     <div ref={boxRef} className="relative">
@@ -94,80 +105,177 @@ export function SearchBar({
         role="search"
         onSubmit={(e) => {
           e.preventDefault();
-          submit(text.trim());
+          if (showSuggest && active >= 0 && suggestions[active]) {
+            submit(suggestions[active].headword);
+          } else submit(text.trim());
         }}
+        className={cn(
+          'group/search relative rounded-2xl border bg-card/90 shadow-lg shadow-black/5 backdrop-blur-sm transition-all duration-200',
+          'focus-within:border-primary/50 focus-within:ring-4 focus-within:shadow-primary/10 focus-within:ring-primary/10',
+          'dark:shadow-black/30'
+        )}
       >
-        <InputGroup className="h-12 rounded-xl bg-background text-base shadow-xs">
-          <InputGroupAddon>
-            <SearchIcon aria-hidden />
-          </InputGroupAddon>
-          <InputGroupInput
+        <div className="flex items-center gap-2 px-3 sm:px-4">
+          <SearchIcon
+            className="size-5 shrink-0 text-muted-foreground transition-colors group-focus-within/search:text-primary"
+            aria-hidden
+          />
+          <input
             {...lipiProps}
+            onKeyDown={(e) => {
+              if (showSuggest && suggestions.length > 0) {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setActive((i) => (i + 1) % suggestions.length);
+                  return;
+                }
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setActive((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+                  return;
+                }
+              }
+              if (e.key === 'Escape') {
+                setOpen(false);
+                return;
+              }
+              lipiProps.onKeyDown(e);
+            }}
+            onChange={(e) => {
+              setActive(-1);
+              setOpen(true);
+              lipiProps.onChange(e);
+            }}
             ref={inputRef}
             autoFocus={autoFocus}
-            placeholder="Search — अग्नि, agni, dharma…"
+            placeholder={
+              value.mode === 'sa' ? 'agni, dharma, अग्नि…' : 'English meaning — fire, king…'
+            }
             aria-label="Search dictionaries"
             autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
             spellCheck={false}
+            enterKeyHint="search"
             onFocus={() => setOpen(true)}
-            className="font-devanagari text-lg"
+            className="h-14 min-w-0 flex-1 bg-transparent font-devanagari text-lg outline-none placeholder:text-muted-foreground/70 sm:h-16 sm:text-xl"
           />
-          {!text ? (
-            <InputGroupAddon align="inline-end">
-              <Kbd>/</Kbd>
-            </InputGroupAddon>
-          ) : null}
-          <InputGroupAddon align="inline-end">
-            <div
-              role="group"
-              aria-label="Search mode"
-              className="flex items-center gap-0.5 rounded-lg border p-0.5"
+          {text ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => {
+                setText('');
+                inputRef.current?.focus();
+              }}
             >
-              {(
-                [
-                  { v: 'sa', label: 'सं', title: 'Sanskrit headword' },
-                  { v: 'en', label: 'En', title: 'English meaning' }
-                ] as const
-              ).map((m) => (
-                <Button
-                  key={m.v}
-                  type="button"
-                  variant={value.mode === m.v ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  title={m.title}
-                  aria-pressed={value.mode === m.v}
-                  onClick={() => onSubmit({ q: value.q, mode: m.v, dicts: value.dicts })}
-                >
-                  {m.label}
-                </Button>
-              ))}
-            </div>
-            <LipiToggle />
-            <SearchSettingsPopover
-              dictionaries={dictionaries}
-              selected={value.dicts}
-              onChange={(dicts) => onSubmit({ q: value.q, mode: value.mode, dicts })}
+              <XIcon className="size-4" aria-hidden />
+            </button>
+          ) : (
+            <Kbd className="max-sm:hidden">/</Kbd>
+          )}
+          <button
+            type="submit"
+            aria-label="Search"
+            className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-teal-500 text-primary-foreground shadow-md shadow-primary/25 transition-all hover:scale-105 hover:shadow-primary/40 active:scale-95 sm:size-10"
+          >
+            <ArrowRightIcon className="size-4 sm:size-5" aria-hidden />
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-dashed px-2.5 py-2 sm:px-3">
+          <div
+            role="radiogroup"
+            aria-label="Search mode"
+            className="relative grid grid-cols-2 rounded-full bg-muted p-0.5"
+          >
+            <span
+              aria-hidden
+              className={cn(
+                'absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full bg-background shadow-sm ring-1 ring-border transition-transform duration-300 ease-out',
+                value.mode === 'en' && 'translate-x-full'
+              )}
             />
-          </InputGroupAddon>
-        </InputGroup>
+            {MODES.map((m) => (
+              <button
+                key={m.v}
+                type="button"
+                role="radio"
+                aria-checked={value.mode === m.v}
+                title={m.title}
+                onClick={() => onSubmit({ q: text.trim() || value.q, mode: m.v })}
+                className={cn(
+                  'relative z-10 h-7 px-3 text-xs font-medium transition-colors',
+                  m.v === 'sa' && 'font-devanagari',
+                  value.mode === m.v
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <span className="max-sm:hidden">{m.label}</span>
+                <span className="sm:hidden">{m.short}</span>
+              </button>
+            ))}
+          </div>
+          <DictionaryPicker dictionaries={dictionaries} selected={selected} prefs={prefs} />
+          <SearchOptions prefs={prefs} mode={value.mode} />
+          <span
+            className="ml-auto hidden items-center gap-1.5 pr-1 text-[11px] leading-none text-muted-foreground sm:flex"
+            title="Alt+X toggles Devanagari typing"
+          >
+            {lipiOn ? (
+              <>
+                <span className="inline-flex h-5 items-center gap-1 rounded-md bg-muted px-1.5 leading-none">
+                  <span className="font-mono text-[11px]">a</span>
+                  <span aria-hidden>→</span>
+                  <span className="font-devanagari text-xs">अ</span>
+                </span>
+                <span className="leading-none">typing</span>
+              </>
+            ) : (
+              'Latin typing'
+            )}
+            <Kbd className="ml-1">Alt X</Kbd>
+          </span>
+        </div>
       </form>
-      {open && debounced.trim().length > 0 ? (
-        <div className="absolute inset-x-0 top-full z-50 mt-1.5 overflow-hidden rounded-xl border bg-popover shadow-lg">
-          <Command label="Suggestions">
+      {showSuggest ? (
+        <div className="absolute inset-x-0 top-full z-50 mt-2 animate-in overflow-hidden rounded-xl border bg-popover shadow-xl duration-150 fade-in-0 slide-in-from-top-1">
+          <Command
+            label="Suggestions"
+            shouldFilter={false}
+            value={suggestions[active]?.headword ?? ''}
+          >
             <CommandList>
               {suggest.isPending ? (
-                <p className="px-3 py-4 text-sm text-muted-foreground">Loading…</p>
-              ) : suggestions.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-muted-foreground">No suggestions</p>
+                <div
+                  className="flex flex-col gap-1 p-2"
+                  role="status"
+                  aria-label="Loading suggestions"
+                >
+                  {[70, 55, 62, 45].map((w) => (
+                    <div key={w} className="flex items-center gap-2 px-2 py-1.5">
+                      <Skeleton className="size-3.5 rounded-full" />
+                      <Skeleton className="h-4" style={{ width: `${w}%` }} />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                suggestions.map((s) => (
-                  <SuggestRow
+                suggestions.map((s, i) => (
+                  <CommandItem
                     key={`${s.headword}-${s.slp1}`}
-                    headword={s.headword}
-                    count={s.count}
+                    value={s.headword}
                     onSelect={() => submit(s.headword)}
-                  />
+                    onMouseEnter={() => setActive(i)}
+                    className="font-devanagari text-base"
+                  >
+                    <SearchIcon className="size-3.5 text-muted-foreground" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">{s.headword}</span>
+                    {i === active ? (
+                      <CornerDownLeftIcon className="size-3.5 text-muted-foreground" aria-hidden />
+                    ) : null}
+                    <span className="text-xs text-muted-foreground tabular-nums">{s.count}</span>
+                  </CommandItem>
                 ))
               )}
             </CommandList>
@@ -175,23 +283,5 @@ export function SearchBar({
         </div>
       ) : null}
     </div>
-  );
-}
-
-function SuggestRow({
-  headword,
-  count,
-  onSelect
-}: {
-  headword: string;
-  count: number;
-  onSelect: () => void;
-}) {
-  const display = useDisplayText(headword);
-  return (
-    <CommandItem value={headword} onSelect={onSelect} className="font-devanagari text-base">
-      <span className="min-w-0 flex-1 truncate">{display}</span>
-      <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
-    </CommandItem>
   );
 }

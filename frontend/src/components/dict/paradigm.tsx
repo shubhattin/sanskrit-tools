@@ -77,7 +77,7 @@ function GridTable({
           <tr className="bg-muted/60">
             <th
               scope="col"
-              className="font-devanagari min-w-24 px-2 py-1.5 text-left font-semibold whitespace-nowrap"
+              className="min-w-24 px-2 py-1.5 text-left font-devanagari font-semibold whitespace-nowrap"
             >
               {corner ?? ''}
             </th>
@@ -85,7 +85,7 @@ function GridTable({
               <th
                 key={c}
                 scope="col"
-                className="font-devanagari min-w-20 px-2 py-1.5 text-left font-semibold whitespace-nowrap"
+                className="min-w-20 px-2 py-1.5 text-left font-devanagari font-semibold whitespace-nowrap"
               >
                 {c}
               </th>
@@ -97,7 +97,7 @@ function GridTable({
             <tr key={ri} className="border-t">
               <th
                 scope="row"
-                className="font-devanagari px-2 py-1.5 text-left font-medium whitespace-nowrap text-muted-foreground"
+                className="px-2 py-1.5 text-left font-devanagari font-medium whitespace-nowrap text-muted-foreground"
               >
                 {row.label}
               </th>
@@ -165,17 +165,17 @@ function ListTable({
               on && HIGHLIGHT_CELL
             )}
           >
-            <dt className="font-devanagari shrink-0 text-sm font-semibold text-muted-foreground">
+            <dt className="shrink-0 font-devanagari text-sm font-semibold text-muted-foreground">
               {item.label}
             </dt>
-            <dd className="font-devanagari min-w-0 text-[15px]">{item.text}</dd>
+            <dd className="min-w-0 font-devanagari text-[15px]">{item.text}</dd>
             <dd className="flex flex-wrap gap-1">
               {item.forms.map((f) => (
                 <button
                   key={f}
                   type="button"
                   onClick={() => void navigate({ to: '/', search: { q: f } })}
-                  className="font-devanagari rounded bg-muted px-1.5 py-px text-sm text-primary underline-offset-2 hover:underline"
+                  className="rounded bg-muted px-1.5 py-px font-devanagari text-sm text-primary underline-offset-2 hover:underline"
                 >
                   {f}
                 </button>
@@ -223,7 +223,7 @@ function ConjugationGroup({
         return (
           <section key={`${s.title ?? ''}-${si}`} aria-label={s.title ?? 'forms'}>
             {s.title ? (
-              <h4 className="font-devanagari mb-2 text-base font-semibold">{s.title}</h4>
+              <h4 className="mb-2 font-devanagari text-base font-semibold">{s.title}</h4>
             ) : null}
             {gridIdx.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -439,7 +439,7 @@ function ParadigmDialogBody({
   return (
     <div className="flex min-h-0 flex-col gap-3">
       <DialogHeader className="pr-8">
-        <DialogTitle className="font-devanagari flex flex-wrap items-baseline gap-x-3 text-2xl">
+        <DialogTitle className="flex flex-wrap items-baseline gap-x-3 font-devanagari text-2xl">
           {p.lemma}
           <span className="text-sm font-normal text-muted-foreground">
             {p.label ? <span className="font-devanagari">{p.label}</span> : null}
@@ -492,7 +492,7 @@ export function ParadigmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col">
+      <DialogContent className="flex max-h-[88vh] flex-col sm:w-fit sm:max-w-[min(72rem,calc(100vw-3rem))] sm:min-w-md">
         <ParadigmDialogBody paradigmId={paradigmId} highlight={highlight} />
       </DialogContent>
     </Dialog>
@@ -519,11 +519,13 @@ export function FormParadigmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col">
+      <DialogContent className="flex max-h-[88vh] flex-col sm:w-fit sm:max-w-[min(72rem,calc(100vw-3rem))] sm:min-w-md">
         {form.paradigm_ids.length > 1 ? (
           <div className="flex flex-wrap gap-1.5 pr-8" aria-label="Choose table">
             {form.paradigm_ids.map((id, i) => {
-              const label = results[i]?.data?.label ?? `#${id}`;
+              const r = results[i];
+              if (r?.isPending) return <Skeleton key={id} className="h-7 w-24 rounded-lg" />;
+              const label = r?.data?.label ?? `#${id}`;
               return (
                 <Button
                   key={id}

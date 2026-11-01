@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronDownIcon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Dictionary, EntryHit } from '@/lib/api/types';
-import { useDisplayText, useDisplayTexts } from '@/components/script/display-script';
+import { KIND_ACCENT } from './kind';
+import { DictionaryInfo, DirectionTag } from './filter';
 import { MatchBadge, SenseHtml } from './sense';
 
 /** Entries longer than this (HTML chars) start collapsed. */
@@ -64,8 +63,7 @@ function SutraDhatuLinks({ entry }: { entry: EntryHit | import('@/lib/api/types'
 }
 
 export function EntryHeadword({ headword, className }: { headword: string; className?: string }) {
-  const display = useDisplayText(headword);
-  return <span className={cn('font-devanagari', className)}>{display}</span>;
+  return <span className={cn('font-devanagari', className)}>{headword}</span>;
 }
 
 /**
@@ -126,38 +124,72 @@ export function DictionaryGroupCard({
   dictionary,
   entries,
   total,
+  index,
   showMatch = true
 }: {
   dictionary: Dictionary;
   entries: EntryHit[];
   total: number;
+  /** 1-based position among the result groups (shown when several). */
+  index?: number;
   showMatch?: boolean;
 }) {
-  const headwords = useDisplayTexts(entries.map((e) => e.headword));
+  const accent = KIND_ACCENT[dictionary.kind];
   return (
-    <section id={`dict-${dictionary.slug}`} aria-label={dictionary.name} className="scroll-mt-24">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 border-b py-3">
+    <section
+      id={`dict-${dictionary.slug}`}
+      aria-label={dictionary.name}
+      className="scroll-mt-32 lg:scroll-mt-20"
+    >
+      <div className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <span
+          aria-hidden
+          className={cn('absolute inset-y-0 left-0 w-1 bg-gradient-to-b', accent.stripe)}
+        />
+        <header className="flex items-center justify-between gap-3 border-b bg-muted/30 py-2.5 pr-4 pl-5">
           <div className="flex min-w-0 items-center gap-2">
-            <Badge variant="secondary" className="shrink-0 font-bold">
+            {index ? (
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground tabular-nums">
+                {index}
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                'shrink-0 rounded-md px-1.5 py-0.5 font-devanagari text-xs font-bold ring-1',
+                accent.badge
+              )}
+            >
               {dictionary.short_name}
-            </Badge>
-            <h2 className="truncate text-sm font-semibold sm:text-base">{dictionary.name}</h2>
+            </span>
+            <DirectionTag dictionary={dictionary} />
+            <Link
+              to="/dict/$slug"
+              params={{ slug: dictionary.slug }}
+              search={{}}
+              className="truncate text-sm font-semibold hover:text-primary hover:underline"
+            >
+              {dictionary.name}
+            </Link>
+            <DictionaryInfo dictionary={dictionary} side="bottom" />
           </div>
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-            {total} {total === 1 ? 'hit' : 'hits'}
+            {total > entries.length ? `${entries.length} of ${total}` : total}{' '}
+            {total === 1 ? 'hit' : 'hits'}
           </span>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5 p-4 sm:p-5">
-          {entries.map((entry, i) => (
-            <article key={entry.id} className="flex flex-col gap-1.5">
+        </header>
+        <div className="flex flex-col divide-y divide-border/60">
+          {entries.map((entry) => (
+            <article
+              key={entry.id}
+              className="flex flex-col gap-1.5 py-4 pr-4 pl-5 sm:pr-6 sm:pl-6"
+            >
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <Link
                   to="/entry/$id"
                   params={{ id: String(entry.id) }}
-                  className="font-devanagari text-xl font-semibold hover:text-primary hover:underline sm:text-2xl"
+                  className="font-devanagari text-xl font-semibold transition-colors hover:text-primary sm:text-2xl"
                 >
-                  {headwords[i] ?? entry.headword}
+                  {entry.headword}
                 </Link>
                 {showMatch ? <MatchBadge match={entry.match} /> : null}
               </div>
@@ -169,8 +201,8 @@ export function DictionaryGroupCard({
               <SutraDhatuLinks entry={entry} />
             </article>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </section>
   );
 }
@@ -186,11 +218,9 @@ export function SnippetOnlyCard({
 }
 
 export function SutraText({ text, className }: { text: string; className?: string }) {
-  const display = useDisplayText(text);
-  return <span className={`font-devanagari ${className ?? ''}`}>{display}</span>;
+  return <span className={cn('font-devanagari', className)}>{text}</span>;
 }
 
 export function DhatuHeadword({ text, className }: { text: string; className?: string }) {
-  const display = useDisplayText(text);
-  return <span className={`font-devanagari ${className ?? ''}`}>{display}</span>;
+  return <span className={cn('font-devanagari', className)}>{text}</span>;
 }
