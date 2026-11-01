@@ -1,0 +1,168 @@
+[package]
+name = "vidyut-test"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# All vidyut crates are pinned to ONE git revision of github.com/ambuda-org/vidyut.
+# Why git and not crates.io: `vidyut-cheda`, `vidyut-sandhi` and `vidyut-akshara` are not
+# published, and cheda's types (kosha::PadaEntry, prakriya::args::*) only line up if every
+# crate comes from the same source. Data in `data/` (py-0.4.0 release) matches this rev
+# (vidyut-kosha has not changed since py-0.4.0).
+[dependencies]
+vidyut-akshara  = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-chandas  = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-cheda    = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-kosha    = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-lipi     = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-prakriya = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+vidyut-sandhi   = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+
+# vidyut-prakriya does heavy rule application; debug builds are very slow for it.
+# debug-assertions=false also stops prakriya from inserting internal debug lines
+# (rule code "    ") into `Prakriya::history()`.
+[profile.dev.package."*"]
+opt-level = 3
+debug-assertions = false
+
+# ---- examples (examples/<crate>/<fn>.rs → cargo run --example <crate>_<fn>) ----
+[[example]]
+name = "akshara_sound_set"
+path = "examples/akshara/sound_set.rs"
+
+[[example]]
+name = "chandas_classify_all"
+path = "examples/chandas/classify_all.rs"
+
+[[example]]
+name = "chandas_classify"
+path = "examples/chandas/classify.rs"
+
+[[example]]
+name = "chandas_meters"
+path = "examples/chandas/meters.rs"
+
+[[example]]
+name = "chandas_scan"
+path = "examples/chandas/scan.rs"
+
+[[example]]
+name = "cheda_lemma_probability"
+path = "examples/cheda/lemma_probability.rs"
+
+[[example]]
+name = "cheda_segment"
+path = "examples/cheda/segment.rs"
+
+[[example]]
+name = "kosha_contains_key"
+path = "examples/kosha/contains_key.rs"
+
+[[example]]
+name = "kosha_dhatus"
+path = "examples/kosha/dhatus.rs"
+
+[[example]]
+name = "kosha_lookup"
+path = "examples/kosha/lookup.rs"
+
+[[example]]
+name = "kosha_lookup_to_prakriya"
+path = "examples/kosha/lookup_to_prakriya.rs"
+
+[[example]]
+name = "kosha_pratipadikas"
+path = "examples/kosha/pratipadikas.rs"
+
+[[example]]
+name = "lipi_detect"
+path = "examples/lipi/detect.rs"
+
+[[example]]
+name = "lipi_mapping"
+path = "examples/lipi/mapping.rs"
+
+[[example]]
+name = "lipi_schemes"
+path = "examples/lipi/schemes.rs"
+
+[[example]]
+name = "lipi_transliterate"
+path = "examples/lipi/transliterate.rs"
+
+[[example]]
+name = "prakriya_dhatupatha"
+path = "examples/prakriya/dhatupatha.rs"
+
+[[example]]
+name = "prakriya_explain_steps"
+path = "examples/prakriya/explain_steps.rs"
+
+[[example]]
+name = "prakriya_ganapatha"
+path = "examples/prakriya/ganapatha.rs"
+
+[[example]]
+name = "prakriya_krdanta"
+path = "examples/prakriya/krdanta.rs"
+
+[[example]]
+name = "prakriya_namadhatu"
+path = "examples/prakriya/namadhatu.rs"
+
+[[example]]
+name = "prakriya_options"
+path = "examples/prakriya/options.rs"
+
+[[example]]
+name = "prakriya_samasa"
+path = "examples/prakriya/samasa.rs"
+
+[[example]]
+name = "prakriya_sanadi"
+path = "examples/prakriya/sanadi.rs"
+
+[[example]]
+name = "prakriya_stryanta"
+path = "examples/prakriya/stryanta.rs"
+
+[[example]]
+name = "prakriya_subanta"
+path = "examples/prakriya/subanta.rs"
+
+[[example]]
+name = "prakriya_taddhitanta"
+path = "examples/prakriya/taddhitanta.rs"
+
+[[example]]
+name = "prakriya_tinanta"
+path = "examples/prakriya/tinanta.rs"
+
+[[example]]
+name = "prakriya_upasarga"
+path = "examples/prakriya/upasarga.rs"
+
+[[example]]
+name = "prakriya_vakya"
+path = "examples/prakriya/vakya.rs"
+
+[[example]]
+name = "sandhi_custom_rules"
+path = "examples/sandhi/custom_rules.rs"
+
+[[example]]
+name = "sandhi_generate_rules"
+path = "examples/sandhi/generate_rules.rs"
+
+[[example]]
+name = "sandhi_join"
+path = "examples/sandhi/join.rs"
+
+[[example]]
+name = "sandhi_split_all"
+path = "examples/sandhi/split_all.rs"
+
+[[example]]
+name = "sandhi_split_at"
+path = "examples/sandhi/split_at.rs"
+
