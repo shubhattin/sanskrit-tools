@@ -12,3 +12,7 @@ frontend/dist
 /db/
 .vercel
 .env*
+
+# vidyut-test: downloaded data + build output (kept on disk across branch switches)
+/vidyut-test/data/
+/vidyut-test/target/
