@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { LogInIcon, LogOutIcon, UserIcon } from 'lucide-react';
+import { LogOutIcon, UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { authClient, isAdmin, signInWith } from '@/lib/auth-client';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,10 +99,14 @@ export function AccountButton() {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button variant="ghost" size="sm" aria-label="Log in" title="Log in">
-              <LogInIcon className="size-4" aria-hidden />
-              <span className="max-sm:hidden">Log in</span>
-            </Button>
+            <button
+              type="button"
+              className="ml-0.5 grid size-8 cursor-pointer place-items-center rounded-full bg-muted text-muted-foreground ring-1 ring-foreground/10 transition hover:text-foreground hover:ring-foreground/25"
+              aria-label="Log in"
+              title="Log in"
+            >
+              <UserIcon className="size-4" aria-hidden />
+            </button>
           }
         />
         <DropdownMenuContent align="end" className="w-60">
