@@ -203,6 +203,8 @@
     background-size: 200% auto;
     background-clip: text;
     color: transparent;
+    /* background-clip: text paints only inside the box; keep ि / ी / repha inside it. */
+    padding-block: 0.12em;
     animation: hero-shine 9s ease-in-out infinite alternate;
   }
 
@@ -302,4 +304,14 @@ html {
       transform: translateX(250%) scaleX(0.6);
     }
   }
+}
+
+/* Devanagari vowel signs (ि ी ॆ ै) and repha rise well above the Latin cap height:
+   Noto Sans Devanagari needs ~1.5em of line box. Inputs and truncated / clipped text
+   cut glyphs at their line box, so give those a taller one. Unlayered on purpose so it
+   wins over the text-* / leading-* utilities. */
+:is(input, textarea).font-devanagari,
+.font-devanagari:is(.truncate, .overflow-hidden, .text-ellipsis),
+:is(.truncate, .overflow-hidden) > .font-devanagari {
+  line-height: 1.65;
 }
