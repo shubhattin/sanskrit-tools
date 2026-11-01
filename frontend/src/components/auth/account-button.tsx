@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -106,7 +107,9 @@ export function AccountButton() {
           }
         />
         <DropdownMenuContent align="end" className="w-60">
-          <DropdownMenuLabel>Sign in</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Sign in</DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <SignInMenuItems pending={signInPending} onSignIn={(p) => void signIn(p)} />
         </DropdownMenuContent>
@@ -135,19 +138,21 @@ export function AccountButton() {
         }
       />
       <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
-          {user.name ? (
-            <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
-          ) : null}
-          {user.email ? (
-            <span className="truncate text-xs text-muted-foreground">{user.email}</span>
-          ) : null}
-          {isAdmin(user) ? (
-            <span className="mt-1 text-[11px] font-medium tracking-wide text-primary uppercase">
-              Admin
-            </span>
-          ) : null}
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+            {user.name ? (
+              <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
+            ) : null}
+            {user.email ? (
+              <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+            ) : null}
+            {isAdmin(user) ? (
+              <span className="mt-1 text-[11px] font-medium tracking-wide text-primary uppercase">
+                Admin
+              </span>
+            ) : null}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={signingOut} onSelect={() => void signOut()}>
           <LogOutIcon className="size-4" aria-hidden /> Sign out
