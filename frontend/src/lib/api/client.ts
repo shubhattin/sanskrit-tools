@@ -43,6 +43,8 @@ export interface SearchParams {
   q: string;
   mode: SearchMode;
   dicts?: string;
+  /** Inflected-form analysis (Sanskrit mode). */
+  forms: boolean;
 }
 
 export function dictionariesQuery() {
@@ -54,12 +56,14 @@ export function dictionariesQuery() {
 }
 
 export function searchQuery(params: SearchParams) {
-  const { q, mode, dicts } = params;
+  const { q, mode, dicts, forms } = params;
+  const withForms = mode === 'sa' && forms;
   return queryOptions({
-    queryKey: ['search', q, mode, dicts ?? ''],
+    queryKey: ['search', q, mode, dicts ?? '', withForms],
     queryFn: () => {
       const sp = new URLSearchParams({ q, mode, limit: String(SEARCH_LIMIT) });
       if (dicts) sp.set('dicts', dicts);
+      if (!withForms) sp.set('forms', '0');
       return fetchJson<SearchResponse>(`/api/search?${sp.toString()}`);
     },
     // Only run when there is an actual query; routes gate this with `enabled`.
@@ -119,6 +123,16 @@ export function sutrasQuery(q?: string) {
       return fetchJson<Sutra[]>(`/api/sutras${qs ? `?${qs}` : ''}`);
     },
     staleTime: 1000 * 60 * 30
+  });
+}
+
+/** Every sūtra (≈4k) for on-device filtering. */
+export function allSutrasQuery() {
+  return queryOptions({
+    queryKey: ['sutras', 'all'],
+    queryFn: () => fetchJson<Sutra[]>('/api/sutras?all=1'),
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60
   });
 }
 

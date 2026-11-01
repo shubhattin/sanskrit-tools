@@ -160,7 +160,11 @@ function BrowseNearby({ slug, seq, currentId }: { slug: string; seq: number; cur
           Browse nearby in {dictionary?.short_name ?? slug}
         </h2>
         {browse.isPending ? (
-          <Skeleton className="h-10" />
+          <div className="flex flex-col gap-1.5" role="status" aria-label="Loading nearby entries">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 rounded-md" />
+            ))}
+          </div>
         ) : (
           <ul className="flex flex-col gap-1">
             {items.map((item) => (
@@ -170,8 +174,8 @@ function BrowseNearby({ slug, seq, currentId }: { slug: string; seq: number; cur
                   params={{ id: String(item.id) }}
                   className={
                     item.id === currentId
-                      ? 'font-devanagari block rounded-md bg-muted px-2 py-1 font-semibold'
-                      : 'font-devanagari block rounded-md px-2 py-1 hover:bg-muted hover:underline'
+                      ? 'block rounded-md bg-muted px-2 py-1 font-devanagari font-semibold'
+                      : 'block rounded-md px-2 py-1 font-devanagari hover:bg-muted hover:underline'
                   }
                   aria-current={item.id === currentId ? 'page' : undefined}
                 >
@@ -186,7 +190,7 @@ function BrowseNearby({ slug, seq, currentId }: { slug: string; seq: number; cur
             <Link to="/entry/$id" params={{ id: String(prev.id) }}>
               <Button variant="outline" size="sm">
                 <ArrowLeftIcon className="size-4" aria-hidden />
-                <span className="font-devanagari max-w-32 truncate">{prev.headword}</span>
+                <span className="max-w-32 truncate font-devanagari">{prev.headword}</span>
               </Button>
             </Link>
           ) : prevSeq !== null ? (
@@ -197,7 +201,7 @@ function BrowseNearby({ slug, seq, currentId }: { slug: string; seq: number; cur
           {next ? (
             <Link to="/entry/$id" params={{ id: String(next.id) }}>
               <Button variant="outline" size="sm">
-                <span className="font-devanagari max-w-32 truncate">{next.headword}</span>
+                <span className="max-w-32 truncate font-devanagari">{next.headword}</span>
                 <ArrowRightIcon className="size-4" aria-hidden />
               </Button>
             </Link>
@@ -225,13 +229,14 @@ function BrowseSeqButton({
 }) {
   const browse = useQuery(browseQuery({ slug, seq, before: 0, after: 1 }));
   const item = browse.data?.items[0];
+  if (browse.isPending) return <Skeleton className="h-7 w-28 rounded-lg" />;
   if (!item) return <span />;
   const Icon = icon === 'prev' ? ArrowLeftIcon : ArrowRightIcon;
   return (
     <Link to="/entry/$id" params={{ id: String(item.id) }}>
       <Button variant="outline" size="sm">
         {icon === 'prev' ? <Icon className="size-4" aria-hidden /> : null}
-        <span className="font-devanagari max-w-32 truncate">{item.headword || label}</span>
+        <span className="max-w-32 truncate font-devanagari">{item.headword || label}</span>
         {icon === 'next' ? <Icon className="size-4" aria-hidden /> : null}
       </Button>
     </Link>

@@ -11,8 +11,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { Skeleton } from '@/components/ui/skeleton';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { useLipiInput } from '@/components/lipi/typing';
-import { LipiToggle } from '@/components/lipi/toggle';
-import { useDisplayTexts } from '@/components/script/display-script';
 
 export const Route = createFileRoute('/dict/$slug')({
   validateSearch: (search: Record<string, unknown>): { seq?: number; q?: string } => ({
@@ -38,7 +36,7 @@ function JumpForm({
     setSynced(initial);
     setJump(initial ?? '');
   }
-  const lipiProps = useLipiInput(jump, setJump);
+  const { props: lipiProps } = useLipiInput(jump, setJump, true);
   return (
     <form
       role="search"
@@ -61,9 +59,6 @@ function JumpForm({
           spellCheck={false}
           className="font-devanagari"
         />
-        <InputGroupAddon align="inline-end">
-          <LipiToggle />
-        </InputGroupAddon>
       </InputGroup>
     </form>
   );
@@ -112,7 +107,6 @@ function DictBrowsePage() {
 
   const items = browse.data?.items ?? [];
   const dictionary = browse.data?.dictionary;
-  const headwords = useDisplayTexts(items.map((i) => i.headword));
 
   return (
     <div className="flex flex-col gap-4">
@@ -182,14 +176,14 @@ function DictBrowsePage() {
             </CardHeader>
             <CardContent className="p-2">
               <ol className="flex flex-col">
-                {items.map((item, i) => (
+                {items.map((item) => (
                   <li key={item.id}>
                     <Link
                       to="/entry/$id"
                       params={{ id: String(item.id) }}
-                      className="font-devanagari flex items-baseline justify-between gap-3 rounded-md px-2 py-1 text-lg hover:bg-muted hover:underline"
+                      className="flex items-baseline justify-between gap-3 rounded-md px-2 py-1 font-devanagari text-lg hover:bg-muted hover:underline"
                     >
-                      <span>{headwords[i] ?? item.headword}</span>
+                      <span>{item.headword}</span>
                       <span className="text-xs text-muted-foreground tabular-nums">{item.seq}</span>
                     </Link>
                   </li>

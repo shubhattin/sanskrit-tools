@@ -434,6 +434,10 @@ export type SearchQueryData = {
          * Hits per dictionary (default 20, max 100)
          */
         limit?: number;
+        /**
+         * Inflected-form analysis: 1 (default) or 0 to skip it
+         */
+        forms?: string;
     };
     url: '/api/search';
 };
@@ -502,6 +506,10 @@ export type SutrasListData = {
          * Number prefix (e.g. 1.1) or text
          */
         q?: string;
+        /**
+         * 1 returns every sūtra (q ignored, no limit)
+         */
+        all?: string;
     };
     url: '/api/sutras';
 };

@@ -110,11 +110,11 @@ interface DhatuDetail { dhatu: Dhatu; works: { dictionary: Dictionary; entries: 
 | Method | Path | Query | Response |
 |---|---|---|---|
 | GET | `/api/dictionaries` | – | `Dictionary[]` |
-| GET | `/api/search` | `q` (required), `mode`=`sa`\|`en` (default `sa`), `dicts`=comma slugs (optional), `limit` per dict (default 20, max 100) | `SearchResponse` |
+| GET | `/api/search` | `q` (required), `mode`=`sa`\|`en` (default `sa`), `dicts`=comma slugs (optional), `limit` per dict (default 20, max 100), `forms`=`0` to skip inflected-form analysis (default on; ending variants like ज्ञानम् ↔ ज्ञान still match) | `SearchResponse` |
 | GET | `/api/suggest` | `q`, `limit` (default 12, max 50) | `Suggestion[]` (prefix autocomplete) |
 | GET | `/api/entries/{id}` | – | `{ entry: Entry, dictionary: Dictionary }` |
 | GET | `/api/dictionaries/{slug}/browse` | `seq` (center, default 0), `before` (default 15), `after` (default 30); or `q` to jump to a headword | `{ dictionary: Dictionary, items: BrowseItem[], center: number }` (`center` = seq jumped to) |
-| GET | `/api/sutras` | `q` optional (number prefix like `1.1` or text) | `Sutra[]` (max 200) |
+| GET | `/api/sutras` | `q` optional (number prefix like `1.1` or text); `all=1` for the whole list (q ignored) | `Sutra[]` (max 200 unless `all=1`) |
 | GET | `/api/sutras/{id}` | – | `SutraDetail` |
 | GET | `/api/dhatus` | `q` optional, `gana` optional | `Dhatu[]` (whole list, ≤ 2,282) |
 | GET | `/api/dhatus/{id}` | – | `DhatuDetail` |

@@ -33,6 +33,8 @@ pub struct SearchParams {
   mode: Option<String>,
   dicts: Option<String>,
   limit: Option<i64>,
+  /// Inflected-form analysis (`0`/`false` disables it; default on).
+  forms: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -227,6 +229,7 @@ struct KeyRow {
         ("mode" = Option<String>, Query, description = "sa (default) or en (English full-text)"),
         ("dicts" = Option<String>, Query, description = "Comma-separated dictionary slugs (optional)"),
         ("limit" = Option<i64>, Query, description = "Hits per dictionary (default 20, max 100)"),
+        ("forms" = Option<String>, Query, description = "Inflected-form analysis: 1 (default) or 0 to skip it"),
     ),
     responses(
         (status = 200, description = "Search hits grouped by dictionary", body = SearchResponse),
@@ -255,6 +258,7 @@ pub async fn search(
     return english(&state, q, limit, &dicts, all_dicts).await;
   }
 
+  let with_forms = !matches!(p.forms.as_deref(), Some("0" | "false"));
   let keys = query_keys(q);
   let mut hits: HashMap<i32, (i32, &'static str)> = HashMap::new(); // entry → (dict, match)
   let add =
@@ -266,10 +270,14 @@ pub async fn search(
 
   // 1. exact key hits and 2. inflected-form analysis are independent —
   // run them concurrently (each holds its own pool connection).
-  let (exact_rows, forms) = tokio::join!(
-    match_keys(&state, KeyColumn::Slp1, &keys, &dicts),
-    analyze_forms(&state, &keys),
-  );
+  let (exact_rows, forms) =
+    tokio::join!(match_keys(&state, KeyColumn::Slp1, &keys, &dicts), async {
+      if with_forms {
+        analyze_forms(&state, &keys).await
+      } else {
+        Ok(Vec::new())
+      }
+    },);
   add(exact_rows?, "exact", &mut hits);
 
   // 2. inflected forms → lemma (and root for kṛdanta / conjugation); ending variants

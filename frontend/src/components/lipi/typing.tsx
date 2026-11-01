@@ -14,108 +14,29 @@ import {
   createTypingContext,
   handleTypingBeforeInputEvent
 } from 'lipilekhika/typing';
-import type { ScriptListType } from 'lipilekhika';
-import { SCRIPT_LIST } from 'lipilekhika';
-
-export { SCRIPT_LIST };
-export type { ScriptListType };
 
 type FieldElement = HTMLInputElement | HTMLTextAreaElement;
+type TypingContext = ReturnType<typeof createTypingContext>;
 
-interface LipiTypingState {
-  enabled: boolean;
-  setEnabled: (next: boolean) => void;
-  toggle: () => void;
-  script: ScriptListType;
-  setScript: (next: ScriptListType) => void;
-  typingContext: ReturnType<typeof createTypingContext>;
-}
+const LipiTypingContext = createContext<TypingContext | null>(null);
 
-const LipiTypingContext = createContext<LipiTypingState | null>(null);
-
-const ENABLED_KEY = 'sans-dict-lipi-enabled';
-const SCRIPT_KEY = 'sans-dict-lipi-script';
-
-function readStoredEnabled(): boolean {
-  try {
-    return localStorage.getItem(ENABLED_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function readStoredScript(): ScriptListType {
-  try {
-    const raw = localStorage.getItem(SCRIPT_KEY);
-    if (raw && (SCRIPT_LIST as readonly string[]).includes(raw)) {
-      return raw as ScriptListType;
-    }
-  } catch {
-    // Ignore storage errors and fall back to the default.
-  }
-  return 'Devanagari';
-}
-
+/** One shared Devanagari typing context (phonetic Latin → Devanagari). */
 export function LipiTypingProvider({ children }: { children: ReactNode }) {
-  // Lipi Lekhika typing is off by default; the user opts in per device.
-  const [enabled, setEnabledState] = useState<boolean>(() =>
-    typeof window === 'undefined' ? false : readStoredEnabled()
-  );
-  const [script, setScriptState] = useState<ScriptListType>(() =>
-    typeof window === 'undefined' ? 'Devanagari' : readStoredScript()
-  );
-
-  const typingContext = useMemo(() => createTypingContext(script), [script]);
-
+  const typingContext = useMemo(() => createTypingContext('Devanagari'), []);
   // Eagerly load the typing data so the first keystroke has no latency.
   useEffect(() => {
     void typingContext.ready;
   }, [typingContext]);
-
-  const setEnabled = useCallback((next: boolean) => {
-    setEnabledState(next);
-    try {
-      localStorage.setItem(ENABLED_KEY, next ? '1' : '0');
-    } catch {
-      // Non-fatal: typing still works for this session.
-    }
-  }, []);
-
-  const toggle = useCallback(() => {
-    setEnabledState((prev) => {
-      try {
-        localStorage.setItem(ENABLED_KEY, prev ? '0' : '1');
-      } catch {
-        // Non-fatal.
-      }
-      return !prev;
-    });
-  }, []);
-
-  const setScript = useCallback((next: ScriptListType) => {
-    setScriptState(next);
-    try {
-      localStorage.setItem(SCRIPT_KEY, next);
-    } catch {
-      // Non-fatal.
-    }
-  }, []);
-
-  const value = useMemo<LipiTypingState>(
-    () => ({ enabled, setEnabled, toggle, script, setScript, typingContext }),
-    [enabled, setEnabled, toggle, script, setScript, typingContext]
-  );
-
-  return <LipiTypingContext.Provider value={value}>{children}</LipiTypingContext.Provider>;
+  return <LipiTypingContext.Provider value={typingContext}>{children}</LipiTypingContext.Provider>;
 }
 
-export function useLipiTyping(): LipiTypingState {
+function useTypingContext(): TypingContext {
   const ctx = useContext(LipiTypingContext);
-  if (!ctx) throw new Error('useLipiTyping must be used within LipiTypingProvider');
+  if (!ctx) throw new Error('useLipiInput must be used within LipiTypingProvider');
   return ctx;
 }
 
-export function isLipiToggleKey(event: KeyboardEvent<FieldElement>): boolean {
+function isLipiToggleKey(event: KeyboardEvent<FieldElement>): boolean {
   return (
     event.altKey &&
     (event.key === 'x' || event.key === 'X' || event.key === 'c' || event.key === 'C')
@@ -132,10 +53,22 @@ export interface LipiInputProps {
 
 /**
  * Binds Lipi Lekhika realtime transliteration typing to a controlled input.
- * Alt+X / Alt+C toggles typing (preventDefault so the browser menu stays shut).
+ * `defaultEnabled` follows the context (on for Sanskrit, off for English);
+ * Alt+X / Alt+C flips it for the current field until `defaultEnabled` changes.
  */
-export function useLipiInput(value: string, setValue: (next: string) => void): LipiInputProps {
-  const { enabled, toggle, typingContext } = useLipiTyping();
+export function useLipiInput(
+  value: string,
+  setValue: (next: string) => void,
+  defaultEnabled: boolean
+): { props: LipiInputProps; enabled: boolean; setEnabled: (next: boolean) => void } {
+  const typingContext = useTypingContext();
+  const [enabled, setEnabled] = useState(defaultEnabled);
+  // Render-time adjustment: reset the override when the context flips.
+  const [syncedDefault, setSyncedDefault] = useState(defaultEnabled);
+  if (syncedDefault !== defaultEnabled) {
+    setSyncedDefault(defaultEnabled);
+    setEnabled(defaultEnabled);
+  }
 
   const onChange = useCallback(
     (event: FormEvent<FieldElement>) => {
@@ -159,16 +92,25 @@ export function useLipiInput(value: string, setValue: (next: string) => void): L
     (event: KeyboardEvent<FieldElement>) => {
       if (isLipiToggleKey(event)) {
         event.preventDefault();
-        toggle();
+        typingContext.clearContext();
+        setEnabled((v) => !v);
         return;
       }
       clearTypingContextOnKeyDown(event, typingContext);
     },
-    [toggle, typingContext]
+    [typingContext]
   );
 
-  return useMemo(
+  const props = useMemo(
     () => ({ value, onChange, onBeforeInput, onBlur, onKeyDown }),
     [value, onChange, onBeforeInput, onBlur, onKeyDown]
   );
+  const setEnabledClearing = useCallback(
+    (next: boolean) => {
+      typingContext.clearContext();
+      setEnabled(next);
+    },
+    [typingContext]
+  );
+  return { props, enabled, setEnabled: setEnabledClearing };
 }

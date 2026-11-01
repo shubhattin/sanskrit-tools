@@ -12,7 +12,6 @@ import {
   type Theme
 } from '@/components/theme-provider';
 import { LipiTypingProvider } from '@/components/lipi/typing';
-import { DisplayScriptProvider } from '@/components/script/display-script';
 import { Header } from '@/components/layout/header';
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
@@ -79,18 +78,20 @@ function RootProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider defaultTheme={DEFAULT_THEME} storageKey={DEFAULT_THEME_STORAGE_KEY}>
       <LipiTypingProvider>
-        <DisplayScriptProvider>
-          <div className="flex min-h-dvh flex-col">
-            <Header />
-            <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 py-5 sm:px-4 sm:py-8">
-              {children}
-            </main>
-            <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-              Data: Arsha Drishti StarDict bundle · Cologne CDSL · Sanskrit Heritage · JNU
-            </footer>
-          </div>
-          <Toaster richColors={true} />
-        </DisplayScriptProvider>
+        <div className="relative isolate flex min-h-dvh flex-col">
+          <div
+            aria-hidden
+            className="app-backdrop pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem]"
+          />
+          <Header />
+          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-5 sm:px-6 sm:py-8">
+            {children}
+          </main>
+          <footer className="border-t border-border/60 py-5 text-center text-xs text-muted-foreground">
+            Data: Arsha Drishti StarDict bundle · Cologne CDSL · Sanskrit Heritage · JNU
+          </footer>
+        </div>
+        <Toaster richColors={true} />
       </LipiTypingProvider>
     </ThemeProvider>
   );
