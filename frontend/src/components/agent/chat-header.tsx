@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { BookOpenIcon, InfoIcon } from 'lucide-react';
 import { dictionariesQuery } from '@/lib/api/client';
-import { AGENT_MODELS } from '@/lib/agent/models';
-import type { AgentModelId, AgentUIMessage } from '@/lib/agent/types';
+import type { AgentUIMessage } from '@/lib/agent/types';
 import { resolveSelectedSlugs, useSearchPrefs } from '@/lib/search-prefs';
 import { DictionaryPicker } from '@/components/dict/filter';
 import { Button } from '@/components/ui/button';
@@ -169,11 +168,9 @@ function InfoButton({ messages }: { messages: AgentUIMessage[] }) {
 
 export function ChatHeader({
   title,
-  model,
   messages
 }: {
   title: string;
-  model: AgentModelId;
   messages: AgentUIMessage[];
 }) {
   return (
@@ -181,7 +178,6 @@ export function ChatHeader({
       <MobileHistoryButton />
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-sm font-semibold text-foreground">{title}</h1>
-        <p className="truncate text-xs text-muted-foreground">{AGENT_MODELS[model].label}</p>
       </div>
       <DictionariesButton />
       <ContextButton />

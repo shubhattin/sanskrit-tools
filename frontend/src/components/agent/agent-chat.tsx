@@ -196,7 +196,7 @@ export function AgentChat({ data }: { data: AgentChatData }) {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <ChatHeader title={chat.title || 'New chat'} model={model} messages={messages} />
+      <ChatHeader title={chat.title || 'New chat'} messages={messages} />
       {!busy && chat.streaming ? (
         <p
           role="status"
