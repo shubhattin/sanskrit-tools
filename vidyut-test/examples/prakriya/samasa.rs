@@ -7,7 +7,7 @@
 //! Run: cargo run --example prakriya_samasa
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn sup(stem: &str, vibhakti: Vibhakti) -> Subanta {
   let p = Pratipadika::basic(Slp1String::from(slp(stem)).unwrap());
@@ -57,7 +57,7 @@ fn main() {
     let mut f: Vec<_> = v
       .derive_samasas(&s)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect();
     f.dedup();
     // Decline the compound stem as a full word (puM prathamā eka; dvandva as dvi).
@@ -71,12 +71,12 @@ fn main() {
     } else {
       v.derive_subantas(&Subanta::new(s.clone(), Linga::Pum, Prathama, vacana))
         .iter()
-        .map(|p| iast(&p.text()))
+        .map(|p| rom(&p.text()))
         .collect()
     };
     println!(
       "{:<22} {:<13} stem: {:<18} word: {}",
-      label,
+      echo(label),
       format!("{ty:?}"),
       f.join(" / "),
       word.join(" / ")
@@ -87,7 +87,7 @@ fn main() {
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_samasa
 // rājan(6) + puruṣa      Tatpurusha    stem: rājapuruṣa         word: rājapuruṣaḥ
-// nīla + utpala          Karmadharaya  stem: nīlotpala          word: nīlotpalaḥ
+// nīla + utpala          Karmadharaya  stem: nīlōtpala          word: nīlōtpalaḥ
 // pīta + ambara          Bahuvrihi     stem: pītāmbara          word: pītāmbaraḥ
 // rāma + kṛṣṇa           Dvandva       stem: rāmakṛṣṇa          word: rāmakṛṣṇau
 // upa + kumbha           Avyayibhava   stem: upakumbham         word: (avyaya, indeclinable)

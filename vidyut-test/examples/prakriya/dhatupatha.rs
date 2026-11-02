@@ -7,7 +7,7 @@
 //! Run: cargo run --example prakriya_dhatupatha [-- "IAST clean root to search"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::dhatupatha::Dhatupatha;
-use vidyut_test::{data_dir, iast, slp};
+use vidyut_test::{data_dir, rom, slp};
 
 fn main() {
   let dp = Dhatupatha::from_path(data_dir().join("prakriya/dhatupatha.tsv")).unwrap();
@@ -16,8 +16,8 @@ fn main() {
 
   let d = dp.get("01.0001").unwrap();
   println!(
-    "get(\"01.0001\") -> aupadeśika {:?}, gaṇa {:?}\n",
-    d.aupadeshika(),
+    "get(\"01.0001\") -> aupadeśika {}, gaṇa {:?}\n",
+    rom(d.aupadeshika().unwrap_or("")),
     d.gana()
   );
 
@@ -33,10 +33,10 @@ fn main() {
       println!(
         "{}  {:<10} clean={:<6} gaṇa={:<8} artha: {}",
         e.code(),
-        e.dhatu().aupadeshika().unwrap_or(""),
-        iast(&clean[0]),
+        rom(e.dhatu().aupadeshika().unwrap_or("")),
+        rom(&clean[0]),
         format!("{:?}", e.dhatu().gana().unwrap()),
-        iast(e.artha())
+        rom(e.artha())
       );
     }
   }
@@ -45,7 +45,7 @@ fn main() {
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_dhatupatha
 // 2229 roots loaded
-// get("01.0001") -> aupadeśika Some("BU"), gaṇa Some(Bhvadi)
+// get("01.0001") -> aupadeśika bhū, gaṇa Some(Bhvadi)
 //
-// 05.0007  kf\Y       clean=kṛ     gaṇa=Svadi    artha: hiṃsāyām
-// 08.0010  qukf\Y     clean=kṛ     gaṇa=Tanadi   artha: karaṇe
+// 05.0007  kṛ↓ñ       clean=kṛ     gaṇa=Svadi    artha: hiṁsāyām
+// 08.0010  ḍukṛ↓ñ     clean=kṛ     gaṇa=Tanadi   artha: karaṇē

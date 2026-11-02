@@ -5,13 +5,13 @@
 //! Run: cargo run --example prakriya_tinanta [-- "IAST root [gaṇa]" | "dhātupāṭha code"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::iast;
+use vidyut_test::{echo, rom};
 
 fn forms(v: &Vyakarana, t: &Tinanta) -> String {
   let mut out: Vec<_> = v
     .derive_tinantas(t)
     .iter()
-    .map(|p| iast(&p.text()))
+    .map(|p| rom(&p.text()))
     .collect();
   out.dedup();
   out.join(" / ")
@@ -22,8 +22,9 @@ fn main() {
   let root = vidyut_test::arg_or("bhū");
   let (code, artha, dhatu) = vidyut_test::dhatu(&root);
   println!(
-    "{root} → dhātupāṭha {code} {} ({artha})",
-    iast(dhatu.aupadeshika().unwrap_or(""))
+    "{} → dhātupāṭha {code} {} ({artha})",
+    echo(&root),
+    rom(dhatu.aupadeshika().unwrap_or(""))
   );
   println!("kartari prayoga; columns = Eka | Dvi | Bahu\n");
 
@@ -89,9 +90,9 @@ fn main() {
 //   Madhyama  abhavaḥ  |  abhavatam  |  abhavata
 //   Uttama    abhavam  |  abhavāva  |  abhavāma
 // VidhiLin
-//   Prathama  bhavet / bhaved  |  bhavetām  |  bhaveyuḥ
-//   Madhyama  bhaveḥ  |  bhavetam  |  bhaveta
-//   Uttama    bhaveyam  |  bhaveva  |  bhavema
+//   Prathama  bhavēt / bhavēd  |  bhavētām  |  bhavēyuḥ
+//   Madhyama  bhavēḥ  |  bhavētam  |  bhavēta
+//   Uttama    bhavēyam  |  bhavēva  |  bhavēma
 // AshirLin
 //   Prathama  bhūyāt / bhūyād  |  bhūyāstām  |  bhūyāsuḥ
 //   Madhyama  bhūyāḥ  |  bhūyāstam  |  bhūyāsta
@@ -105,6 +106,6 @@ fn main() {
 //   Madhyama  abhaviṣyaḥ  |  abhaviṣyatam  |  abhaviṣyata
 //   Uttama    abhaviṣyam  |  abhaviṣyāva  |  abhaviṣyāma
 //
-// Karmani laṭ 3sg: bhūyate
+// Karmani laṭ 3sg: bhūyatē
 //
-// Bhave laṭ 3sg: bhūyate
+// Bhave laṭ 3sg: bhūyatē

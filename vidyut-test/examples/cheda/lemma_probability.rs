@@ -5,7 +5,7 @@
 //!
 //! Run: cargo run --example cheda_lemma_probability [-- "IAST lemma"]
 use vidyut_cheda::{Chedaka, POSTag};
-use vidyut_test::{data_dir, slp};
+use vidyut_test::{data_dir, echo, slp};
 
 fn main() {
   let chedaka = Chedaka::new(&data_dir()).unwrap();
@@ -40,7 +40,7 @@ fn main() {
     };
     println!(
       "{:<10} {:>9} {:>9} {:>9}",
-      l,
+      echo(&l),
       f(POSTag::Subanta),
       f(POSTag::Tinanta),
       f(POSTag::Avyaya)
@@ -51,12 +51,12 @@ fn main() {
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example cheda_lemma_probability
 // lemma        Subanta   Tinanta    Avyaya
-// deva           -2.40     -4.26     -4.45
+// dēva           -2.40     -4.26     -4.45
 // rāma           -3.03     -3.85     -6.14
 // kṛṣṇa          -2.83         -         -
 // gaja           -3.59         -         -
 // upamanyu       -4.77         -     -6.74
-// ca             -5.42         -     -1.51
+// cha            -5.42         -     -1.51
 // iti            -5.56     -6.44     -1.88
 // bhū            -2.87     -2.20     -3.53
 // gam            -2.85     -2.82     -3.40

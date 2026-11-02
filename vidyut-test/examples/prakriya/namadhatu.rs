@@ -5,7 +5,7 @@
 //! Run: cargo run --example prakriya_namadhatu [-- "IAST stem"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let v = Vyakarana::builder().log_steps(false).build();
@@ -27,12 +27,12 @@ fn main() {
       let f: Vec<_> = v
         .derive_tinantas(&t)
         .iter()
-        .map(|p| iast(&p.text()))
+        .map(|p| rom(&p.text()))
         .collect();
       println!(
         "{:<8} + {:<7} -> {}",
-        stem,
-        sanadi.as_str(),
+        echo(&stem),
+        rom(sanadi.as_str()),
         if f.is_empty() {
           "-".into()
         } else {
@@ -45,12 +45,12 @@ fn main() {
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_namadhatu
-// putra    + kyac    -> putrīyati
-// putra    + kAmyac  -> putrakāmyati
-// putra    + kyaN    -> putrāyate
-// śyena    + kyac    -> śyenīyati
-// śyena    + kAmyac  -> śyenakāmyati
-// śyena    + kyaN    -> śyenāyate
-// kṛṣṇa    + kyac    -> kṛṣṇīyati
-// kṛṣṇa    + kAmyac  -> kṛṣṇakāmyati
-// kṛṣṇa    + kyaN    -> kṛṣṇāyate
+// putra    + kyach   -> putrīyati
+// putra    + kāmyach -> putrakāmyati
+// putra    + kyaṅ    -> putrāyatē
+// śyēna    + kyach   -> śyēnīyati
+// śyēna    + kāmyach -> śyēnakāmyati
+// śyēna    + kyaṅ    -> śyēnāyatē
+// kṛṣṇa    + kyach   -> kṛṣṇīyati
+// kṛṣṇa    + kāmyach -> kṛṣṇakāmyati
+// kṛṣṇa    + kyaṅ    -> kṛṣṇāyatē

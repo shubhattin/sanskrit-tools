@@ -9,7 +9,7 @@
 //!
 //! Run: cargo run --example kosha_dhatus [-- "IAST root to search, e.g. gam"]
 use vidyut_kosha::Kosha;
-use vidyut_test::{data_dir, iast, slp};
+use vidyut_test::{data_dir, rom, slp};
 
 fn main() {
   let kosha = Kosha::new(data_dir().join("kosha")).unwrap();
@@ -24,12 +24,12 @@ fn main() {
     let dh = d.dhatu();
     println!(
       "{} | aupadeśika={} gaṇa={} prefixes={:?} sanadi={:?}\n   sa: {}\n   en: {}\n   hi: {}",
-      iast(d.clean_text()),
-      dh.aupadeshika().map(iast).unwrap_or_default(),
+      rom(d.clean_text()),
+      dh.aupadeshika().map(rom).unwrap_or_default(),
       dh.gana().map(|g| format!("{g:?}")).unwrap_or("-".into()),
-      dh.prefixes(),
+      dh.prefixes().iter().map(|p| rom(p)).collect::<Vec<_>>(),
       dh.sanadi(),
-      d.artha_sa().map(iast).unwrap_or_default(),
+      d.artha_sa().map(rom).unwrap_or_default(),
       d.artha_en().unwrap_or("-"),
       d.artha_hi().unwrap_or("-"),
     );
@@ -40,7 +40,7 @@ fn main() {
 // $ cargo run --example kosha_dhatus
 // 45395 dhatu entries (includes sanadi/upasarga variants)
 //
-// gam | aupadeśika=ga॒mḷm̐ gaṇa=Bhvadi prefixes=[] sanadi=[]
+// gam | aupadeśika=ga↓ml̥m̐ gaṇa=Bhvadi prefixes=[] sanadi=[]
 //    sa: gatau
 //    en: to go
 //    hi: S

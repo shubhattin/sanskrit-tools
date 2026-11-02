@@ -5,7 +5,7 @@
 //!
 //! Run: cargo run --example chandas_classify [-- "IAST verse, lines separated by \n"]
 use vidyut_chandas::Chandas;
-use vidyut_test::{data_dir, slp};
+use vidyut_test::{data_dir, echo, rom, slp};
 
 fn main() {
   let chandas = Chandas::from_file(data_dir().join("chandas/meters.tsv")).unwrap();
@@ -30,21 +30,21 @@ fn main() {
     let name = m
       .padya()
       .as_ref()
-      .map(|p| p.name().to_string())
+      .map(|p| rom(p.name()))
       .unwrap_or("-".into());
     println!(
       "{:<12} {:<8} | {}",
       name,
       format!("{:?}", m.match_type()),
-      v.replace('\n', " / ")
+      echo(&v).replace('\n', " / ")
     );
   }
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example chandas_classify
-// -            None     | dharmakṣetre kurukṣetre samavetā yuyutsavaḥ / māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya
-// vasantatilakA Pada     | mātaḥ samastajagatāṃ madhukaiṭabhāreḥ
-// mandAkrAntA  Pada     | kaścit kāntāvirahaguruṇā svādhikārāt pramattaḥ / śāpenāstaṅgamitamahimā varṣabhogyeṇa bhartuḥ
-// SArdulavikrIqita Pada     | yā kundendutuṣārahāradhavalā yā śubhravastrāvṛtā
-// SrI          Full     | not a verse
+// -            None     | dharmakṣētrē kurukṣētrē samavētā yuyutsavaḥ / māmakāḥ pāṇḍavāś chaiva kim akurvata sañjaya
+// vasantatilakā Pada     | mātaḥ samastajagatāṁ madhukaiṭabhārēḥ
+// mandākrāntā  Pada     | kaśchit kāntāvirahaguruṇā svādhikārāt pramattaḥ / śāpēnāstaṅgamitamahimā varṣabhōgyēṇa bhartuḥ
+// śārdulavikrīḍita Pada     | yā kundēndutuṣārahāradhavalā yā śubhravastrāvṛtā
+// śrī          Full     | nōt a vērsē

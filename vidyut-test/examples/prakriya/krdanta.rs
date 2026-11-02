@@ -6,7 +6,7 @@
 //! Run: cargo run --example prakriya_krdanta [-- "IAST root [gaṇa]" | "dhātupāṭha code"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::iast;
+use vidyut_test::{echo, rom};
 
 fn main() {
   let v = Vyakarana::builder().log_steps(false).build();
@@ -16,7 +16,7 @@ fn main() {
     let mut f: Vec<_> = v
       .derive_krdantas(k)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect();
     f.dedup();
     if f.is_empty() {
@@ -43,13 +43,14 @@ fn main() {
     (ktin, "abstract fem. noun"),
   ];
   println!(
-    "{root} → dhātupāṭha {code} {} ({artha})",
-    iast(dhatu.aupadeshika().unwrap_or(""))
+    "{} → dhātupāṭha {code} {} ({artha})",
+    echo(&root),
+    rom(dhatu.aupadeshika().unwrap_or(""))
   );
   for (krt, gloss) in krts {
     println!(
       "  {:<8} {:<24} {}",
-      krt.as_str(),
+      rom(krt.as_str()),
       gloss,
       show(&Krdanta::new(dhatu.clone(), krt))
     );
@@ -65,7 +66,7 @@ fn main() {
       .unwrap();
     println!(
       "  {:<8} {:<24} {}",
-      krt.as_str(),
+      rom(krt.as_str()),
       "present participle",
       show(&k)
     );
@@ -77,28 +78,28 @@ fn main() {
   let f: Vec<_> = v
     .derive_subantas(&s)
     .iter()
-    .map(|p| iast(&p.text()))
+    .map(|p| rom(&p.text()))
     .collect();
   println!("\nkta-stem declined (strī prathamā eka): {}", f.join(" / "));
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_krdanta
-// kṛ 8 → dhātupāṭha 08.0010 ḍukṛ॒ñ (karaṇe)
+// kṛ 8 → dhātupāṭha 08.0010 ḍukṛ↓ñ (karaṇē)
 //   kta      past passive participle  kṛta
-//   ktavatu~ past active participle   kṛtavat
-//   ktvA     gerund (absolutive)      kṛtvā
-//   tumu~n   infinitive               kartum
+//   ktavatum̐ past active participle   kṛtavat
+//   ktvā     gerund (absolutive)      kṛtvā
+//   tumum̐n  infinitive               kartum
 //   tavya    gerundive                kartavya
-//   anIyar   gerundive                karaṇīya
+//   anīyar   gerundive                karaṇīya
 //   yat      gerundive                -
-//   Ryat     gerundive                kārya
-//   tfc      agent noun               kartṛ
-//   Rvu~l    agent noun               kāraka
-//   lyu~w    action noun              karaṇa
-//   GaY      action noun              kāra
+//   ṇyat     gerundive                kārya
+//   tṛch     agent noun               kartṛ
+//   ṇvum̐l   agent noun               kāraka
+//   lyum̐ṭ   action noun              karaṇa
+//   ghañ     action noun              kāra
 //   ktin     abstract fem. noun       kṛti
-//   Satf~    present participle       kurvat
-//   SAnac    present participle       kurvāṇa
+//   śatṛm̐   present participle       kurvat
+//   śānach   present participle       kurvāṇa
 //
 // kta-stem declined (strī prathamā eka): kṛtā

@@ -4,7 +4,7 @@
 //!
 //! Run: cargo run --example kosha_contains_key [-- "IAST word"]
 use vidyut_kosha::Kosha;
-use vidyut_test::{data_dir, slp};
+use vidyut_test::{data_dir, echo, slp};
 
 fn main() {
   let kosha = Kosha::new(data_dir().join("kosha")).unwrap();
@@ -28,7 +28,7 @@ fn main() {
   for w in words {
     println!(
       "{:<10} {}",
-      w,
+      echo(&w),
       if kosha.contains_key(&slp(&w)) {
         "✓"
       } else {
@@ -44,8 +44,8 @@ fn main() {
 // narās      ✓
 // narasya    ✓
 // narasyā    ✗
-// gacchati   ✓
-// gacchiti   ✗
+// gachChati  ✓
+// gachChiti  ✗
 // putrīyati  ✗
 // sundarā    ✗
 // sundarī    ✓

@@ -6,7 +6,7 @@
 //! Run: cargo run --example prakriya_vakya [-- "IAST words with final s, space separated"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::Pada;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let v = Vyakarana::new();
@@ -37,20 +37,20 @@ fn main() {
           .map(|t| t.text())
           .filter(|t| !t.is_empty())
           .collect();
-        format!("{}  [{}]", iast(&p.text()), iast(&words.join(" ")))
+        format!("{}  [{}]", rom(&p.text()), rom(&words.join(" ")))
       })
       .collect();
     out.dedup();
-    println!("{:<24} -> {}", s, out.join("   |   "));
+    println!("{:<24} -> {}", echo(&s), out.join("   |   "));
   }
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_vakya
-// rāmas gacchati           -> rāmogacchati  [rāmo gacchati]
-// rāmas atra               -> rāmotra  [rāmo tra]
-// tat ca                   -> tacca  [tac ca]
-// ca iti                   -> ceti  [c eti]
-// devas indras             -> devaindraḥ  [deva indraḥ]
+// rāmas gachChati          -> rāmōgachChati  [rāmō gachChati]
+// rāmas atra               -> rāmōtra  [rāmō tra]
+// tat cha                  -> tachcha  [tach cha]
+// cha iti                  -> chēti  [ch ēti]
+// dēvas indras             -> devaindraH  [dēva indraḥ]
 // vāk īśas                 -> vāgīśaḥ  [vāg īśaḥ]
-// tam katham citrapakṣam   -> taṃkathaṃcitrapakṣam  [taṃ kathaṃ citrapakṣam]   |   taṅkathañcitrapakṣam  [taṅ kathañ citrapakṣam]
+// tam katham chitrapakṣam  -> taṁkathaṁchitrapakṣam  [taṁ kathaṁ chitrapakṣam]   |   taṅkathañchitrapakṣam  [taṅ kathañ chitrapakṣam]

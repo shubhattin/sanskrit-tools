@@ -17,6 +17,7 @@ vidyut-kosha    = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da
 vidyut-lipi     = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
 vidyut-prakriya = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
 vidyut-sandhi   = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
+lipilekhika = "1.1.2"
 
 # vidyut-prakriya does heavy rule application; debug builds are very slow for it.
 # debug-assertions=false also stops prakriya from inserting internal debug lines
@@ -166,3 +167,7 @@ path = "examples/sandhi/split_all.rs"
 name = "sandhi_split_at"
 path = "examples/sandhi/split_at.rs"
 
+
+[[example]]
+name = "lipi_roman_audit"
+path = "examples/lipi/roman_audit.rs"

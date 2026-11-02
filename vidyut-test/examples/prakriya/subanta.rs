@@ -4,7 +4,7 @@
 //! Run: cargo run --example prakriya_subanta [-- "IAST stem" "puM|strI|napuMsaka"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let v = Vyakarana::builder().log_steps(false).build();
@@ -15,7 +15,8 @@ fn main() {
     .unwrap_or(Linga::Pum);
   let prati = Pratipadika::basic(Slp1String::from(slp(&stem)).unwrap());
   println!(
-    "{stem} ({}) — columns = eka / dvi / bahu\n",
+    "{} ({}) — columns = eka / dvi / bahu\n",
+    echo(&stem),
     format!("{linga:?}")
   );
 
@@ -26,7 +27,7 @@ fn main() {
         let mut f: Vec<_> = v
           .derive_subantas(&s)
           .iter()
-          .map(|p| iast(&p.text()))
+          .map(|p| rom(&p.text()))
           .collect();
         f.dedup();
         f.join("/")
@@ -48,9 +49,9 @@ fn main() {
 //
 // Prathama    rāmaḥ          rāmau            rāmāḥ
 // Dvitiya     rāmam          rāmau            rāmān
-// Trtiya      rāmeṇa         rāmābhyām        rāmaiḥ
-// Caturthi    rāmāya         rāmābhyām        rāmebhyaḥ
-// Panchami    rāmāt/rāmād    rāmābhyām        rāmebhyaḥ
-// Sasthi      rāmasya        rāmayoḥ          rāmāṇām
-// Saptami     rāme           rāmayoḥ          rāmeṣu
+// Trtiya      rāmēṇa         rāmābhyām        rāmaiḥ
+// Caturthi    rāmāya         rāmābhyām        rāmēbhyaḥ
+// Panchami    rāmāt/rāmād    rāmābhyām        rāmēbhyaḥ
+// Sasthi      rāmasya        rāmayōḥ          rāmāṇām
+// Saptami     rāmē           rāmayōḥ          rāmēṣu
 // Sambodhana  rāma           rāmau            rāmāḥ

@@ -4,7 +4,7 @@
 //!
 //! Run: cargo run --example chandas_meters [-- "meter name substring (SLP1)"]
 use vidyut_chandas::Chandas;
-use vidyut_test::{data_dir, iast};
+use vidyut_test::{data_dir, rom};
 
 fn main() {
   let chandas = Chandas::from_file(data_dir().join("chandas/meters.tsv")).unwrap();
@@ -28,7 +28,7 @@ fn main() {
     if !hit {
       continue;
     }
-    println!("{}", iast(v.name()));
+    println!("{}", rom(v.name()));
     for (i, p) in v.padas().iter().enumerate() {
       let w: String = p.weights().iter().map(|w| w.as_str()).collect();
       println!(
@@ -42,7 +42,7 @@ fn main() {
   }
   println!("\njātis:");
   for j in chandas.jatis() {
-    println!("  {:<12} mātrās per pāda {:?}", iast(j.name()), j.matras());
+    println!("  {:<12} mātrās per pāda {:?}", rom(j.name()), j.matras());
   }
 }
 
@@ -65,5 +65,5 @@ fn main() {
 //   āryāgīti     mātrās per pāda [12, 20, 12, 20]
 //   gīti         mātrās per pāda [12, 18, 12, 18]
 //   udgīti       mātrās per pāda [12, 15, 12, 18]
-//   aupacchandasikam mātrās per pāda [16, 18, 16, 18]
+//   aupachChandasikam mātrās per pāda [16, 18, 16, 18]
 //   āryā         mātrās per pāda [12, 18, 12, 15]

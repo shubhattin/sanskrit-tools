@@ -8,7 +8,7 @@
 //! Run: cargo run --example sandhi_join [-- "IAST word1" "IAST word2"]
 use std::collections::BTreeSet;
 use vidyut_sandhi::generate_rules;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn join(rules: &[vidyut_sandhi::Rule], a: &str, b: &str) -> BTreeSet<String> {
   // The rule table writes word-final visarga as its underlying `s` (rAmas, not rAmaH).
@@ -53,19 +53,19 @@ fn main() {
   for (a, b) in pairs {
     let res: Vec<_> = join(&rules, &slp(&a), &slp(&b))
       .iter()
-      .map(|s| iast(s))
+      .map(|s| rom(s))
       .collect();
-    println!("{a} + {b} -> {}", res.join(" | "));
+    println!("{} + {} -> {}", echo(&a), echo(&b), res.join(" | "));
   }
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example sandhi_join
-// ca + iti -> ceti
-// deva + indraḥ -> devendraḥ
+// cha + iti -> chēti
+// dēva + indraḥ -> dēvēndraḥ
 // iti + api -> ity api
-// rāmaḥ + gacchati -> rāmaḥgacchati | rāmo gacchati
-// tat + ca -> tac ca
+// rāmaḥ + gachChati -> rāmaḥgachChati | rāmō gachChati
+// tat + cha -> tach cha
 // vāk + īśaḥ -> vāk īśaḥ
-// guruḥ + atra -> guruḥatra | gurur atra
+// guruḥ + atra -> gurutra | gurur atra
 // mahā + ṛṣiḥ -> maharṣiḥ

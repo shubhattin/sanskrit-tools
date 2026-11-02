@@ -4,7 +4,7 @@
 //!
 //! Run: cargo run --example sandhi_custom_rules
 use vidyut_sandhi::{Kind, SplitsMap, Splitter};
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let mut map = SplitsMap::new();
@@ -16,12 +16,12 @@ fn main() {
 
   for word in ["ceti", "gaṅgodakam"] {
     let w = slp(word);
-    print!("{word}: ");
+    print!("{}: ", echo(word));
     let found: Vec<_> = s
       .split_all(&w)
       .into_iter()
       .filter(|x| x.kind() == Kind::Standard)
-      .map(|x| format!("{} + {}", iast(x.first()), iast(x.second())))
+      .map(|x| format!("{} + {}", rom(x.first()), rom(x.second())))
       .collect();
     println!("{}", found.join("  |  "));
   }
@@ -29,5 +29,5 @@ fn main() {
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example sandhi_custom_rules
-// ceti: ca + iti  |  cā + īti
-// gaṅgodakam: gaṅga + udakam
+// chēti: cha + iti  |  chā + īti
+// gaṅgōdakam: gaṅga + udakam

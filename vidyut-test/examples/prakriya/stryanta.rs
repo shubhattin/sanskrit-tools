@@ -8,7 +8,7 @@
 //! Run: cargo run --example prakriya_stryanta [-- "IAST masculine stem"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let v = Vyakarana::builder().log_steps(false).build();
@@ -26,12 +26,12 @@ fn main() {
     let mut f: Vec<_> = v
       .derive_stryantas(&p)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect();
     f.dedup();
     println!(
       "{:<9} -> {}",
-      s,
+      echo(&s),
       if f.is_empty() {
         "-".into()
       } else {

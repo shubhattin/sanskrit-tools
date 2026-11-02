@@ -4,14 +4,14 @@
 //!
 //! Run: cargo run --example chandas_scan [-- "IAST line"]
 use vidyut_chandas::Chandas;
-use vidyut_test::{data_dir, iast, slp};
+use vidyut_test::{data_dir, rom, slp};
 
 fn main() {
   let chandas = Chandas::from_file(data_dir().join("chandas/meters.tsv")).unwrap();
   let line = vidyut_test::arg_or("mātaḥ samastajagatāṃ madhukaiṭabhāreḥ");
   let m = chandas.classify(slp(&line));
   for row in m.aksharas() {
-    let sylls: Vec<_> = row.iter().map(|a| iast(a.text())).collect();
+    let sylls: Vec<_> = row.iter().map(|a| rom(a.text())).collect();
     let weights: String = row.iter().map(|a| a.weight().as_str()).collect();
     let matras: i32 = row.iter().map(|a| a.num_matras()).sum();
     println!("syllables: {}", sylls.join(" · "));
@@ -24,5 +24,5 @@ fn main() {
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example chandas_scan
-// syllables: mā · taḥ · sa · ma · sta · ja · ga · tāṃ · ma · dhu · kai · ṭa · bhā · reḥ
+// syllables: mā · taḥ · sa · ma · sta · ja · ga · tāṁ · ma · dhu · kai · ṭa · bhā · rēḥ
 // pattern  : GGLGLLLGLLGLGG   (14 akṣaras, 21 mātrās)

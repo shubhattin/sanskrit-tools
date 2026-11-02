@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use vidyut_prakriya::args::*;
 use vidyut_prakriya::{Rule, Vyakarana};
-use vidyut_test::{data_dir, iast};
+use vidyut_test::{data_dir, echo, rom};
 
 fn load(file: &str) -> HashMap<String, String> {
   let text = std::fs::read_to_string(data_dir().join("prakriya").join(file)).unwrap();
@@ -30,7 +30,7 @@ fn main() {
       Rule::Unadipatha(c) => unadi.get(*c),
       _ => None,
     };
-    t.map(|s| iast(s))
+    t.map(|s| rom(s))
       .unwrap_or_else(|| format!("({})", r.source_name()))
   };
 
@@ -38,8 +38,9 @@ fn main() {
   let root = vidyut_test::arg_or("bhū");
   let (code, artha, dhatu) = vidyut_test::dhatu(&root);
   println!(
-    "{root} → dhātupāṭha {code} {} ({artha})",
-    iast(dhatu.aupadeshika().unwrap_or(""))
+    "{} → dhātupāṭha {code} {} ({artha})",
+    echo(&root),
+    rom(dhatu.aupadeshika().unwrap_or(""))
   );
   println!("laṭ kartari prathama eka:\n");
   let args = Tinanta::new(
@@ -51,7 +52,7 @@ fn main() {
   );
 
   for p in v.derive_tinantas(&args) {
-    println!("=> {}\n", iast(&p.text()));
+    println!("=> {}\n", rom(&p.text()));
     for step in p.history() {
       let terms: Vec<_> = step
         .result()
@@ -62,7 +63,7 @@ fn main() {
       println!(
         "{:<9} {:<26} {}",
         step.rule().code(),
-        iast(&terms.join(" + ")),
+        rom(&terms.join(" + ")),
         text_of(&step.rule())
       );
     }
@@ -76,23 +77,23 @@ fn main() {
 //
 // => bhavati
 //
-// 1.3.1     bhū                        bhūvādayo dhātavaḥ
-// 3.2.123   bhū + lam̐ṭ                vartamāne laṭ
-// 1.3.2     bhū + lam̐ṭ                upadeśe'janunāsika it
+// 1.3.1     bhū                        bhūvādayō dhātavaḥ
+// 3.2.123   bhū + lam̐ṭ                vartamānē laṭ
+// 1.3.2     bhū + lam̐ṭ                upadēśē`janunāsika it
 // 1.3.3     bhū + lam̐ṭ                halantyam
-// 1.3.9     bhū + l                    tasya lopaḥ
-// 1.3.78    bhū + l                    śeṣāt kartari parasmaipadam
-// 3.4.78    bhū + tip                  tiptasjhisipthasthamibvasmas tātāṃjhathāsāthāṃdhvamiḍvahimahiṅ
+// 1.3.9     bhū + l                    tasya lōpaḥ
+// 1.3.78    bhū + l                    śēṣāt kartari parasmaipadam
+// 3.4.78    bhū + tip                  tiptasjhisipthasthamibvasmas tātāṁjhathāsāthāṁdhvamiḍvahimahiṅ
 // 1.3.3     bhū + tip                  halantyam
-// 1.3.9     bhū + ti                   tasya lopaḥ
+// 1.3.9     bhū + ti                   tasya lōpaḥ
 // 3.1.68    bhū + śap + ti             kartari śap
 // 1.3.3     bhū + śap + ti             halantyam
-// 1.3.8     bhū + śap + ti             laśakvataddhite
-// 1.3.9     bhū + a + ti               tasya lopaḥ
+// 1.3.8     bhū + śap + ti             laśakvataddhitē
+// 1.3.9     bhū + a + ti               tasya lōpaḥ
 // 3.4.113   bhū + a + ti               tiṅśitsārvadhātukam
 // 3.4.113   bhū + a + ti               tiṅśitsārvadhātukam
-// 1.4.13    bhū + a + ti               yasmāt pratyayavidhistadādi pratyaye'ṅgam
-// 7.3.84    bho + a + ti               sārvadhātukārdhadhātukayoḥ
-// 6.1.78    bhav + a + ti              eco'yavāyāvaḥ
-// 1.4.14    bhav + a + ti              suptiṅantaṃ padam
+// 1.4.13    bhū + a + ti               yasmāt pratyayavidhistadādi pratyayē`ṅgam
+// 7.3.84    bhō + a + ti               sārvadhātukārdhadhātukayōḥ
+// 6.1.78    bhav + a + ti              ēchō`yavāyāvaḥ
+// 1.4.14    bhav + a + ti              suptiṅantaṁ padam
 // 8.4.68    bhav + a + ti              a a

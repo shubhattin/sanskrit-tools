@@ -6,7 +6,7 @@
 use vidyut_kosha::Kosha;
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::Pada;
-use vidyut_test::{data_dir, describe, iast, slp};
+use vidyut_test::{data_dir, describe, rom, slp};
 
 fn main() {
   let kosha = Kosha::new(data_dir().join("kosha")).unwrap();
@@ -14,7 +14,7 @@ fn main() {
   let word = slp(&vidyut_test::arg_or("jagāma"));
 
   let entries = kosha.get_all(&word);
-  println!("{} analyses of '{}':", entries.len(), iast(&word));
+  println!("{} analyses of '{}':", entries.len(), rom(&word));
   for e in &entries {
     println!("  {}", describe(e));
   }
@@ -41,7 +41,7 @@ prakriyā of the first analysis:"
         .map(|t| t.text())
         .filter(|t| !t.is_empty())
         .collect();
-      println!("   {:<10} {}", step.rule().code(), iast(&terms.join(" + ")));
+      println!("   {:<10} {}", step.rule().code(), rom(&terms.join(" + ")));
     }
   }
 }
@@ -53,8 +53,8 @@ prakriyā of the first analysis:"
 //   tiṅanta  gam (gaṇa Bhvadi)  Lit Kartari Uttama Eka
 //
 // prakriyā of the first analysis:
-//    1.3.1      ga॒mḷm̐
-//    1.3.2      ga॒mḷm̐
+//    1.3.1      ga↓ml̥m̐
+//    1.3.2      ga↓ml̥m̐
 //    1.3.9      gam
 //    01.0934    gam
 //    3.2.115    gam + lim̐ṭ

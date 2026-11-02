@@ -1,11 +1,11 @@
 //! vidyut-akshara · `Set::from(chars)` / `set.contains(c)` / `Display`
 //! Tiny low-level helper used inside prakriya/sandhi/chandas: a const 128-byte
-//! bitset of SLP1 sounds. `Display` prints members in traditional varṇa order.
+//! bitset of SLP1 sounds. `Display` prints members (as SLP1) in traditional varṇa order.
 //! (Not much else in this crate yet — it's a building block, not a user API.)
 //!
 //! Run: cargo run --example akshara_sound_set [-- "IAST word to classify"]
 use vidyut_akshara::Set;
-use vidyut_test::{iast, slp};
+use vidyut_test::{rom, slp};
 
 // const-constructible, so sets can be statics (as in vidyut's own code).
 const AC: Set = Set::from("aAiIuUfFxXeEoO"); // vowels
@@ -13,17 +13,17 @@ const HAL: Set = Set::from("kKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh"); // consonants
 const GHOSHA: Set = Set::from("gGNjJYqQRdDnbBmyrlvh"); // voiced consonants
 
 fn main() {
-  // Display gives SLP1 in varṇa order; spaced IAST alongside for readability.
+  // Display gives SLP1 in varṇa order; each sound is romanized separately (rom) for readability.
   let spaced = |s: &Set| {
     s.to_string()
       .chars()
-      .map(|c| iast(&c.to_string()))
+      .map(|c| rom(&c.to_string()))
       .collect::<Vec<_>>()
       .join(" ")
   };
-  println!("AC     = {:<16} {}", AC.to_string(), spaced(&AC));
-  println!("HAL    = {:<16} {}", HAL.to_string(), spaced(&HAL));
-  println!("GHOSHA = {:<16} {}\n", GHOSHA.to_string(), spaced(&GHOSHA));
+  println!("AC     = {}", spaced(&AC));
+  println!("HAL    = {}", spaced(&HAL));
+  println!("GHOSHA = {}\n", spaced(&GHOSHA));
 
   let mut aspirates = Set::new();
   for c in "KGCJWQTDPB".chars() {
@@ -47,18 +47,18 @@ fn main() {
     } else {
       ""
     };
-    println!("  {:<3} {kind}{asp}", iast(&c.to_string()));
+    println!("  {:<3} {kind}{asp}", rom(&c.to_string()));
   }
   println!("\ncontains_any vowel? {}", AC.contains_any(&word));
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example akshara_sound_set
-// AC     = aAiIuUfFxXeEoO   a ā i ī u ū ṛ ṝ ḷ ḹ e ai o au
-// HAL    = kKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh k kh g gh ṅ c ch j jh ñ ṭ ṭh ḍ ḍh ṇ t th d dh n p ph b bh m y r l v ś ṣ s h
-// GHOSHA = gGNjJYqQRdDnbBmyrlvh g gh ṅ j jh ñ ḍ ḍh ṇ d dh n b bh m y r l v h
+// AC     = a ā i ī u ū ṛ ṝ l̥ l̥̄ ē ai ō au
+// HAL    = k kh g gh ṅ ch Ch j jh ñ ṭ ṭh ḍ ḍh ṇ t th d dh n p ph b bh m y r l v ś ṣ s h
+// GHOSHA = g gh ṅ j jh ñ ḍ ḍh ṇ d dh n b bh m y r l v h
 //
-// custom aspirates set = kh gh ch jh ṭh ḍh th dh ph bh
+// custom aspirates set = kh gh Ch jh ṭh ḍh th dh ph bh
 //
 //   bh  hal, ghoṣa + mahāprāṇa
 //   a   ac (vowel)

@@ -4,7 +4,7 @@
 //!
 //! Run: cargo run --example sandhi_generate_rules [-- "IAST result to filter on, e.g. e"]
 use vidyut_sandhi::generate_rules;
-use vidyut_test::{iast, slp};
+use vidyut_test::{rom, slp};
 
 fn main() {
   let rules = generate_rules();
@@ -12,13 +12,13 @@ fn main() {
 
   // Which (first + second) pairs produce this result?
   let target = slp(&vidyut_test::arg_or("o"));
-  println!("rules whose result is '{}':", iast(&target));
+  println!("rules whose result is '{}':", rom(&target));
   for r in rules.iter().filter(|r| r.result() == target) {
     println!(
       "  {:>4} + {:<4} -> {}",
-      iast(r.first()),
-      iast(r.second()),
-      iast(r.result())
+      rom(r.first()),
+      rom(r.second()),
+      rom(r.result())
     );
   }
 }
@@ -27,8 +27,8 @@ fn main() {
 // $ cargo run --example sandhi_generate_rules
 // 1468 rules generated
 //
-// rules whose result is 'o':
-//      a + u    -> o
-//      a + ū    -> o
-//      ā + u    -> o
-//      ā + ū    -> o
+// rules whose result is 'ō':
+//      a + u    -> ō
+//      a + ū    -> ō
+//      ā + u    -> ō
+//      ā + ū    -> ō

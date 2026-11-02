@@ -9,7 +9,7 @@
 //! Run: cargo run --example prakriya_options
 use vidyut_prakriya::args::*;
 use vidyut_prakriya::{Decision, RuleChoice, Vyakarana};
-use vidyut_test::iast;
+use vidyut_test::rom;
 
 fn rama_nom() -> Subanta {
   Subanta::new(
@@ -24,7 +24,7 @@ fn main() {
   let texts = |v: &Vyakarana, s: &Subanta| {
     v.derive_subantas(s)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect::<Vec<_>>()
   };
   println!(
@@ -45,7 +45,11 @@ fn main() {
   );
   let sv = Vyakarana::builder().use_svaras(true).build();
   let raw: Vec<_> = sv.derive_subantas(&agni).iter().map(|p| p.text()).collect();
-  println!("use_svaras(true) : agni -> {:?} (raw SLP1)", raw);
+  let shown: Vec<_> = raw.iter().map(|t| rom(t)).collect();
+  println!(
+    "use_svaras(true) : agni -> {:?}  (/ marks the udātta)",
+    shown
+  );
 
   // Optional rules: guh (ūdit → optional iṭ by 7.2.44) gives several lṛṭ forms.
   // Show which optional rule each output depended on.
@@ -65,7 +69,7 @@ fn main() {
       .iter()
       .map(|c| format!("{}={:?}", c.rule.code(), c.decision))
       .collect();
-    println!("  {:<12} choices: {}", iast(&p.text()), ch.join(", "));
+    println!("  {:<12} choices: {}", rom(&p.text()), ch.join(", "));
   }
 
   // Force-decline the first optional rule → only the other branch remains.
@@ -83,7 +87,7 @@ fn main() {
     let f: Vec<_> = forced
       .derive_tinantas(&t)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect();
     println!("  forcing {} = Decline -> {:?}", first.rule.code(), f);
   }
@@ -93,11 +97,11 @@ fn main() {
 // $ cargo run --example prakriya_options
 // default          : ["rāmaḥ"]
 // nlp_mode(true)   : ["rāmas"]
-// use_svaras(true) : agni -> ["agni/H"] (raw SLP1)
+// use_svaras(true) : agni -> ["agni/ḥ"]  (/ marks the udātta)
 //
 // guh lṛṭ 3sg has 4 results:
-//   ghokṣyate    choices: 1.3.72=Accept, 7.2.44=Accept
-//   gūhiṣyate    choices: 1.3.72=Accept, 7.2.44=Decline
-//   ghokṣyati    choices: 1.3.72=Decline, 7.2.44=Accept
+//   ghōkṣyatē    choices: 1.3.72=Accept, 7.2.44=Accept
+//   gūhiṣyatē    choices: 1.3.72=Accept, 7.2.44=Decline
+//   ghōkṣyati    choices: 1.3.72=Decline, 7.2.44=Accept
 //   gūhiṣyati    choices: 1.3.72=Decline, 7.2.44=Decline
-//   forcing 1.3.72 = Decline -> ["ghokṣyati", "gūhiṣyati"]
+//   forcing 1.3.72 = Decline -> ["ghōkṣyati", "gūhiṣyati"]

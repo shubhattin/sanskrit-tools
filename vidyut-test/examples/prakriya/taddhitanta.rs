@@ -5,7 +5,7 @@
 //! Run: cargo run --example prakriya_taddhitanta [-- "IAST stem"]
 use vidyut_prakriya::Vyakarana;
 use vidyut_prakriya::args::*;
-use vidyut_test::{iast, slp};
+use vidyut_test::{echo, rom, slp};
 
 fn main() {
   let v = Vyakarana::builder().log_steps(false).build();
@@ -15,7 +15,7 @@ fn main() {
     let mut f: Vec<_> = v
       .derive_taddhitantas(t)
       .iter()
-      .map(|p| iast(&p.text()))
+      .map(|p| rom(&p.text()))
       .collect();
     f.dedup();
     if f.is_empty() {
@@ -26,7 +26,7 @@ fn main() {
   };
 
   use Taddhita::*;
-  println!("{stem} + …");
+  println!("{} + …", echo(&stem));
   for (t, gloss) in [
     (aR, "descendant / related to"),
     (iY, "patronymic"),
@@ -40,7 +40,7 @@ fn main() {
   ] {
     println!(
       "  {:<6} {:<24} {}",
-      t.as_str(),
+      rom(t.as_str()),
       gloss,
       show(&Taddhitanta::new(p.clone(), t))
     );
@@ -59,15 +59,15 @@ fn main() {
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example prakriya_taddhitanta
-// vasudeva + …
-//   aR     descendant / related to  vāsudeva
-//   iY     patronymic               vāsudevi
-//   Wak    dealing with             vāsudevika
-//   matu~p possessing               vasudevavat
-//   tva    -ness (neut.)            vasudevatva
-//   tal    -ness (fem.)             vasudevatā
-//   tarap  comparative              vasudevatara
-//   tamap  superlative              vasudevatama
-//   kan    diminutive               vasudevaka
+// vasudēva + …
+//   aṇ     descendant / related to  vāsudēva
+//   iñ     patronymic               vāsudēvi
+//   ṭhak   dealing with             vāsudēvika
+//   matum̐p possessing               vasudēvavat
+//   tva    -ness (neut.)            vasudēvatva
+//   tal    -ness (fem.)             vasudēvatā
+//   tarap  comparative              vasudēvatara
+//   tamap  superlative              vasudēvatama
+//   kan    diminutive               vasudēvaka
 //
 // upagu + aR [artha = TasyaApatyam]: aupagava

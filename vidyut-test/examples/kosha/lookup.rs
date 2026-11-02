@@ -5,7 +5,7 @@
 //!
 //! Run: cargo run --example kosha_lookup [-- "IAST word"]
 use vidyut_kosha::Kosha;
-use vidyut_test::{data_dir, describe, iast, slp};
+use vidyut_test::{data_dir, describe, echo, rom, slp};
 
 /// Kosha stores final visarga as s (or r): rAmaH -> rAmas / rAmar.
 fn keys(word: &str) -> Vec<String> {
@@ -33,12 +33,12 @@ fn main() {
     .collect(),
   };
   for w in words {
-    println!("\n» {w}");
+    println!("\n» {}", echo(&w));
     // get_all can return exact duplicates (same analysis via different stems/paths).
     let mut seen = std::collections::BTreeSet::new();
     for key in keys(&slp(&w)) {
       for e in kosha.get_all(&key) {
-        seen.insert(format!("[{}] {}", iast(&key), describe(&e)));
+        seen.insert(format!("[{}] {}", rom(&key), describe(&e)));
       }
     }
     for line in seen.iter().take(8) {
@@ -55,8 +55,8 @@ fn main() {
 // kosha size: 167774751 entries
 //
 // » bhavati
-//   [bhavati] subanta  kṛdanta bhū + Satf~ (Lat)  Napumsaka Saptami Eka
-//   [bhavati] subanta  kṛdanta bhū + Satf~ (Lat)  Pum Saptami Eka
+//   [bhavati] subanta  kṛdanta bhū + śatṛm̐ (Lat)  Napumsaka Saptami Eka
+//   [bhavati] subanta  kṛdanta bhū + śatṛm̐ (Lat)  Pum Saptami Eka
 //   [bhavati] subanta  prātipadika bhavat  Napumsaka Saptami Eka
 //   [bhavati] subanta  prātipadika bhavat  Pum Saptami Eka
 //   [bhavati] subanta  prātipadika bhavat  Stri Sambodhana Eka
@@ -66,40 +66,40 @@ fn main() {
 //   … +4 more analyses
 //
 // » rāmaḥ
-//   [rāmas] subanta  kṛdanta ram + GaY  Pum Prathama Eka
-//   [rāmas] subanta  kṛdanta ram + Ra  Pum Prathama Eka
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Napumsaka Panchami Eka
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Napumsaka Sasthi Eka
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Pum Dvitiya Bahu
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Pum Panchami Eka
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Pum Prathama Bahu
-//   [rāmas] subanta  kṛdanta ram + kvi~p  Pum Sambodhana Bahu
+//   [rāmas] subanta  kṛdanta ram + ghañ  Pum Prathama Eka
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Napumsaka Panchami Eka
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Napumsaka Sasthi Eka
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Pum Dvitiya Bahu
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Pum Panchami Eka
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Pum Prathama Bahu
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Pum Sambodhana Bahu
+//   [rāmas] subanta  kṛdanta ram + kvim̐p  Pum Sasthi Eka
 //   … +8 more analyses
 //
 // » phalāni
-//   [phalāni] subanta  kṛdanta phal + Ga  Napumsaka Dvitiya Bahu
-//   [phalāni] subanta  kṛdanta phal + Ga  Napumsaka Prathama Bahu
-//   [phalāni] subanta  kṛdanta phal + Ga  Napumsaka Sambodhana Bahu
-//   [phalāni] subanta  kṛdanta phal + ac  Napumsaka Dvitiya Bahu
-//   [phalāni] subanta  kṛdanta phal + ac  Napumsaka Prathama Bahu
-//   [phalāni] subanta  kṛdanta phal + ac  Napumsaka Sambodhana Bahu
+//   [phalāni] subanta  kṛdanta phal + ach  Napumsaka Dvitiya Bahu
+//   [phalāni] subanta  kṛdanta phal + ach  Napumsaka Prathama Bahu
+//   [phalāni] subanta  kṛdanta phal + ach  Napumsaka Sambodhana Bahu
+//   [phalāni] subanta  kṛdanta phal + gha  Napumsaka Dvitiya Bahu
+//   [phalāni] subanta  kṛdanta phal + gha  Napumsaka Prathama Bahu
+//   [phalāni] subanta  kṛdanta phal + gha  Napumsaka Sambodhana Bahu
 //   [phalāni] subanta  prātipadika phala  Napumsaka Dvitiya Bahu
 //   [phalāni] subanta  prātipadika phala  Napumsaka Prathama Bahu
 //   … +2 more analyses
 //
 // » gatvā
-//   [gatvā] avyaya   kṛdanta gam + ktvA
+//   [gatvā] avyaya   kṛdanta gam + ktvā
 //
-// » devebhyaḥ
-//   [devebhyas] subanta  kṛdanta dev + Ga  Napumsaka Caturthi Bahu
-//   [devebhyas] subanta  kṛdanta dev + Ga  Napumsaka Panchami Bahu
-//   [devebhyas] subanta  kṛdanta dev + Ga  Pum Caturthi Bahu
-//   [devebhyas] subanta  kṛdanta dev + Ga  Pum Panchami Bahu
-//   [devebhyas] subanta  kṛdanta dev + GaY  Napumsaka Caturthi Bahu
-//   [devebhyas] subanta  kṛdanta dev + GaY  Napumsaka Panchami Bahu
-//   [devebhyas] subanta  kṛdanta dev + GaY  Pum Caturthi Bahu
-//   [devebhyas] subanta  kṛdanta dev + GaY  Pum Panchami Bahu
+// » dēvēbhyaḥ
+//   [dēvēbhyas] subanta  kṛdanta div + ach  Napumsaka Caturthi Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + ach  Napumsaka Panchami Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + ach  Pum Caturthi Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + ach  Pum Panchami Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + gha  Napumsaka Caturthi Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + gha  Napumsaka Panchami Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + gha  Pum Caturthi Bahu
+//   [dēvēbhyas] subanta  kṛdanta div + gha  Pum Panchami Bahu
 //   … +28 more analyses
 //
-// » agacchat
-//   [agacchat] tiṅanta  gam (gaṇa Bhvadi)  Lan Kartari Prathama Eka
+// » agachChat
+//   [agachChat] tiṅanta  gam (gaṇa Bhvadi)  Lan Kartari Prathama Eka

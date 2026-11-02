@@ -4,20 +4,24 @@
 //!
 //! Run: cargo run --example chandas_classify_all [-- "IAST line"]
 use vidyut_chandas::Chandas;
-use vidyut_test::{data_dir, slp};
+use vidyut_test::{data_dir, echo, rom, slp};
 
 fn main() {
   let chandas = Chandas::from_file(data_dir().join("chandas/meters.tsv")).unwrap();
   let line = vidyut_test::arg_or("vāgarthāviva saṃpṛktau");
   let all = chandas.classify_all(slp(&line));
-  println!("'{line}' is compatible with {} meters:", all.padyas().len());
+  println!(
+    "'{}' is compatible with {} meters:",
+    echo(&line),
+    all.padyas().len()
+  );
   for (p, t) in all.padyas().iter().zip(all.match_types()) {
-    println!("  {:<16} {:?}", p.name(), t);
+    println!("  {:<16} {:?}", rom(p.name()), t);
   }
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example chandas_classify_all
-// 'vāgarthāviva saṃpṛktau' is compatible with 2 meters:
-//   madaleKA         Prefix
-//   alolA            Prefix
+// 'vāgarthāviva saṁpṛktau' is compatible with 2 meters:
+//   madalēkhā        Prefix
+//   alōlā            Prefix

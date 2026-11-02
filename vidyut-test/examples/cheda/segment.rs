@@ -13,7 +13,7 @@
 //!
 //! Run: cargo run --example cheda_segment [-- "IAST sentence"]
 use vidyut_cheda::Chedaka;
-use vidyut_test::{data_dir, iast, slp};
+use vidyut_test::{data_dir, echo, rom, slp};
 
 fn main() {
   let chedaka = Chedaka::new(&data_dir()).unwrap();
@@ -27,7 +27,7 @@ fn main() {
     ],
   };
   for text in inputs {
-    println!("\n» {text}");
+    println!("\n» {}", echo(&text));
     for t in chedaka.run(&slp(&text)).unwrap() {
       let morph = t
         .data()
@@ -36,7 +36,7 @@ fn main() {
         .unwrap_or("-".into());
       println!(
         "  {:<14} {:<8} {morph}",
-        iast(t.text()),
+        rom(t.text()),
         format!("{:?}", t.pos_tag())
       );
     }
@@ -46,22 +46,22 @@ fn main() {
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example cheda_segment
 //
-// » dharmakṣetre kurukṣetre samavetā yuyutsavaḥ
-//   dharmakṣetre   Subanta  subanta  prātipadika dharmakṣetra  Napumsaka Saptami Eka
-//   kurukṣetre     Subanta  subanta  prātipadika kurukṣetra  Napumsaka Saptami Eka
-//   samavet        Tinanta  tiṅanta  saṃvid (gaṇa Adadi)  Lan Kartari Prathama Eka
+// » dharmakṣētrē kurukṣētrē samavētā yuyutsavaḥ
+//   dharmakṣētrē   Subanta  subanta  prātipadika dharmakṣētra  Napumsaka Saptami Eka
+//   kurukṣētrē     Subanta  subanta  prātipadika kurukṣētra  Napumsaka Saptami Eka
+//   samavēt        Tinanta  tiṅanta  saṁvid (gaṇa Adadi)  Lan Kartari Prathama Eka
 //   ās             Subanta  subanta  prātipadika a  Pum Prathama Bahu
 //   yuyutsavas     Subanta  subanta  prātipadika yuyutsu  Pum Prathama Bahu
 //
-// » rāmo vanaṃ gacchati
-//   rāmas          Subanta  subanta  kṛdanta ram + kvi~p  Pum Prathama Bahu
-//   van            Subanta  subanta  kṛdanta av + kvasu~ (Lit)  Pum Sambodhana Eka
+// » rāmō vanaṁ gachChati
+//   rāmas          Subanta  subanta  kṛdanta ram + kvim̐p  Pum Prathama Bahu
+//   van            Subanta  subanta  kṛdanta av + kvasum̐ (Lit)  Pum Sambodhana Eka
 //   am             Subanta  subanta  prātipadika a  Pum Dvitiya Eka
-//   gacchati       Tinanta  tiṅanta  gam (gaṇa Bhvadi)  Lat Kartari Prathama Eka
+//   gachChati      Tinanta  tiṅanta  gam (gaṇa Bhvadi)  Lat Kartari Prathama Eka
 //
 // » tathaiva
 //   tathā          Avyaya   avyaya   prātipadika tathā
-//   eva            Subanta  subanta  prātipadika eva  Napumsaka Sambodhana Eka
+//   ēva            Subanta  subanta  prātipadika ēva  Napumsaka Sambodhana Eka
 //
 // » nāstyatra
 //   na             Subanta  subanta  prātipadika na  Napumsaka Sambodhana Eka

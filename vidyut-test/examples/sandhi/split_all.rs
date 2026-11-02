@@ -4,7 +4,7 @@
 //!
 //! Run: cargo run --example sandhi_split_all [-- "IAST text"]
 use vidyut_sandhi::{Kind, Splitter};
-use vidyut_test::{data_dir, iast, slp};
+use vidyut_test::{data_dir, rom, slp};
 
 fn main() {
   let splitter = Splitter::from_csv(data_dir().join("sandhi/rules.csv")).unwrap();
@@ -16,19 +16,19 @@ fn main() {
     .collect();
   println!(
     "'{}': {} splits total, {} are real sandhi reversals (Kind::Standard + valid):",
-    iast(&text),
+    rom(&text),
     splits.len(),
     real.len()
   );
   for s in real {
-    println!("  {} + {}", iast(s.first()), iast(s.second()));
+    println!("  {} + {}", rom(s.first()), rom(s.second()));
   }
 }
 
 // ==== SAMPLE OUTPUT ====
 // $ cargo run --example sandhi_split_all
 // 'tathaiva': 10 splits total, 4 are real sandhi reversals (Kind::Standard + valid):
-//   tatha + eva
+//   tatha + ēva
 //   tatha + aiva
-//   tathā + eva
+//   tathā + ēva
 //   tathā + aiva
