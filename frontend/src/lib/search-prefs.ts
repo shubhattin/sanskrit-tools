@@ -22,7 +22,7 @@ export interface SearchPrefs {
   forms: boolean;
 }
 
-export const DEFAULT_PREFS: SearchPrefs = { dicts: [...DEFAULT_DICTS], forms: false };
+export const DEFAULT_PREFS: SearchPrefs = { dicts: [...DEFAULT_DICTS], forms: true };
 
 const slugSchema = z.string().regex(/^[a-z0-9-]{1,64}$/);
 const prefsSchema = z.object({
