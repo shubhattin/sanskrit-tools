@@ -19,12 +19,8 @@ vidyut-prakriya = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da
 vidyut-sandhi   = { git = "https://github.com/ambuda-org/vidyut.git", rev = "8da2f90bee3ce1c07505fa432fc3729e3f7e02ea" }
 lipilekhika = "1.1.2"
 
-# vidyut-prakriya does heavy rule application; debug builds are very slow for it.
-# debug-assertions=false also stops prakriya from inserting internal debug lines
-# (rule code "    ") into `Prakriya::history()`.
-[profile.dev.package."*"]
-opt-level = 3
-debug-assertions = false
+# Workspace member of the root crate: profiles live in ../Cargo.toml (deps at opt-level 2,
+# debug-assertions off for vidyut-prakriya so `history()` has no internal debug steps).
 
 # ---- examples (examples/<crate>/<fn>.rs → cargo run --example <crate>_<fn>) ----
 [[example]]

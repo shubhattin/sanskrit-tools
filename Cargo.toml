@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+# vidyut-test is a member only so rust-analyzer indexes it; `cargo build`/`run` at the root
+# still builds just sans_dict (default-members).
+[workspace]
+members = [".", "vidyut-test"]
+default-members = ["."]
+
 [dependencies]
 axum = "0.8"
 dotenvy = "0.15"
@@ -66,3 +72,7 @@ opt-level = 3
 
 [profile.dev.package."*"]
 opt-level = 2
+
+# vidyut-prakriya records extra debug steps under debug assertions (vidyut-test examples).
+[profile.dev.package.vidyut-prakriya]
+debug-assertions = false
