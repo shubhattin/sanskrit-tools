@@ -1,7 +1,8 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { dhatuQuery } from '@/lib/api/client';
-import { Button } from '@/components/ui/button';
+import { ZapIcon } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { EntryHeadword, EntrySenses, DhatuHeadword } from '@/components/dict/entry';
 import { InflectionSection } from '@/components/dict/paradigm';
+import { vSiteRootQuery } from '@/lib/vidyut/api';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/dhatu/$id')({
   component: DhatuDetailPage
@@ -80,6 +83,7 @@ function DhatuDetailPage() {
             <h1 className="text-3xl font-bold">
               <DhatuHeadword text={dhatu.upadesha} />
             </h1>
+            <DeriveFormsLink dhatuId={dhatuId} />
           </div>
           <dl className="grid grid-cols-1 gap-x-8 gap-y-1.5 text-[15px] sm:grid-cols-2">
             <div className="flex gap-2">
@@ -162,5 +166,20 @@ function DhatuDetailPage() {
         </Tabs>
       )}
     </div>
+  );
+}
+
+/** Opens this root in the vidyut Dhātu tool when vidyut's Dhātupāṭha has the same root. */
+function DeriveFormsLink({ dhatuId }: { dhatuId: number }) {
+  const match = useQuery(vSiteRootQuery(dhatuId));
+  if (!match.data) return null;
+  return (
+    <Link
+      to="/vidyut/dhatu"
+      search={{ code: match.data.code }}
+      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'ml-auto')}
+    >
+      <ZapIcon aria-hidden /> Forms &amp; derivations
+    </Link>
   );
 }

@@ -51,6 +51,12 @@ export const zErrorBody = z.object({
     error: z.string()
 });
 
+export const zFit = z.enum([
+    'full',
+    'pada',
+    'prefix'
+]);
+
 export const zFormAnalysis = z.object({
     analysis: z.string(),
     cells: z.array(z.array(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }))),
@@ -59,6 +65,35 @@ export const zFormAnalysis = z.object({
     paradigm_ids: z.array(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })),
     root: z.string().nullish(),
     source: z.string()
+});
+
+export const zJoinRequest = z.object({
+    words: z.array(z.string())
+});
+
+/**
+ * Lakāra (tense / mood). The Vedic leṭ is left out.
+ */
+export const zLakaraId = z.enum([
+    'lat',
+    'lit',
+    'lut',
+    'lrt',
+    'lot',
+    'lan',
+    'vidhi_lin',
+    'ashir_lin',
+    'lun',
+    'lrn'
+]);
+
+/**
+ * `forms[purusha][vacana]` = the variants for that cell (puruṣa: prathama, madhyama, uttama;
+ * vacana: eka, dvi, bahu).
+ */
+export const zLakaraTable = z.object({
+    forms: z.array(z.array(z.array(z.string()))),
+    lakara: zLakaraId
 });
 
 export const zLang = z.enum([
@@ -108,6 +143,52 @@ export const zEntryResponse = z.object({
     entry: zEntry
 });
 
+export const zLingaId = z.enum([
+    'pum',
+    'stri',
+    'napumsaka'
+]);
+
+export const zDeclension = z.object({
+    forms: z.array(z.array(z.array(z.string()))),
+    linga: zLingaId,
+    stems: z.array(z.string())
+});
+
+export const zMeterKind = z.enum([
+    'vrtta',
+    'jati',
+    'anushtubh'
+]);
+
+export const zMeterMatch = z.object({
+    fit: zFit,
+    kind: zMeterKind,
+    name: z.string(),
+    note: z.string().nullish()
+});
+
+export const zMeterPada = z.object({
+    ganas: z.array(z.string()),
+    pattern: z.string(),
+    yati: z.array(z.int().gte(0))
+});
+
+export const zMeterInfo = z.object({
+    kind: zMeterKind,
+    matras: z.array(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })),
+    name: z.string(),
+    padas: z.array(zMeterPada),
+    syllables: z.array(z.int().gte(0))
+});
+
+export const zPadaId = z.enum(['parasmaipada', 'atmanepada']);
+
+export const zPadaTables = z.object({
+    lakaras: z.array(zLakaraTable),
+    pada: zPadaId
+});
+
 export const zParadigm = z.object({
     id: z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
     label: z.string().nullish(),
@@ -125,6 +206,134 @@ export const zParadigmSummary = z.object({
     source: z.string()
 });
 
+export const zPrayogaId = z.enum([
+    'kartari',
+    'karmani',
+    'bhave'
+]);
+
+export const zKrdantaForm = z.object({
+    avyaya: z.boolean(),
+    forms: z.array(z.string()),
+    gloss: z.string().nullish(),
+    krt: z.string(),
+    label: z.string(),
+    lakara: zLakaraId.nullish(),
+    lingas: z.array(zLingaId),
+    prayoga: zPrayogaId.nullish()
+});
+
+export const zKrtGroup = z.object({
+    items: z.array(zKrdantaForm),
+    key: z.string(),
+    label: z.string()
+});
+
+export const zPurushaId = z.enum([
+    'prathama',
+    'madhyama',
+    'uttama'
+]);
+
+/**
+ * A root of vidyut's Dhātupāṭha.
+ */
+export const zRootInfo = z.object({
+    artha: z.string(),
+    aupadeshika: z.string(),
+    code: z.string(),
+    gana: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    number: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    roots: z.array(z.string())
+});
+
+export const zConjugation = z.object({
+    prayoga: zPrayogaId,
+    root: zRootInfo,
+    stems: z.array(z.string()),
+    tables: z.array(zPadaTables)
+});
+
+export const zRootDetail = z.object({
+    dhatu_id: z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }).nullish(),
+    root: zRootInfo
+});
+
+export const zRuleSource = z.enum([
+    'ashtadhyayi',
+    'varttika',
+    'dhatupatha',
+    'unadipatha',
+    'linganushasana',
+    'phit',
+    'kashika',
+    'kaumudi',
+    'other'
+]);
+
+export const zRuleRef = z.object({
+    code: z.string(),
+    source: zRuleSource,
+    sutra_id: z.string().nullish(),
+    text: z.string().nullish(),
+    url: z.string().nullish()
+});
+
+export const zOptionalRule = z.object({
+    applied: z.boolean(),
+    rule: zRuleRef
+});
+
+export const zSamasaKind = z.enum([
+    'tatpurusha',
+    'karmadharaya',
+    'dvigu',
+    'bahuvrihi',
+    'dvandva',
+    'samahara_dvandva',
+    'avyayibhava'
+]);
+
+export const zSamasaWord = z.object({
+    forms: z.array(z.string()),
+    linga: zLingaId
+});
+
+export const zSamasaResult = z.object({
+    stems: z.array(z.string()),
+    words: z.array(zSamasaWord)
+});
+
+/**
+ * Sanādi pratyayas that make a new root from a root (the nāmadhātu ones are not exposed).
+ */
+export const zSanadiId = z.enum([
+    'nic',
+    'san',
+    'yan',
+    'yan_luk'
+]);
+
+/**
+ * A root from the Dhātupāṭha, optionally with sanādi suffixes (in order: `[nic, san]` is the
+ * desiderative of the causative) and upasargas (Devanagari: `प्र`, `सम्`, `आ`).
+ */
+export const zDhatuArgs = z.object({
+    code: z.string(),
+    sanadi: z.array(zSanadiId).optional(),
+    upasargas: z.array(z.string()).optional()
+});
+
+export const zKrdantaRequest = z.object({
+    dhatu: zDhatuArgs
+});
+
+export const zSandhiRule = z.object({
+    first: z.string(),
+    result: z.string(),
+    second: z.string()
+});
+
 export const zSearchResponse = z.object({
     did_you_mean: z.array(z.string()),
     forms: z.array(zFormAnalysis),
@@ -132,6 +341,34 @@ export const zSearchResponse = z.object({
     mode: z.string(),
     query: z.string(),
     slp1: z.array(z.string())
+});
+
+export const zSplit = z.object({
+    left: z.string(),
+    left_known: z.boolean(),
+    right: z.string(),
+    right_known: z.boolean()
+});
+
+export const zChunkSplit = z.object({
+    chunk: z.string(),
+    splits: z.array(zSplit)
+});
+
+export const zStepTerm = z.object({
+    changed: z.boolean(),
+    text: z.string()
+});
+
+export const zStep = z.object({
+    rule: zRuleRef,
+    terms: z.array(zStepTerm)
+});
+
+export const zDerivation = z.object({
+    optional_rules: z.array(zOptionalRule),
+    steps: z.array(zStep),
+    text: z.string()
 });
 
 export const zSuggestion = z.object({
@@ -154,6 +391,150 @@ export const zSutraDetail = z.object({
     prev: z.string().nullish(),
     sutra: zSutra
 });
+
+export const zSyllable = z.object({
+    guru: z.boolean(),
+    text: z.string()
+});
+
+export const zScannedLine = z.object({
+    ganas: z.array(z.string()),
+    matras: z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    pattern: z.string(),
+    syllables: z.array(zSyllable)
+});
+
+export const zScansion = z.object({
+    best: zMeterMatch.nullish(),
+    lines: z.array(zScannedLine),
+    others: z.array(zMeterMatch)
+});
+
+export const zTaddhitaForm = z.object({
+    forms: z.array(z.string()),
+    gloss: z.string().nullish(),
+    label: z.string(),
+    linga: zLingaId,
+    taddhita: z.string()
+});
+
+export const zTaddhitaRequest = z.object({
+    stem: z.string()
+});
+
+export const zTextRequest = z.object({
+    text: z.string()
+});
+
+export const zTinantaRequest = z.object({
+    dhatu: zDhatuArgs,
+    prayoga: zPrayogaId
+});
+
+export const zVacanaId = z.enum([
+    'eka',
+    'dvi',
+    'bahu'
+]);
+
+export const zVibhaktiId = z.enum([
+    'prathama',
+    'dvitiya',
+    'trtiya',
+    'caturthi',
+    'panchami',
+    'sasthi',
+    'saptami',
+    'sambodhana'
+]);
+
+/**
+ * One member of a compound.
+ */
+export const zSamasaPada = z.object({
+    linga: zLingaId.optional(),
+    stem: z.string(),
+    vibhakti: zVibhaktiId.optional()
+});
+
+export const zSamasaRequest = z.object({
+    padas: z.array(zSamasaPada),
+    samasa_type: zSamasaKind
+});
+
+/**
+ * A nominal stem (prātipadika): typed as is, or derived (kṛdanta, taddhitānta, samāsa).
+ */
+export const zStemArgs = z.union([
+    z.object({
+        kind: z.enum(['basic']),
+        stem: z.string()
+    }),
+    z.object({
+        dhatu: zDhatuArgs,
+        kind: z.enum(['krdanta']),
+        krt: z.string(),
+        lakara: zLakaraId.nullish(),
+        prayoga: zPrayogaId.nullish()
+    }),
+    z.object({
+        kind: z.enum(['taddhitanta']),
+        stem: z.string(),
+        taddhita: z.string()
+    }),
+    z.object({
+        kind: z.enum(['samasa']),
+        padas: z.array(zSamasaPada),
+        samasa_type: zSamasaKind
+    })
+]);
+
+export const zStemRequest = z.object({
+    stem: zStemArgs
+});
+
+export const zSubantaRequest = z.object({
+    linga: zLingaId,
+    stem: zStemArgs
+});
+
+/**
+ * A word (or stem / root / phrase) to derive step by step.
+ */
+export const zWordSpec = z.union([
+    z.object({
+        dhatu: zDhatuArgs,
+        kind: z.enum(['tinanta']),
+        lakara: zLakaraId,
+        pada: zPadaId.nullish(),
+        prayoga: zPrayogaId,
+        purusha: zPurushaId,
+        vacana: zVacanaId
+    }),
+    z.object({
+        kind: z.enum(['subanta']),
+        linga: zLingaId,
+        stem: zStemArgs,
+        vacana: zVacanaId,
+        vibhakti: zVibhaktiId
+    }),
+    z.object({
+        kind: z.enum(['stem']),
+        stem: zStemArgs
+    }),
+    z.object({
+        kind: z.enum(['stryanta']),
+        stem: zStemArgs
+    }),
+    z.object({
+        dhatu: zDhatuArgs,
+        kind: z.enum(['dhatu'])
+    }),
+    z.object({
+        kind: z.enum(['vakya']),
+        words: z.array(z.string())
+    })
+]);
 
 export const zDhatusListQuery = z.object({
     q: z.string().optional(),
@@ -263,3 +644,111 @@ export const zSutrasGetPath = z.object({
  * Sutra with commentaries
  */
 export const zSutrasGetResponse = zSutraDetail;
+
+export const zVidyutChandasBody = zTextRequest;
+
+/**
+ * Scansion and meter
+ */
+export const zVidyutChandasResponse = zScansion;
+
+export const zVidyutDeriveBody = zWordSpec;
+
+/**
+ * Step-by-step derivations (one per result)
+ */
+export const zVidyutDeriveResponse = z.array(zDerivation);
+
+export const zVidyutDhatusQuery = z.object({
+    q: z.string().optional(),
+    gana: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }).optional()
+});
+
+/**
+ * Matching roots of vidyut's Dhātupāṭha (max 60)
+ */
+export const zVidyutDhatusResponse = z.array(zRootInfo);
+
+export const zVidyutSiteDhatuPath = z.object({
+    id: z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+});
+
+/**
+ * The same root in vidyut's Dhātupāṭha
+ */
+export const zVidyutSiteDhatuResponse = zRootInfo;
+
+export const zVidyutDhatuPath = z.object({
+    code: z.string()
+});
+
+/**
+ * One root
+ */
+export const zVidyutDhatuResponse = zRootDetail;
+
+export const zVidyutKrdantaBody = zKrdantaRequest;
+
+/**
+ * Kṛdanta stems of the root, grouped
+ */
+export const zVidyutKrdantaResponse = z.array(zKrtGroup);
+
+/**
+ * Meter catalogue
+ */
+export const zVidyutMetersResponse = z.array(zMeterInfo);
+
+export const zVidyutSamasaBody = zSamasaRequest;
+
+/**
+ * Compound stem and its nominative
+ */
+export const zVidyutSamasaResponse = zSamasaResult;
+
+export const zVidyutSandhiJoinBody = zJoinRequest;
+
+/**
+ * The joined phrase (variants when sandhi is optional)
+ */
+export const zVidyutSandhiJoinResponse = z.array(z.string());
+
+/**
+ * The sandhi rule table
+ */
+export const zVidyutSandhiRulesResponse = z.array(zSandhiRule);
+
+export const zVidyutSandhiSplitBody = zTextRequest;
+
+/**
+ * Two-word split candidates per chunk
+ */
+export const zVidyutSandhiSplitResponse = z.array(zChunkSplit);
+
+export const zVidyutStryantaBody = zStemRequest;
+
+/**
+ * Feminine stems
+ */
+export const zVidyutStryantaResponse = z.array(z.string());
+
+export const zVidyutSubantaBody = zSubantaRequest;
+
+/**
+ * Declension table
+ */
+export const zVidyutSubantaResponse = zDeclension;
+
+export const zVidyutTaddhitaBody = zTaddhitaRequest;
+
+/**
+ * Taddhitānta stems (common suffixes first)
+ */
+export const zVidyutTaddhitaResponse = z.array(zTaddhitaForm);
+
+export const zVidyutTinantaBody = zTinantaRequest;
+
+/**
+ * Every lakāra of the root in this prayoga, per pada
+ */
+export const zVidyutTinantaResponse = zConjugation;

@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DhatusGetData, DhatusGetErrors, DhatusGetResponses, DhatusListData, DhatusListErrors, DhatusListResponses, DictionariesBrowseData, DictionariesBrowseErrors, DictionariesBrowseResponses, DictionariesListData, DictionariesListErrors, DictionariesListResponses, EntriesGetData, EntriesGetErrors, EntriesGetResponses, ParadigmsGetData, ParadigmsGetErrors, ParadigmsGetResponses, ParadigmsListData, ParadigmsListErrors, ParadigmsListResponses, SearchQueryData, SearchQueryErrors, SearchQueryResponses, SearchSuggestData, SearchSuggestErrors, SearchSuggestResponses, SutrasGetData, SutrasGetErrors, SutrasGetResponses, SutrasListData, SutrasListErrors, SutrasListResponses } from './types.gen';
+import type { DhatusGetData, DhatusGetErrors, DhatusGetResponses, DhatusListData, DhatusListErrors, DhatusListResponses, DictionariesBrowseData, DictionariesBrowseErrors, DictionariesBrowseResponses, DictionariesListData, DictionariesListErrors, DictionariesListResponses, EntriesGetData, EntriesGetErrors, EntriesGetResponses, ParadigmsGetData, ParadigmsGetErrors, ParadigmsGetResponses, ParadigmsListData, ParadigmsListErrors, ParadigmsListResponses, SearchQueryData, SearchQueryErrors, SearchQueryResponses, SearchSuggestData, SearchSuggestErrors, SearchSuggestResponses, SutrasGetData, SutrasGetErrors, SutrasGetResponses, SutrasListData, SutrasListErrors, SutrasListResponses, VidyutChandasData, VidyutChandasErrors, VidyutChandasResponses, VidyutDeriveData, VidyutDeriveErrors, VidyutDeriveResponses, VidyutDhatuData, VidyutDhatuErrors, VidyutDhatuResponses, VidyutDhatusData, VidyutDhatusErrors, VidyutDhatusResponses, VidyutKrdantaData, VidyutKrdantaErrors, VidyutKrdantaResponses, VidyutMetersData, VidyutMetersResponses, VidyutSamasaData, VidyutSamasaErrors, VidyutSamasaResponses, VidyutSandhiJoinData, VidyutSandhiJoinErrors, VidyutSandhiJoinResponses, VidyutSandhiRulesData, VidyutSandhiRulesResponses, VidyutSandhiSplitData, VidyutSandhiSplitErrors, VidyutSandhiSplitResponses, VidyutSiteDhatuData, VidyutSiteDhatuErrors, VidyutSiteDhatuResponses, VidyutStryantaData, VidyutStryantaErrors, VidyutStryantaResponses, VidyutSubantaData, VidyutSubantaErrors, VidyutSubantaResponses, VidyutTaddhitaData, VidyutTaddhitaErrors, VidyutTaddhitaResponses, VidyutTinantaData, VidyutTinantaErrors, VidyutTinantaResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -106,6 +106,138 @@ export class Sutras extends HeyApiClient {
     }
 }
 
+export class Vidyut extends HeyApiClient {
+    public chandas<ThrowOnError extends boolean = false>(options: Options<VidyutChandasData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutChandasResponses, VidyutChandasErrors, ThrowOnError>({
+            url: '/api/vidyut/chandas',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public derive<ThrowOnError extends boolean = false>(options: Options<VidyutDeriveData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutDeriveResponses, VidyutDeriveErrors, ThrowOnError>({
+            url: '/api/vidyut/derive',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public dhatus<ThrowOnError extends boolean = false>(options?: Options<VidyutDhatusData, ThrowOnError>) {
+        return (options?.client ?? this.client).get<VidyutDhatusResponses, VidyutDhatusErrors, ThrowOnError>({ url: '/api/vidyut/dhatus', ...options });
+    }
+    
+    public siteDhatu<ThrowOnError extends boolean = false>(options: Options<VidyutSiteDhatuData, ThrowOnError>) {
+        return (options.client ?? this.client).get<VidyutSiteDhatuResponses, VidyutSiteDhatuErrors, ThrowOnError>({ url: '/api/vidyut/dhatus/site/{id}', ...options });
+    }
+    
+    public dhatu<ThrowOnError extends boolean = false>(options: Options<VidyutDhatuData, ThrowOnError>) {
+        return (options.client ?? this.client).get<VidyutDhatuResponses, VidyutDhatuErrors, ThrowOnError>({ url: '/api/vidyut/dhatus/{code}', ...options });
+    }
+    
+    public krdanta<ThrowOnError extends boolean = false>(options: Options<VidyutKrdantaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutKrdantaResponses, VidyutKrdantaErrors, ThrowOnError>({
+            url: '/api/vidyut/krdanta',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public meters<ThrowOnError extends boolean = false>(options?: Options<VidyutMetersData, ThrowOnError>) {
+        return (options?.client ?? this.client).get<VidyutMetersResponses, unknown, ThrowOnError>({ url: '/api/vidyut/meters', ...options });
+    }
+    
+    public samasa<ThrowOnError extends boolean = false>(options: Options<VidyutSamasaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutSamasaResponses, VidyutSamasaErrors, ThrowOnError>({
+            url: '/api/vidyut/samasa',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public sandhiJoin<ThrowOnError extends boolean = false>(options: Options<VidyutSandhiJoinData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutSandhiJoinResponses, VidyutSandhiJoinErrors, ThrowOnError>({
+            url: '/api/vidyut/sandhi/join',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public sandhiRules<ThrowOnError extends boolean = false>(options?: Options<VidyutSandhiRulesData, ThrowOnError>) {
+        return (options?.client ?? this.client).get<VidyutSandhiRulesResponses, unknown, ThrowOnError>({ url: '/api/vidyut/sandhi/rules', ...options });
+    }
+    
+    public sandhiSplit<ThrowOnError extends boolean = false>(options: Options<VidyutSandhiSplitData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutSandhiSplitResponses, VidyutSandhiSplitErrors, ThrowOnError>({
+            url: '/api/vidyut/sandhi/split',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public stryanta<ThrowOnError extends boolean = false>(options: Options<VidyutStryantaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutStryantaResponses, VidyutStryantaErrors, ThrowOnError>({
+            url: '/api/vidyut/stryanta',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public subanta<ThrowOnError extends boolean = false>(options: Options<VidyutSubantaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutSubantaResponses, VidyutSubantaErrors, ThrowOnError>({
+            url: '/api/vidyut/subanta',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public taddhita<ThrowOnError extends boolean = false>(options: Options<VidyutTaddhitaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutTaddhitaResponses, VidyutTaddhitaErrors, ThrowOnError>({
+            url: '/api/vidyut/taddhita',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public tinanta<ThrowOnError extends boolean = false>(options: Options<VidyutTinantaData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutTinantaResponses, VidyutTinantaErrors, ThrowOnError>({
+            url: '/api/vidyut/tinanta',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
 export class Api extends HeyApiClient {
     public static readonly __registry = new HeyApiRegistry<Api>();
     
@@ -145,5 +277,10 @@ export class Api extends HeyApiClient {
     private _sutras?: Sutras;
     get sutras(): Sutras {
         return this._sutras ??= new Sutras({ client: this.client });
+    }
+    
+    private _vidyut?: Vidyut;
+    get vidyut(): Vidyut {
+        return this._vidyut ??= new Vidyut({ client: this.client });
     }
 }

@@ -3,6 +3,7 @@
 //! long texts capped, ids kept so the UI can link to the pages. Shapes: `docs/agent.md`.
 
 use crate::agent::text::{senses_text, truncate};
+use crate::agent::vidyut_tools as vt;
 use crate::agent::web_search::{WebSearch, WebSearchInput, WebSearchOutput};
 use crate::routes::{self, ApiError};
 use crate::state::AppState;
@@ -123,6 +124,52 @@ pub fn agent_tools(ctx: &ToolCtx) -> AgentTools {
      Tattvabodhinī (tattvabodhini), and its gaṇa from the Gaṇapāṭha when it has one. Pass \
      `commentaries` to get only those, at greater length.",
     get_sutra,
+  );
+  // Grammar tools on vidyut (generated, not looked up: any root / stem, with derivations).
+  t.add::<vt::ConjugateInput, _, _>(
+    ctx,
+    "vidyut_conjugate",
+    "Generate a verb's conjugation with Pāṇini's grammar (vidyut): every lakāra (or one) of a \
+     Dhātupāṭha root in a prayoga, per pada, also with sanādi (causative णिच्, desiderative सन्, \
+     intensive यङ्) and upasargas. Use for any root/prefix/sanādi combination, or when \
+     find_paradigms has no table. Rows: puruṣa × (eka | dvi | bahu).",
+    vt::conjugate,
+  );
+  t.add::<vt::DeclineInput, _, _>(
+    ctx,
+    "vidyut_decline",
+    "Generate the declension of any nominal stem in a gender with Pāṇini's grammar (vidyut). \
+     Rows: vibhakti × (eka | dvi | bahu).",
+    vt::decline,
+  );
+  t.add::<vt::KrdantasInput, _, _>(
+    ctx,
+    "vidyut_krdantas",
+    "Generate a root's kṛdantas (vidyut): participles (क्त, क्तवतु, शतृ, शानच्…), gerund, \
+     infinitive, gerundives, agent/action nouns and other kṛt suffixes.",
+    vt::krdantas,
+  );
+  t.add::<vt::DerivationInput, _, _>(
+    ctx,
+    "vidyut_derivation",
+    "Step-by-step Pāṇinian derivation (prakriyā) of one verb form (root + lakāra, puruṣa, \
+     vacana) or noun form (stem + liṅga, vibhakti, vacana): each step's sūtra (with sutra_id for \
+     /sutra links), its text, and the result. Use to explain how a form arises.",
+    vt::derivation,
+  );
+  t.add::<vt::SandhiInput, _, _>(
+    ctx,
+    "vidyut_sandhi",
+    "Sandhi: `join` words with the grammar's rules (रामः + अस्ति → रामोऽस्ति), or `split` a \
+     joined word into phonetic candidates, marking parts found in the dictionaries.",
+    vt::sandhi,
+  );
+  t.add::<vt::MeterInput, _, _>(
+    ctx,
+    "vidyut_meter",
+    "Identify the meter of a verse: laghu/guru scansion and gaṇas per line, the meter \
+     (vṛtta, jāti or anuṣṭubh) and other compatible meters.",
+    vt::meter,
   );
   if ctx.web_search.is_some() {
     t.add::<WebSearchInput, _, _>(

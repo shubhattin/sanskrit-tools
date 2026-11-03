@@ -10,6 +10,7 @@ pub mod dhatus;
 pub mod paradigms;
 pub mod search;
 pub mod sutras;
+pub mod vidyut;
 
 use crate::entities::{dictionaries, entries, enums};
 use crate::state::AppState;
@@ -29,6 +30,7 @@ pub fn openapi_router() -> OpenApiRouter<AppState> {
     .merge(sutras::openapi_router())
     .merge(dhatus::openapi_router())
     .merge(paradigms::openapi_router())
+    .merge(vidyut::openapi_router())
 }
 
 pub struct ApiError(pub StatusCode, pub String);

@@ -14,6 +14,7 @@
   `tsc-links`): forwards `Cookie` to `${VITE_BETTER_AUTH_URL}/api/auth/get-session`, requires the
   admin role, blocks cross-site writes.
 - `src/agent/` – dictionary agent (`/agent`): aisdk (git rev) tool loop over our OpenRouter Responses-API model (`openrouter.rs`: reasoning-item replay, top-level `cache_control` for Anthropic, cost), dictionary tools calling the API handlers (`tools.rs`), web search through OpenAI's native `web_search` tool (`web_search.rs`), AI SDK UI stream encoder (`ui_stream.rs`), storage (`store.rs`). Routes in `src/routes/agent.rs` (outside OpenAPI, behind `require_admin`); contract `docs/agent.md` (keep in sync with `frontend/src/lib/agent/`).
+- `src/vidyut/` – grammar tools on Ambuda's vidyut (git rev pinned in `Cargo.toml`): `prakriya.rs` (word generation + step-by-step derivations), `chandas.rs` (meter), `sandhi.rs` (rules, splits); Devanagari in/out, SLP1 only inside. Data (`data/`: chandas, prakriya, sandhi TSV/CSV) is committed and `include_str!`-embedded. `src/routes/vidyut.rs` is the thin web layer (`/api/vidyut/*`, public; adds site-dhātu matching and dictionary flags for splits); `src/agent/vidyut_tools.rs` the agent's `vidyut_*` tools. UI: `frontend/src/routes/vidyut.*.tsx`, `frontend/src/components/vidyut/`.
 - `src/routes/` – API handlers (entity queries; Postgres-specific SQL as typed raw `Statement`s + `FromQueryResult`); contract in `docs/api.md` (keep it in sync with the frontend types in `frontend/src/lib/api/`).
 - `schema/schema.ts` – tables; migrations in `schema/migrations/` (snake_case columns).
 
@@ -40,5 +41,5 @@
 - Package manager: bun (`bunx`, never npx).
 - Search keys are always produced by `src/translit.rs`; never compare Devanagari strings in SQL for lookup.
 - Entry HTML is built by escaping source text first and adding only the tags listed in `docs/api.md`; HTML sources go through `markup::sanitize_html`.
-- Lipi Lekhika typing on inputs: default off, Alt+X / Alt+C toggles.
+- Lipi Lekhika typing on inputs: default off, Alt+X / Alt+C toggles. Exceptions: the main search bar (typing follows the mode: on for Sanskrit, off for English; ↑/↓ with no suggestions open, or Alt+X / Alt+C, switch the mode) and the vidyut tools (Devanagari-only fields, typing always on, no hint).
 - Never run git commit on your own.

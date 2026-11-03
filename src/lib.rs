@@ -8,3 +8,4 @@ pub mod openapi;
 pub mod routes;
 pub mod state;
 pub mod translit;
+pub mod vidyut;

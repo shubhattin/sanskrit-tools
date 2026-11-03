@@ -11,4 +11,5 @@ pub mod text;
 pub mod tools;
 pub mod turn;
 pub mod ui_stream;
+pub mod vidyut_tools;
 pub mod web_search;

@@ -125,3 +125,83 @@ Search input may be Devanagari, IAST, Harvard-Kyoto, ITRANS, SLP1 or lipilekhika
 the server normalizes it. `mode=en` runs English full-text over Sanskrit→English lexicons and
 English headwords (computer terms, Apte / Monier-Williams / Borooah English→Sanskrit).
 In `en` mode English→Sanskrit works come first and an exact English headword ranks highest.
+
+## Vidyut (`/api/vidyut/*`)
+
+Grammar tools on Ambuda's [vidyut](https://github.com/ambuda-org/vidyut) (core: `src/vidyut/`,
+handlers: `src/routes/vidyut.rs`; data embedded from `src/vidyut/data/`). Pure computation, public.
+**Devanagari only** in and out (Latin letters → 400 "Please enter the text in Devanagari").
+Generated types: `frontend/src/lib/api/generated/types.gen.ts` (`frontend/src/lib/vidyut/api.ts`).
+
+```ts
+type LakaraId = 'lat'|'lit'|'lut'|'lrt'|'lot'|'lan'|'vidhi_lin'|'ashir_lin'|'lun'|'lrn';
+type PrayogaId = 'kartari'|'karmani'|'bhave';      type PadaId = 'parasmaipada'|'atmanepada';
+type PurushaId = 'prathama'|'madhyama'|'uttama';   type VacanaId = 'eka'|'dvi'|'bahu';
+type LingaId = 'pum'|'stri'|'napumsaka';
+type VibhaktiId = 'prathama'|'dvitiya'|'trtiya'|'caturthi'|'panchami'|'sasthi'|'saptami'|'sambodhana';
+type SanadiId = 'nic'|'san'|'yan'|'yan_luk';
+type SamasaKind = 'tatpurusha'|'karmadharaya'|'dvigu'|'bahuvrihi'|'dvandva'|'samahara_dvandva'|'avyayibhava';
+
+interface RootInfo { code: string;            // vidyut Dhātupāṭha code 'GG.NNNN'
+  gana: number; number: number; aupadeshika: string; roots: string[]; artha: string; }
+interface DhatuArgs { code: string; sanadi?: SanadiId[];   // in order: ['nic','san'] = desid. of caus.
+  upasargas?: string[]; }                                   // Devanagari, outermost first; आ = आङ्
+type StemArgs =
+  | { kind: 'basic'; stem: string }
+  | { kind: 'krdanta'; dhatu: DhatuArgs; krt: string;      // vidyut SLP1 label: 'kta', 'Satf~'
+      lakara?: LakaraId | null; prayoga?: PrayogaId | null }   // śatṛ / śānac only
+  | { kind: 'taddhitanta'; stem: string; taddhita: string } // 'aR', 'tva'
+  | { kind: 'samasa'; padas: SamasaPada[]; samasa_type: SamasaKind };
+interface SamasaPada { stem: string; vibhakti?: VibhaktiId; linga?: LingaId }  // first of avyayībhāva = indeclinable
+type WordSpec =                                             // what /derive explains
+  | { kind: 'tinanta'; dhatu: DhatuArgs; prayoga; lakara; purusha; vacana; pada?: PadaId | null }
+  | { kind: 'subanta'; stem: StemArgs; linga; vibhakti; vacana }
+  | { kind: 'stem'; stem: StemArgs }  | { kind: 'stryanta'; stem: StemArgs }
+  | { kind: 'dhatu'; dhatu: DhatuArgs } | { kind: 'vakya'; words: string[] };
+
+interface Conjugation { root: RootInfo; stems: string[]; prayoga: PrayogaId;
+  tables: { pada: PadaId; lakaras: { lakara: LakaraId; forms: string[][][] }[] }[] } // [purusha][vacana][variants]
+interface Declension { stems: string[]; linga: LingaId; forms: string[][][] }      // [vibhakti][vacana][variants]
+interface KrtGroup { key: string; label: string; items: { krt: string; label: string;
+  lakara: LakaraId | null; prayoga: PrayogaId | null; gloss: string | null; forms: string[];
+  lingas: LingaId[]; avyaya: boolean }[] }
+interface TaddhitaForm { taddhita: string; label: string; gloss: string | null; forms: string[]; linga: LingaId }
+interface SamasaResult { stems: string[]; words: { linga: LingaId; forms: string[] }[] }
+interface Derivation { text: string;
+  steps: { rule: RuleRef; terms: { text: string; changed: boolean }[] }[];
+  optional_rules: { rule: RuleRef; applied: boolean }[] }
+interface RuleRef { source: 'ashtadhyayi'|'varttika'|'dhatupatha'|'unadipatha'|'linganushasana'|
+  'phit'|'kashika'|'kaumudi'|'other'; code: string; text: string | null;
+  sutra_id: string | null;   // this site's sūtra id ('1.1.001') for Aṣṭādhyāyī / vārttika / Kāśikā
+  url: string | null }
+interface Scansion { lines: { syllables: { text: string; guru: boolean }[]; pattern: string;   // 'GGLG…'
+    ganas: string[]; matras: number }[];
+  best: MeterMatch | null; others: MeterMatch[] }
+interface MeterMatch { name: string; kind: 'vrtta'|'jati'|'anushtubh';
+  fit: 'full'|'pada'|'prefix'; note: string | null }                     // note: 'vipulā'
+interface MeterInfo { name: string; kind; padas: { pattern: string;      // '.' = either
+  ganas: string[]; yati: number[] }[]; matras: number[]; syllables: number[] }
+```
+
+| Method | Path | Body / query | Response |
+|---|---|---|---|
+| GET | `/api/vidyut/dhatus` | `q` (root, meaning word or code `1.1`), `gana` | `RootInfo[]` (exact roots first, max 60) |
+| GET | `/api/vidyut/dhatus/{code}` | – | `{ root: RootInfo, dhatu_id: number \| null }` (`dhatu_id`: same root on `/dhatu/{id}`) |
+| GET | `/api/vidyut/dhatus/site/{id}` | – | `RootInfo` for the site's root `id` (404 when vidyut has no safe match) |
+| POST | `/api/vidyut/tinanta` | `{ dhatu: DhatuArgs, prayoga }` | `Conjugation` (one table set per pada the root takes) |
+| POST | `/api/vidyut/krdanta` | `{ dhatu: DhatuArgs }` | `KrtGroup[]` (participles, avyaya, gerundives, nouns, other) |
+| POST | `/api/vidyut/subanta` | `{ stem: StemArgs, linga }` | `Declension` |
+| POST | `/api/vidyut/stryanta` | `{ stem: StemArgs }` | `string[]` feminine stems |
+| POST | `/api/vidyut/taddhita` | `{ stem: string }` | `TaddhitaForm[]` (glossed common suffixes first) |
+| POST | `/api/vidyut/samasa` | `{ padas: SamasaPada[] (2–6), samasa_type }` | `SamasaResult` |
+| POST | `/api/vidyut/derive` | `WordSpec` | `Derivation[]` (one per result) |
+| POST | `/api/vidyut/chandas` | `{ text }` (≤ 2,000 chars; a line per pāda / half-verse, daṇḍas end lines) | `Scansion` |
+| GET | `/api/vidyut/meters` | – | `MeterInfo[]` (anuṣṭubh, vṛttas by length, jātis) |
+| POST | `/api/vidyut/sandhi/join` | `{ words: string[] }` (2–12) | `string[]` joined phrase(s), spaced as printed (रामो गच्छति, तच्च) |
+| POST | `/api/vidyut/sandhi/split` | `{ text }` | `{ chunk: string; splits: { left; right; left_known; right_known }[] }[]` (`*_known`: headword or inflected form in the dictionaries; both-known first) |
+| GET | `/api/vidyut/sandhi/rules` | – | `{ first; second; result }[]` |
+
+Notes: tables show one pause form where vidyut gives both (रामात् / रामाद्, 8.4.56); `/derive`
+returns both. The site's Dhātupāṭha is another edition than vidyut's: roots are matched within
+the gaṇa by upadeśa or plain root, preferring the same number (~95% of roots match).
+

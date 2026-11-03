@@ -32,7 +32,8 @@ use crate::routes::{DictEntries, Dictionary, Entry, ErrorBody};
         (name = "search", description = "Sanskrit / English search and autocomplete"),
         (name = "sutras", description = "Astadhyayi sutras and commentaries"),
         (name = "dhatus", description = "Dhatupatha roots and dhatu works"),
-        (name = "paradigms", description = "Inflection tables")
+        (name = "paradigms", description = "Inflection tables"),
+        (name = "vidyut", description = "Grammar tools on Ambuda's vidyut: word generation, meter, sandhi")
     )
 )]
 pub struct ApiDoc;
