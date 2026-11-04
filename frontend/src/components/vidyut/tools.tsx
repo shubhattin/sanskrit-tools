@@ -1,7 +1,23 @@
-import { AudioWaveformIcon, CombineIcon, ShapesIcon, SproutIcon, ZapIcon } from 'lucide-react';
+import {
+  AudioWaveformIcon,
+  CombineIcon,
+  ScanTextIcon,
+  ShapesIcon,
+  SproutIcon,
+  ZapIcon
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const TOOLS = [
+  {
+    to: '/vidyut/cheda',
+    label: 'Cheda',
+    deva: 'पदच्छेदः',
+    icon: ScanTextIcon,
+    short: 'Segment a verse or sentence into words and tag each one',
+    blurb:
+      'Paste a śloka or a sentence: its sandhi undone and every word tagged (stem or root, case or tense, number), read as a whole by cheda and Jev, with each word’s derivation and forms one click away.'
+  },
   {
     to: '/vidyut/dhatu',
     label: 'Dhātu',
@@ -34,9 +50,9 @@ export const TOOLS = [
     label: 'Sandhi',
     deva: 'सन्धिः',
     icon: CombineIcon,
-    short: 'Join words, split text and read each word’s grammar',
+    short: 'Join words, split them apart, and the rules between',
     blurb:
-      'Join words with the rules of sandhi, or split a joined text into words and see what each one is (stem, case, number or root, tense, person), with its derivation.'
+      'Join words with the rules of sandhi, take a joined word apart (every way it can split, or at the sound you pick), and browse the rule table.'
   }
 ] as const;
 

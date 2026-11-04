@@ -1,30 +1,33 @@
 import { useDeferredValue, useEffect, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRightIcon, GitBranchIcon, ScissorsIcon, XIcon } from 'lucide-react';
+import { ChevronRightIcon, GitBranchIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { WordCard } from '@/components/vidyut/words';
 import {
+  ChedaBadge,
+  Legend,
+  ReadingChoices,
+  pickOf,
+  useReading
+} from '@/components/vidyut/reading';
+import {
   DevaInput,
   ErrorNote,
   LoadingBlock,
   SectionLabel,
-  Segmented,
-  radioKeys
+  Segmented
 } from '@/components/vidyut/controls';
-import { JevBadge, JevBar, JevPending, isJevChoice, jevProbability } from '@/components/vidyut/jev';
+import { JevBadge, JevPending, isJevChoice, jevProbability } from '@/components/vidyut/jev';
 import { useOpenDerivation } from '@/components/vidyut/derivation';
 import { searchString } from '@/lib/search-params';
 import {
-  jevAnalysesQuery,
   jevJoinQuery,
-  jevSplitQuery,
   joinQuery,
   sandhiRulesQuery,
   splitAtQuery,
-  splitQuery,
   type ChunkSplit,
   type JevPick,
   type Reading,
@@ -172,19 +175,6 @@ function PartText({ text, known }: { text: string; known: boolean }) {
   );
 }
 
-/** Marks the reading vidyut's statistical segmenter chose. */
-function ChedaBadge() {
-  return (
-    <span
-      title="cheda, vidyut's statistical segmenter (trained on Sanskrit texts), picked this reading"
-      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-500/30 dark:text-emerald-300"
-    >
-      <ScissorsIcon className="size-3" aria-hidden />
-      cheda
-    </span>
-  );
-}
-
 /** A reading's words as word cards, joined by +. */
 function ReadingWords({
   reading,
@@ -197,7 +187,6 @@ function ReadingWords({
   return (
     <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2" aria-label="Words">
       {reading.parts.map((p, i) => {
-        const pick = picks?.[i]?.pick;
         return (
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 ? (
@@ -205,39 +194,11 @@ function ReadingWords({
                 +
               </span>
             ) : null}
-            <WordCard
-              part={p}
-              jevKey={pick ? pick.options[pick.choice] : undefined}
-              jevP={pick ? pick.probabilities[pick.choice] : undefined}
-            />
+            <WordCard part={p} {...pickOf(picks?.[i])} />
           </li>
         );
       })}
     </ol>
-  );
-}
-
-/** One reading as plain text with its known-word marks. */
-function ReadingText({ reading }: { reading: Reading }) {
-  return (
-    <span className="flex flex-wrap items-baseline gap-x-1.5 font-devanagari">
-      {reading.parts.map((p, i) => (
-        <span key={i} className="flex items-baseline gap-1.5">
-          {i > 0 ? <span className="text-muted-foreground">+</span> : null}
-          <span
-            className={cn(
-              p.dictionary
-                ? 'font-semibold text-foreground'
-                : p.known
-                  ? 'font-semibold text-emerald-700 dark:text-emerald-300'
-                  : 'text-muted-foreground line-through decoration-muted-foreground/40'
-            )}
-          >
-            {p.text}
-          </span>
-        </span>
-      ))}
-    </span>
   );
 }
 
@@ -313,7 +274,7 @@ function ChunkCard({
   picksLoading
 }: {
   chunk: ChunkSplit;
-  jev?: JevPick | null;
+  jev?: JevPick;
   jevLoading: boolean;
   selected: number;
   onSelect: (i: number) => void;
@@ -355,50 +316,7 @@ function ChunkCard({
         {many ? (
           <div className="flex flex-col gap-1.5">
             <SectionLabel>Readings · {chunk.readings.length}</SectionLabel>
-            <div
-              role="radiogroup"
-              aria-label="Readings"
-              onKeyDown={radioKeys}
-              className="flex flex-col gap-0.5"
-            >
-              {chunk.readings.map((r, i) => {
-                const on = i === selected;
-                const p = jevProbability(jev, r.label);
-                return (
-                  <button
-                    key={r.label}
-                    type="button"
-                    role="radio"
-                    aria-checked={on}
-                    tabIndex={on ? 0 : -1}
-                    onClick={() => onSelect(i)}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-left text-base transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-                      on ? 'bg-primary/8 ring-1 ring-primary/25' : 'hover:bg-muted/70'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'grid size-4 shrink-0 place-items-center rounded-full border',
-                        on ? 'border-primary bg-primary' : 'border-muted-foreground/40'
-                      )}
-                      aria-hidden
-                    >
-                      {on ? <span className="size-1.5 rounded-full bg-primary-foreground" /> : null}
-                    </span>
-                    <ReadingText reading={r} />
-                    <span className="ml-auto flex shrink-0 items-center gap-2">
-                      {r.cheda ? <ChedaBadge /> : null}
-                      {isJevChoice(jev, r.label) ? (
-                        <JevBadge p={p} />
-                      ) : p !== undefined ? (
-                        <JevBar p={p} />
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <ReadingChoices chunk={chunk} jev={jev} selected={selected} onSelect={onSelect} />
           </div>
         ) : null}
 
@@ -450,79 +368,40 @@ function ChunkCard({
   );
 }
 
-/** Legend for the word cards. */
-function Legend() {
-  const dot = (c: string) => <span className={cn('size-2 rounded-full', c)} aria-hidden />;
-  return (
-    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1.5">{dot('bg-emerald-500')} verb</span>
-      <span className="flex items-center gap-1.5">{dot('bg-sky-500')} noun / adjective</span>
-      <span className="flex items-center gap-1.5">{dot('bg-amber-500')} indeclinable</span>
-      <span>Click a word for all its analyses, its derivation and its forms.</span>
-    </p>
-  );
-}
-
 function Split({ q }: { q: string }) {
-  const res = useQuery({ ...splitQuery(q), enabled: !!q });
-  const askJev = !!res.data?.some((c) => c.readings.length > 1);
-  const jev = useQuery({ ...jevSplitQuery(q), enabled: !!q && askJev });
-  // The reader's choice of reading per chunk (by label); default: Jev's pick, else the first.
-  const [chosen, setChosen] = useState<Record<string, string>>({});
-  const chunks = res.data ?? [];
-  const selected = chunks.map((c, i) => {
-    const want = chosen[`${i}:${c.chunk}`];
-    const jp = jev.data?.[i]?.chunk === c.chunk ? jev.data[i]!.pick : null;
-    const label = want ?? (jp ? jp.options[jp.choice] : undefined);
-    return Math.max(0, label ? c.readings.findIndex((r) => r.label === label) : 0);
-  });
-  // Jev then reads each word of the chosen readings in the sentence's context.
-  const words = chunks.flatMap((c, i) => c.readings[selected[i]!]?.parts ?? []);
-  const ambiguous = words.some((p) => p.analyses.length > 1);
-  const settled = !askJev || !jev.isFetching;
-  const picks = useQuery({
-    ...jevAnalysesQuery(
-      q,
-      words.map((p) => p.text)
-    ),
-    enabled: !!q && ambiguous && settled
-  });
+  const r = useReading(q);
   if (!q)
     return (
       <Hint>
-        Reads joined text as words: every way sandhi could have joined them, checked against the
-        dictionaries and every form Pāṇini’s grammar generates, then weighed by cheda and Jev. Each
-        word shows what it is, with its derivation and forms one click away.
+        Takes joined text apart: every way sandhi could have joined its words, checked against the
+        dictionaries and every form Pāṇini’s grammar generates, then weighed by cheda and Jev. To
+        read a whole verse word by word, use{' '}
+        <Link
+          to="/vidyut/cheda"
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Cheda
+        </Link>
+        .
       </Hint>
     );
-  if (res.isPending) return <LoadingBlock rows={3} label="Splitting" />;
-  if (res.isError) return <ErrorNote error={res.error} />;
-  // Where each chunk's words start in `words`.
-  const sizes = chunks.map((c, i) => c.readings[selected[i]!]?.parts.length ?? 0);
-  const starts = sizes.map((_, i) => sizes.slice(0, i).reduce((a, b) => a + b, 0));
-  // Picks are for the words sent; ignore them if a reading changed since.
-  const fresh = picks.data?.length === words.length;
+  if (r.split.isPending) return <LoadingBlock rows={3} label="Splitting" />;
+  if (r.split.isError) return <ErrorNote error={r.split.error} />;
   return (
     <div className="flex flex-col gap-3">
       <Legend />
-      {chunks.map((c, i) => {
-        const from = starts[i]!;
-        const n = sizes[i]!;
-        return (
-          <ChunkCard
-            key={`${c.chunk}-${i}`}
-            chunk={c}
-            jev={jev.data?.[i]?.chunk === c.chunk ? jev.data[i]!.pick : undefined}
-            jevLoading={askJev && jev.isFetching && c.readings.length > 1}
-            selected={selected[i]!}
-            onSelect={(r) =>
-              setChosen((m) => ({ ...m, [`${i}:${c.chunk}`]: c.readings[r]!.label }))
-            }
-            picks={fresh ? picks.data!.slice(from, from + n) : undefined}
-            picksLoading={picks.isFetching && !jev.isFetching}
-          />
-        );
-      })}
+      {r.chunks.map((c, i) => (
+        <ChunkCard
+          key={`${c.chunk}-${i}`}
+          chunk={c}
+          jev={r.chunkPick(i)}
+          jevLoading={r.readingsPending && c.readings.length > 1}
+          selected={r.selected[i]!}
+          onSelect={(k) => r.choose(i, c.readings[k]!.label)}
+          picks={r.wordPicks(i)}
+          picksLoading={r.wordsPending}
+        />
+      ))}
     </div>
   );
 }

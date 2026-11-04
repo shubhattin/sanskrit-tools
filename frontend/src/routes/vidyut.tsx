@@ -19,7 +19,11 @@ function VidyutLayout() {
           <Link to="/vidyut" className="group flex items-center gap-2.5">
             <VidyutMark className="transition-transform group-hover:-rotate-6" />
             <span className="flex flex-col leading-tight">
-              <span className="font-devanagari text-xl font-bold">विद्युत्</span>
+              {onIndex ? (
+                <h1 className="font-devanagari text-xl font-bold">विद्युत्</h1>
+              ) : (
+                <span className="font-devanagari text-xl font-bold">विद्युत्</span>
+              )}
               <span className="text-xs text-muted-foreground">Sanskrit grammar tools</span>
             </span>
           </Link>

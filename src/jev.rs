@@ -58,7 +58,7 @@ pub fn configured() -> bool {
 }
 
 /// Most questions answered per call (larger sets go in parallel batches of [`MAX_QUESTIONS`]).
-const MAX_TOTAL: usize = 24;
+const MAX_TOTAL: usize = 48;
 
 /// Asks Jev to choose an option for each question (questions with fewer than two options are
 /// skipped). Returns picks by question name.

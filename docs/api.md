@@ -217,11 +217,11 @@ interface MeterInfo { name: string; kind; padas: { pattern: string;      // '.' 
 | POST | `/api/vidyut/chandas` | `{ text }` (≤ 2,000 chars; a line per pāda / half-verse, daṇḍas end lines) | `Scansion` |
 | GET | `/api/vidyut/meters` | – | `MeterInfo[]` (anuṣṭubh, vṛttas by length, jātis) |
 | POST | `/api/vidyut/sandhi/join` | `{ words: string[] }` (2–12) | `string[]` joined phrase(s), spaced as printed (रामो गच्छति, तच्च) |
-| POST | `/api/vidyut/sandhi/split` | `{ text }` | `ChunkSplit[]` (per space-separated chunk, max 16) |
+| POST | `/api/vidyut/sandhi/split` | `{ text }` | `ChunkSplit[]` (per space-separated chunk, max 24: a śloka; equivalent readings that differ only in a final sound are merged) |
 | GET | `/api/vidyut/pada` | `w` (one word) | `{ word: Part; split: Reading \| null }` (all analyses; a split when the word is no single form) |
 | POST | `/api/vidyut/sandhi/split-at` | `{ chunk, at }` (one chunk; `at` from `aksharas[].varnas[].at`) | `{ left: Part; right: Reading }[]` (junction at that sound; rest read by the optimizer; dictionary words first) |
-| POST | `/api/vidyut/jev/split` | `{ text }` | `{ chunk: string; pick: JevPick \| null }[]` (Jev's choice among each chunk's `readings`, given each word's analyses and cheda's reading; null with < 2) |
-| POST | `/api/vidyut/jev/analyses` | `{ text, words: string[] }` (a reading's words, ≤ 40) | `{ word: string; pick: JevPick \| null }[]` (each word's analysis in context; options = `PadaInfo.key`) |
+| POST | `/api/vidyut/jev/split` | `{ text }` | `{ chunk: string; pick: JevPick \| null }[]` (Jev's choice among each chunk's `readings`, given each word's analyses, cheda's reading and every chunk's readings, so the whole text is read at once; null with < 2) |
+| POST | `/api/vidyut/jev/analyses` | `{ text, words: string[] }` (a reading's words, ≤ 64; cheda's tags of the whole text go along as hints) | `{ word: string; pick: JevPick \| null }[]` (each word's analysis in context; options = `PadaInfo.key`) |
 | POST | `/api/vidyut/jev/meter` | `{ text }` | `JevPick \| null` (among `best` + `others`; options = meter names) |
 | POST | `/api/vidyut/jev/join` | `{ words }` | `JevPick \| null` (among the joined variants) |
 | GET | `/api/vidyut/sandhi/rules` | – | `{ first; second; result }[]` |

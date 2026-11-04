@@ -7,6 +7,7 @@ import {
   ArrowRightIcon,
   BookOpenIcon,
   CheckIcon,
+  ChevronLeftIcon,
   GitBranchIcon,
   SparklesIcon,
   TableIcon
@@ -188,7 +189,6 @@ export function WordCard({
   const shown = part.analyses.find((a) => a.key === jevKey) ?? part.analyses[0];
   const source = sourceOf(part);
   const kind = shown ? KIND[shown.kind] : null;
-  const lemmas = [...new Set(part.analyses.map((a) => a.lemma))].filter((l) => l !== part.text);
   return (
     <Popover>
       <PopoverTrigger
@@ -229,67 +229,100 @@ export function WordCard({
         )}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[22rem] max-w-[calc(100vw-1rem)] gap-2 p-2">
-        <div className="flex items-baseline justify-between gap-2 px-1.5 pt-1">
-          <PopoverTitle className="font-devanagari text-2xl font-bold">{part.text}</PopoverTitle>
-          <span
-            className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
-              part.dictionary
-                ? 'bg-primary/10 text-primary'
-                : part.known
-                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-muted text-muted-foreground'
-            )}
-            title={source.label}
-          >
-            {part.known ? <CheckIcon className="size-3" aria-hidden /> : null}
-            {part.dictionary ? 'Dictionary word' : part.known ? 'Grammar form' : 'Unknown'}
-          </span>
-        </div>
-        {part.analyses.length ? (
-          <>
-            <p className="px-1.5 text-[11px] text-muted-foreground">
-              {part.analyses.length === 1
-                ? 'What it is'
-                : `${part.analyses.length} ways to read it${jevKey ? ' · ✦ Jev’s pick in this sentence' : ', likeliest first'}`}
-            </p>
-            <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-              {part.analyses.map((a, i) => (
-                <Analysis
-                  key={a.key}
-                  a={a}
-                  word={part.text}
-                  first={!jevKey && i === 0}
-                  jev={a.key === jevKey ? jevP : undefined}
-                />
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="px-1.5 text-xs text-muted-foreground">
-            {part.dictionary
-              ? 'A dictionary headword the grammar does not generate (an indeclinable, a name, a phrase).'
-              : 'Neither the dictionaries nor the grammar know this form: likely not the intended split.'}
-          </p>
-        )}
-        {part.known ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t px-1.5 pt-2 text-xs">
-            <BookOpenIcon className="size-3.5 text-muted-foreground" aria-hidden />
-            {[part.text, ...lemmas].slice(0, 4).map((w) => (
-              <Link
-                key={w}
-                to="/"
-                search={{ q: w }}
-                className="font-devanagari font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {w}
-              </Link>
-            ))}
-            <span className="text-muted-foreground">in the dictionaries</span>
-          </div>
-        ) : null}
+        <WordDetails part={part} jevKey={jevKey} jevP={jevP} />
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Everything about one word, for a popover: its source, every analysis (Jev's pick marked)
+ * with derivation and forms, and the dictionary. */
+export function WordDetails({
+  part,
+  jevKey,
+  jevP,
+  back
+}: {
+  part: Part;
+  jevKey?: string;
+  jevP?: number;
+  /** A way back up (a word opened from its chunk): label and action. */
+  back?: { label: string; onClick: () => void };
+}) {
+  const source = sourceOf(part);
+  const lemmas = [...new Set(part.analyses.map((a) => a.lemma))].filter((l) => l !== part.text);
+  return (
+    <>
+      {back ? (
+        <button
+          type="button"
+          onClick={back.onClick}
+          className="inline-flex items-center gap-1 self-start rounded-md px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <ChevronLeftIcon className="size-3.5" aria-hidden />
+          <span className="font-devanagari">{back.label}</span>
+        </button>
+      ) : null}
+      <div className="flex items-baseline justify-between gap-2 px-1.5 pt-1">
+        <PopoverTitle className="font-devanagari text-2xl font-bold">{part.text}</PopoverTitle>
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
+            part.dictionary
+              ? 'bg-primary/10 text-primary'
+              : part.known
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                : 'bg-muted text-muted-foreground'
+          )}
+          title={source.label}
+        >
+          {part.known ? <CheckIcon className="size-3" aria-hidden /> : null}
+          {part.dictionary ? 'Dictionary word' : part.known ? 'Grammar form' : 'Unknown'}
+        </span>
+      </div>
+      {part.analyses.length ? (
+        <>
+          <p className="px-1.5 text-[11px] text-muted-foreground">
+            {part.analyses.length === 1
+              ? 'What it is'
+              : `${part.analyses.length} ways to read it${jevKey ? ' · ✦ Jev’s pick in this sentence' : ', likeliest first'}`}
+          </p>
+          <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+            {part.analyses.map((a, i) => (
+              <Analysis
+                key={a.key}
+                a={a}
+                word={part.text}
+                first={!jevKey && i === 0}
+                jev={a.key === jevKey ? jevP : undefined}
+              />
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="px-1.5 text-xs text-muted-foreground">
+          {part.dictionary
+            ? 'A dictionary headword the grammar does not generate (an indeclinable, a name, a phrase).'
+            : 'Neither the dictionaries nor the grammar know this form: likely not the intended split.'}
+        </p>
+      )}
+      {part.known ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t px-1.5 pt-2 text-xs">
+          <BookOpenIcon className="size-3.5 text-muted-foreground" aria-hidden />
+          {[part.text, ...lemmas].slice(0, 4).map((w) => (
+            <Link
+              key={w}
+              to="/"
+              search={{ q: w }}
+              className="font-devanagari font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {w}
+            </Link>
+          ))}
+          <span className="text-muted-foreground">in the dictionaries</span>
+        </div>
+      ) : null}
+    </>
   );
 }
 

@@ -88,7 +88,7 @@ pub fn pada_final(slp1: &str) -> String {
 }
 
 /// Most chunks split at once (a śloka).
-pub const MAX_CHUNKS: usize = 16;
+pub const MAX_CHUNKS: usize = 24;
 
 /// The text's space-separated chunks in SLP1 (letters and avagraha only).
 pub fn chunks(text: &str) -> Result<Vec<String>> {
@@ -106,7 +106,7 @@ pub fn chunks(text: &str) -> Result<Vec<String>> {
     return err("Enter a word or phrase");
   }
   if chunks.len() > MAX_CHUNKS {
-    return err("Enter at most sixteen words (a verse) at a time");
+    return err("Enter at most 24 words (a verse) at a time");
   }
   Ok(chunks)
 }
@@ -407,6 +407,53 @@ pub fn readings_of(lat: &Lattice, rest: &str, dict: InDictionary, k: usize) -> V
 /// puts it where its cost ranks it, at most second (kept even past `k`). Each of its words leads with the analysis
 /// cheda chose.
 pub fn with_cheda(
+  readings: Vec<Reading>,
+  chunk: &str,
+  dict: InDictionary,
+  k: usize,
+) -> Vec<Reading> {
+  dedupe(add_cheda(readings, chunk, dict, k))
+}
+
+/// A word with its final sound as it is before a pause (विनयाद् → विनयात्, धर्मं → धर्मम्), to
+/// tell readings apart that differ only in how sandhi left a final sound.
+fn canonical(deva: &str) -> String {
+  let k = word_key(&to_slp1(deva).unwrap_or_default());
+  let Some(last) = k.chars().last() else {
+    return k;
+  };
+  let stem = &k[..k.len() - 1];
+  if stem.is_empty() {
+    return k;
+  }
+  let to = match last {
+    'g' => 'k',
+    'q' => 'w',
+    'd' => 't',
+    'b' => 'p',
+    'M' => 'm',
+    'r' | 's' => 'H',
+    c => c,
+  };
+  format!("{stem}{to}")
+}
+
+/// Drops readings that repeat an earlier one up to final sounds (keeping cheda's spelling, which
+/// restores them).
+fn dedupe(readings: Vec<Reading>) -> Vec<Reading> {
+  let mut out: Vec<(Vec<String>, Reading)> = Vec::new();
+  for r in readings {
+    let key: Vec<String> = r.parts.iter().map(|p| canonical(&p.text)).collect();
+    match out.iter_mut().find(|(k, _)| *k == key) {
+      Some((_, kept)) if r.cheda && !kept.cheda => *kept = r,
+      Some(_) => {}
+      None => out.push((key, r)),
+    }
+  }
+  out.into_iter().map(|(_, r)| r).collect()
+}
+
+fn add_cheda(
   mut readings: Vec<Reading>,
   chunk: &str,
   dict: InDictionary,
@@ -524,6 +571,17 @@ mod tests {
       .iter()
       .map(|c| format!("{}+{}", c.left, c.right))
       .collect()
+  }
+
+  #[test]
+  fn readings_differing_in_final_sounds_merge() {
+    kosha::load();
+    let c = &chunks("विनयाद्याति").unwrap()[0];
+    let none = |_: &str| false;
+    let rs = with_cheda(readings(&lattice(c), &none, 5), c, &none, 5);
+    let labels: Vec<&str> = rs.iter().map(|r| r.label.as_str()).collect();
+    assert!(labels.contains(&"विनयात्✓ + याति✓"), "{labels:?}");
+    assert!(!labels.contains(&"विनयाद्✓ + याति✓"), "{labels:?}");
   }
 
   #[test]

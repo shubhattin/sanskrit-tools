@@ -25,6 +25,7 @@ import { Route as SutraIndexRouteImport } from './routes/sutra.index'
 import { Route as SutraIdRouteImport } from './routes/sutra.$id'
 import { Route as VidyutIndexRouteImport } from './routes/vidyut.index'
 import { Route as VidyutChandasRouteImport } from './routes/vidyut.chandas'
+import { Route as VidyutChedaRouteImport } from './routes/vidyut.cheda'
 import { Route as VidyutDhatuRouteImport } from './routes/vidyut.dhatu'
 import { Route as VidyutNamaRouteImport } from './routes/vidyut.nama'
 import { Route as VidyutSandhiRouteImport } from './routes/vidyut.sandhi'
@@ -109,6 +110,11 @@ const VidyutChandasRoute = VidyutChandasRouteImport.update({
   path: '/chandas',
   getParentRoute: () => VidyutRoute,
 } as any)
+const VidyutChedaRoute = VidyutChedaRouteImport.update({
+  id: '/cheda',
+  path: '/cheda',
+  getParentRoute: () => VidyutRoute,
+} as any)
 const VidyutDhatuRoute = VidyutDhatuRouteImport.update({
   id: '/dhatu',
   path: '/dhatu',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
   '/vidyut/dhatu': typeof VidyutDhatuRoute
   '/vidyut/nama': typeof VidyutNamaRoute
   '/vidyut/sandhi': typeof VidyutSandhiRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
   '/vidyut/dhatu': typeof VidyutDhatuRoute
   '/vidyut/nama': typeof VidyutNamaRoute
   '/vidyut/sandhi': typeof VidyutSandhiRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
   '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
   '/vidyut/dhatu': typeof VidyutDhatuRoute
   '/vidyut/nama': typeof VidyutNamaRoute
   '/vidyut/sandhi': typeof VidyutSandhiRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/paradigm/$id'
     | '/sutra/$id'
     | '/vidyut/chandas'
+    | '/vidyut/cheda'
     | '/vidyut/dhatu'
     | '/vidyut/nama'
     | '/vidyut/sandhi'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/paradigm/$id'
     | '/sutra/$id'
     | '/vidyut/chandas'
+    | '/vidyut/cheda'
     | '/vidyut/dhatu'
     | '/vidyut/nama'
     | '/vidyut/sandhi'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/paradigm/$id'
     | '/sutra/$id'
     | '/vidyut/chandas'
+    | '/vidyut/cheda'
     | '/vidyut/dhatu'
     | '/vidyut/nama'
     | '/vidyut/sandhi'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VidyutChandasRouteImport
       parentRoute: typeof VidyutRoute
     }
+    '/vidyut/cheda': {
+      id: '/vidyut/cheda'
+      path: '/cheda'
+      fullPath: '/vidyut/cheda'
+      preLoaderRoute: typeof VidyutChedaRouteImport
+      parentRoute: typeof VidyutRoute
+    }
     '/vidyut/dhatu': {
       id: '/vidyut/dhatu'
       path: '/dhatu'
@@ -436,6 +455,7 @@ const SutraRouteWithChildren = SutraRoute._addFileChildren(SutraRouteChildren)
 
 interface VidyutRouteChildren {
   VidyutChandasRoute: typeof VidyutChandasRoute
+  VidyutChedaRoute: typeof VidyutChedaRoute
   VidyutDhatuRoute: typeof VidyutDhatuRoute
   VidyutNamaRoute: typeof VidyutNamaRoute
   VidyutSandhiRoute: typeof VidyutSandhiRoute
@@ -444,6 +464,7 @@ interface VidyutRouteChildren {
 
 const VidyutRouteChildren: VidyutRouteChildren = {
   VidyutChandasRoute: VidyutChandasRoute,
+  VidyutChedaRoute: VidyutChedaRoute,
   VidyutDhatuRoute: VidyutDhatuRoute,
   VidyutNamaRoute: VidyutNamaRoute,
   VidyutSandhiRoute: VidyutSandhiRoute,

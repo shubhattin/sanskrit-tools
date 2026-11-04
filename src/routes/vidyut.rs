@@ -429,6 +429,8 @@ async fn known_keys(state: &AppState, keys: HashSet<String>) -> Result<HashSet<S
 }
 
 const READINGS: usize = 5;
+/// Words of a reading Jev tags at once (a long verse).
+const MAX_WORDS: usize = 64;
 
 /// vidyut's kosha + cheda, decompressed on first use (off the async workers).
 async fn kosha_ready() -> Result<(), ApiError> {
@@ -692,9 +694,9 @@ pub async fn jev_analyses(
   Json(r): Json<AnalysesRequest>,
 ) -> ApiResult<Vec<WordPick>> {
   check_len(&r.text)?;
-  if r.words.is_empty() || r.words.len() > 40 {
+  if r.words.is_empty() || r.words.len() > MAX_WORDS {
     return Err(ApiError::bad_request(
-      "Give the reading's words (at most 40)",
+      "Give the reading's words (at most 64)",
     ));
   }
   kosha_ready().await?;
@@ -707,11 +709,17 @@ pub async fn jev_analyses(
       Ok((w.clone(), kosha::analyses(&sandhi::word_key(&slp))))
     })
     .collect::<VResult<_>>()?;
-  // cheda's choice per word, where its segmentation has the word.
-  let cheda: Vec<(String, String)> = text_chunks
-    .iter()
-    .filter_map(|c| kosha::segment(c))
-    .flatten()
+  // cheda's choice per word, where its segmentation has the word: over the whole text at once,
+  // so its tags see the neighbouring words (chunk by chunk if that fails).
+  let cheda: Vec<(String, String)> = kosha::segment(&text_chunks.join(" "))
+    .unwrap_or_else(|| {
+      text_chunks
+        .iter()
+        .filter_map(|c| kosha::segment(c))
+        .flatten()
+        .collect()
+    })
+    .into_iter()
     .filter_map(|w| Some((to_deva(&sandhi::pada_final(&w.text)), w.pada?.key)))
     .collect();
   let questions: Vec<Question> = words
@@ -803,7 +811,9 @@ pub async fn jev_split(
     .map(|(i, c)| Question {
       name: format!("c{i}"),
       instructions: format!(
-        "Which reading splits the Sanskrit «{}» into the words this text most likely intends?",
+        "Which reading splits chunk {} of {}, «{}», into the words this text most likely intends?",
+        i + 1,
+        chunks.len(),
         c.chunk
       ),
       options: c.readings.iter().map(describe_reading).collect(),
@@ -812,7 +822,14 @@ pub async fn jev_split(
   let state_json = json!({
     "task": "Read Sanskrit text by undoing sandhi (separating the joined words).",
     "text": r.text.trim(),
+    // The whole text's candidates, so every question (batches are asked in parallel) reads its
+    // chunk with the others.
+    "chunks": chunks.iter().map(|c| json!({
+      "chunk": c.chunk,
+      "readings": c.readings.iter().map(|r| &r.label).collect::<Vec<_>>(),
+    })).collect::<Vec<_>>(),
     "notes": [
+      "The chunks are one text (a sentence or a verse), in order: read them together. A chunk's reading should fit the others' (a subject and its verb, an adjective and its noun, a relative and its correlative are often in different chunks).",
       "Each option is a reading of one chunk: its words, and for each word what it can be (stem, case, number / root, tense, person) as Pāṇinian grammar generates it.",
       "Readings come from an optimizer that prefers known words, then fewer words; options are in its order, best first.",
       "[dictionary] = a dictionary headword or inflected form; [grammar] = a form the grammar generates but no dictionary lists; [unknown] = neither. Very short words (ओ, न, र) match almost anywhere, so readings built from them are suspect.",

@@ -446,7 +446,7 @@ pub(super) async fn sandhi(ctx: ToolCtx, input: SandhiInput) -> Result<Value, St
              vidyut's statistical segmenter; words = each known form's likeliest analysis. splits: \
              two-word phonetic candidates. ✓ = a dictionary word or a form the grammar generates.",
     "chunks": chunks,
-    "page": format!("/vidyut/sandhi?tab=split&q={text}"),
+    "page": format!("/vidyut/cheda?q={text}"),
   }))
 }
 
@@ -502,7 +502,7 @@ pub(super) async fn analyze(ctx: ToolCtx, input: AnalyzeInput) -> Result<Value, 
              number; verbs: root lakāra person number voice). Pick the analysis that fits the \
              sentence. vidyut_derivation with `form` + `analysis` explains one. ✓ = known word.",
     "chunks": chunks,
-    "page": format!("/vidyut/sandhi?tab=split&q={text}"),
+    "page": format!("/vidyut/cheda?q={text}"),
   }))
 }
 
