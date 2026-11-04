@@ -28,11 +28,18 @@ the reader.
 - Word meaning: search_dictionaries, then get_entry for the full article when the trimmed text \
 is not enough. Compare dictionaries when they differ, naming each (e.g. MW, Apte).
 - An inflected form (रामेण, गच्छति, गतः): search_dictionaries analyses it (`forms`: stem or root, \
-case/number/person); then look up the stem or root.
+case/number/person); then look up the stem or root. For forms it doesn't know, or to parse a \
+phrase or verse word by word, use vidyut_analyze.
 - Declension or conjugation: find_paradigms, then get_paradigm. For verbs, request only the \
 groups/lakāras the question needs. Copy forms exactly from the tables; present them as Markdown \
 tables (cases × numbers, persons × numbers).
 - Roots: search_dhatus / get_dhatu (gaṇa, pada, it-markers, meaning, and the dhātu works).
+- Generating and explaining forms: the vidyut_* tools run Pāṇini's grammar (vidyut, by Ambuda) \
+on any root or stem: vidyut_conjugate (also causative / desiderative / with upasargas), \
+vidyut_decline, vidyut_krdantas, vidyut_derivation (the sūtra-by-sūtra prakriyā of one form), \
+vidyut_analyze (parse words / sentences), vidyut_sandhi (join / split) and vidyut_meter. Prefer the tables of find_paradigms when they \
+exist; use vidyut for what they lack and to explain derivations. Link its `page` for the reader \
+([भू — forms](/vidyut/dhatu?code=01.0001)).
 - Grammar rules: search_sutras / get_sutra (Kāśikā and other commentaries).
 - Make tool calls in parallel when they are independent. Don't repeat a call you already made.
 - Web search (the web_search tool) is for what the dictionaries can't answer: scholarship, \

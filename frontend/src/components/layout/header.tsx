@@ -9,7 +9,8 @@ import {
   MoonIcon,
   ScrollTextIcon,
   SearchIcon,
-  SunIcon
+  SunIcon,
+  ZapIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,6 +47,13 @@ const NAV = [
     exact: false
   },
   { to: '/dhatu', label: 'Dhātus', hint: 'Verbal roots by gaṇa', icon: LeafIcon, exact: false },
+  {
+    to: '/vidyut',
+    label: 'Vidyut',
+    hint: 'Word forms, meter, sandhi',
+    icon: ZapIcon,
+    exact: false
+  },
   {
     to: '/agent',
     label: 'Agent',

@@ -148,7 +148,70 @@ type AgentUITools = {
               commentaries: { dict: string; dict_name: string; text: string;
                               truncated: boolean }[] };
   };
+  // Grammar tools on vidyut (src/agent/vidyut_tools.rs → src/vidyut). Roots / stems / words in
+  // any script; ids as in docs/api.md § Vidyut. `page` = the matching /vidyut/* tool page.
+  vidyut_conjugate: {
+    input: { root: string; gana?: number; prayoga?: PrayogaId; lakara?: LakaraId;
+             sanadi?: SanadiId[]; upasargas?: string[] };       // root: any script or code 08.0010
+    output: { root: VidyutRoot; homonyms: VidyutRoot[]; stems: string[]; prayoga: PrayogaId;
+              columns: 'eka | dvi | bahu';
+              tables: { pada: PadaId; lakara: LakaraId; rows: string[] }[];  // "प्रथमपुरुषः: a | b | c"
+              page: string };
+  };
+  vidyut_decline: {
+    input: { stem: string; linga: LingaId };
+    output: { stem: string; linga: LingaId; columns: string; rows: string[]; page: string };
+  };
+  vidyut_krdantas: {
+    input: { root: string; gana?: number; sanadi?: SanadiId[]; upasargas?: string[] };
+    output: { root: VidyutRoot; homonyms: VidyutRoot[];
+              groups: { group: string; items: string[] }[];   // "क्त — past passive participle: कृत"
+              page: string };
+  };
+  vidyut_derivation: {
+    input: { root?: string; gana?: number; sanadi?: SanadiId[]; upasargas?: string[];
+             prayoga?: PrayogaId; lakara?: LakaraId; purusha?: PurushaId;   // verb form
+             stem?: string; linga?: LingaId; vibhakti?: VibhaktiId;          // noun form
+             vacana?: VacanaId;
+             form?: string;       // with root / stem: pick a variant; alone: derive the form
+             analysis?: string }; // as vidyut_analyze reads it (one of its analyses; default 1st)
+    output: { results: string[]; form: string;
+              optional_rules: { rule: string; applied: boolean }[];
+              steps: { rule: string; sutra_id: string | null; text: string | null;
+                       result: string }[];                                  // max 80
+              truncated: boolean };
+  };
+  vidyut_sandhi: {
+    input: { join?: string[]; split?: string };
+    output: { words: string[]; joined: string[]; page: string }
+          | { note: string; chunks: { chunk: string;
+                readings: { reading: string;      // "तथा✓ + एव✓" (✓ = dictionary or kosha word)
+                            cheda: boolean;       // cheda's segmentation
+                            words: string[] }[];  // "उद्भवनम् = उद्भवन (उद्भू + ल्युट्) napumsaka prathama eka"
+                splits: string[] }[];             // two-word, max 12
+              page: string };  // readings: best 3 whole readings
+  };
+  vidyut_analyze: {
+    input: { text: string };   // word, phrase or verse, any script
+    output: { note: string;
+              chunks: { chunk: string;
+                reading: string | null;              // best: cheda's, else the optimizer's
+                by: 'cheda' | 'optimizer' | null;
+                words: { word: string; in_dictionaries: boolean;
+                         analyses: string[] }[];     // max 5, likeliest first (PadaInfo.key)
+                other_readings: string[] }[];       // max 3
+              page: string };
+  };
+  vidyut_meter: {
+    input: { verse: string };
+    output: { meter: MeterMatch | null;
+              lines: { syllables: string; pattern: string; ganas: string; matras: number }[];
+              also_compatible: string[]; page: string };
+  };
 };
+
+interface VidyutRoot { code: string; upadesha: string; root: string; artha: string; gana: number }
 ```
 
-`ParadigmTable` and `Dhatu` are the API types in `docs/api.md`.
+`ParadigmTable` and `Dhatu` are the API types in `docs/api.md`; the vidyut ids and `MeterMatch`
+are in its § Vidyut.

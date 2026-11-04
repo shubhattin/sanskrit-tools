@@ -4,6 +4,21 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Akshara = {
+    varnas: Array<Varna>;
+};
+
+export type AnalysesRequest = {
+    /**
+     * The whole text (context).
+     */
+    text: string;
+    /**
+     * The words of the chosen reading, in order (Devanagari, as `Part.text`).
+     */
+    words: Array<string>;
+};
+
 export type BrowseItem = {
     headword: string;
     id: number;
@@ -19,6 +34,61 @@ export type BrowseResponse = {
     items: Array<BrowseItem>;
 };
 
+export type ChunkPick = {
+    chunk: string;
+    pick?: null | JevPick;
+};
+
+export type ChunkSplit = {
+    /**
+     * The chunk as akṣaras of varṇas (`at` positions for `/sandhi/split-at`).
+     */
+    aksharas: Array<Akshara>;
+    chunk: string;
+    /**
+     * The best whole readings (all words), best first: dictionary words, then fewest words.
+     */
+    readings: Array<Reading>;
+    /**
+     * Two-word candidates: both parts known first, then one, then the rest (each in split order).
+     */
+    splits: Array<Split>;
+};
+
+export type Conjugation = {
+    prayoga: PrayogaId;
+    root: RootInfo;
+    /**
+     * The root after sanādi / upasarga (e.g. भावि for भू + णिच्).
+     */
+    stems: Array<string>;
+    /**
+     * One set of tables per pada the root takes in this prayoga (ubhayapadī roots get both).
+     */
+    tables: Array<PadaTables>;
+};
+
+export type Declension = {
+    /**
+     * `forms[vibhakti][vacana]`, vibhaktis prathamā … saptamī then sambodhana.
+     */
+    forms: Array<Array<Array<string>>>;
+    linga: LingaId;
+    /**
+     * The stem the table is built on (derived stems spelled out).
+     */
+    stems: Array<string>;
+};
+
+export type Derivation = {
+    /**
+     * The optional rules this result depends on (why a cell has several forms).
+     */
+    optional_rules: Array<OptionalRule>;
+    steps: Array<Step>;
+    text: string;
+};
+
 export type Dhatu = {
     artha: string;
     extra?: string | null;
@@ -29,6 +99,16 @@ export type Dhatu = {
     pada?: string | null;
     root: string;
     upadesha: string;
+};
+
+/**
+ * A root from the Dhātupāṭha, optionally with sanādi suffixes (in order: `[nic, san]` is the
+ * desiderative of the causative) and upasargas (Devanagari: `प्र`, `सम्`, `आ`).
+ */
+export type DhatuArgs = {
+    code: string;
+    sanadi?: Array<SanadiId>;
+    upasargas?: Array<string>;
 };
 
 export type DhatuDetail = {
@@ -91,6 +171,8 @@ export type ErrorBody = {
     error: string;
 };
 
+export type Fit = 'full' | 'pada' | 'prefix';
+
 export type FormAnalysis = {
     /**
      * e.g. `पुमान् · तृतीया · एकः; नपुंसकम् · तृतीया · एकः`
@@ -119,7 +201,165 @@ export type FormAnalysis = {
     source: string;
 };
 
+/**
+ * Jev's answer to one question: the chosen option (index into the options given) and how sure.
+ */
+export type JevPick = {
+    choice: number;
+    confidence?: number | null;
+    /**
+     * The options as they were put to Jev.
+     */
+    options: Array<string>;
+    /**
+     * Probability per option (same order).
+     */
+    probabilities: Array<number>;
+};
+
+export type JoinRequest = {
+    /**
+     * Devanagari words, in order.
+     */
+    words: Array<string>;
+};
+
+export type KrdantaForm = {
+    avyaya: boolean;
+    forms: Array<string>;
+    /**
+     * Short English description (curated suffixes only).
+     */
+    gloss?: string | null;
+    /**
+     * vidyut kṛt label (SLP1) — pass back as `krt` in [`StemArgs::Krdanta`].
+     */
+    krt: string;
+    /**
+     * The suffix in Devanagari (`क्त`, `शतृ`).
+     */
+    label: string;
+    lakara?: null | LakaraId;
+    /**
+     * Genders the stem is declined in (empty for indeclinables).
+     */
+    lingas: Array<LingaId>;
+    prayoga?: null | PrayogaId;
+};
+
+export type KrdantaRequest = {
+    dhatu: DhatuArgs;
+};
+
+export type KrtGroup = {
+    items: Array<KrdantaForm>;
+    key: string;
+    label: string;
+};
+
+/**
+ * Lakāra (tense / mood). The Vedic leṭ is left out.
+ */
+export type LakaraId = 'lat' | 'lit' | 'lut' | 'lrt' | 'lot' | 'lan' | 'vidhi_lin' | 'ashir_lin' | 'lun' | 'lrn';
+
+/**
+ * `forms[purusha][vacana]` = the variants for that cell (puruṣa: prathama, madhyama, uttama;
+ * vacana: eka, dvi, bahu).
+ */
+export type LakaraTable = {
+    forms: Array<Array<Array<string>>>;
+    lakara: LakaraId;
+};
+
 export type Lang = 'sa' | 'en' | 'hi';
+
+export type LingaId = 'pum' | 'stri' | 'napumsaka';
+
+export type MeterInfo = {
+    kind: MeterKind;
+    /**
+     * Jāti: mātrās per pāda.
+     */
+    matras: Array<number>;
+    name: string;
+    /**
+     * Vṛtta: one entry per distinct pāda (samavṛttas have one).
+     */
+    padas: Array<MeterPada>;
+    /**
+     * Syllables per pāda (vṛtta, anuṣṭubh).
+     */
+    syllables: Array<number>;
+};
+
+export type MeterKind = 'vrtta' | 'jati' | 'anushtubh';
+
+export type MeterMatch = {
+    fit: Fit;
+    kind: MeterKind;
+    name: string;
+    /**
+     * e.g. "vipulā" for a śloka whose odd pāda leaves the common (pathyā) pattern.
+     */
+    note?: string | null;
+};
+
+export type MeterPada = {
+    ganas: Array<string>;
+    /**
+     * `L` / `G`, `.` for "either" (pāda-final syllables).
+     */
+    pattern: string;
+    /**
+     * Caesura (yati) after these syllable counts.
+     */
+    yati: Array<number>;
+};
+
+export type OptionalRule = {
+    /**
+     * Whether this derivation applied the optional rule.
+     */
+    applied: boolean;
+    rule: RuleRef;
+};
+
+export type PadaId = 'parasmaipada' | 'atmanepada';
+
+/**
+ * One grammatical reading of a word form.
+ */
+export type PadaInfo = {
+    /**
+     * Kṛdanta stems: the root and kṛt pratyaya (उद्भू, ल्युट्).
+     */
+    dhatu?: string | null;
+    /**
+     * One-line summary (`उद्भवन (उद्भू + ल्युट्) napumsaka prathama eka`): a stable key for the
+     * analysis (Jev's option label) and the agent's view of it.
+     */
+    key: string;
+    kind: PadaKind;
+    krt?: string | null;
+    lakara?: null | LakaraId;
+    /**
+     * Prātipadika (subanta, avyaya) or dhātu (tiṅanta), Devanagari.
+     */
+    lemma: string;
+    linga?: null | LingaId;
+    prayoga?: null | PrayogaId;
+    purusha?: null | PurushaId;
+    vacana?: null | VacanaId;
+    vibhakti?: null | VibhaktiId;
+    word?: null | WordSpec;
+};
+
+export type PadaKind = 'subanta' | 'avyaya' | 'tinanta';
+
+export type PadaTables = {
+    lakaras: Array<LakaraTable>;
+    pada: PadaId;
+};
 
 export type Paradigm = {
     id: number;
@@ -138,6 +378,171 @@ export type ParadigmSummary = {
     source: string;
 };
 
+export type Part = {
+    /**
+     * What the form can be (vidyut's kosha), likeliest first; empty when the grammar has no such
+     * form.
+     */
+    analyses: Array<PadaInfo>;
+    /**
+     * A headword or inflected form in the dictionaries.
+     */
+    dictionary: boolean;
+    /**
+     * A word: in the dictionaries or generated by the grammar (vidyut's kosha).
+     */
+    known: boolean;
+    text: string;
+};
+
+export type PinnedSplit = {
+    left: Part;
+    /**
+     * The rest, read as words by the optimizer.
+     */
+    right: Reading;
+};
+
+export type PrayogaId = 'kartari' | 'karmani' | 'bhave';
+
+export type PurushaId = 'prathama' | 'madhyama' | 'uttama';
+
+export type Reading = {
+    /**
+     * This is cheda's segmentation (vidyut's statistical segmenter).
+     */
+    cheda: boolean;
+    /**
+     * `तथा✓ + एव✓` (✓ = known): how the reading is shown to Jev, and its option label.
+     */
+    label: string;
+    parts: Array<Part>;
+};
+
+export type RootDetail = {
+    /**
+     * This root's page on the site (`/dhatu/{id}`), when the site's Dhātupāṭha has it.
+     */
+    dhatu_id?: number | null;
+    root: RootInfo;
+};
+
+/**
+ * A root of vidyut's Dhātupāṭha.
+ */
+export type RootInfo = {
+    artha: string;
+    /**
+     * Aupadeśika form with it-markers and accents (e.g. `एधँ॒`).
+     */
+    aupadeshika: string;
+    /**
+     * Dhātupāṭha code `GG.NNNN` (e.g. `01.0001`).
+     */
+    code: string;
+    gana: number;
+    number: number;
+    /**
+     * The root after it-lopa (e.g. `एध्`); several when it-lopa allows options.
+     */
+    roots: Array<string>;
+};
+
+export type RuleRef = {
+    /**
+     * e.g. `3.2.123`, `1.1.33.1` (vārttika), `2473` (Kaumudī).
+     */
+    code: string;
+    source: RuleSource;
+    /**
+     * This site's sūtra id (`3.2.123` → `3.2.123`, `1.1.1` → `1.1.001`) for Aṣṭādhyāyī rules and
+     * for vārttikas / Kāśikā notes on one.
+     */
+    sutra_id?: string | null;
+    text?: string | null;
+    /**
+     * Link for references outside the shipped texts.
+     */
+    url?: string | null;
+};
+
+export type RuleSource = 'ashtadhyayi' | 'varttika' | 'dhatupatha' | 'unadipatha' | 'linganushasana' | 'phit' | 'kashika' | 'kaumudi' | 'other';
+
+export type SamasaKind = 'tatpurusha' | 'karmadharaya' | 'dvigu' | 'bahuvrihi' | 'dvandva' | 'samahara_dvandva' | 'avyayibhava';
+
+/**
+ * One member of a compound.
+ */
+export type SamasaPada = {
+    linga?: LingaId;
+    /**
+     * Devanagari stem (`राजन्`), or an indeclinable for the first member of an avyayībhāva.
+     */
+    stem: string;
+    vibhakti?: VibhaktiId;
+};
+
+export type SamasaRequest = {
+    padas: Array<SamasaPada>;
+    samasa_type: SamasaKind;
+};
+
+export type SamasaResult = {
+    /**
+     * The compound stem(s).
+     */
+    stems: Array<string>;
+    /**
+     * Nominative in each gender the compound takes (dual for itaretara-dvandva; the indeclinable
+     * for avyayībhāva).
+     */
+    words: Array<SamasaWord>;
+};
+
+export type SamasaWord = {
+    forms: Array<string>;
+    linga: LingaId;
+};
+
+/**
+ * Sanādi pratyayas that make a new root from a root (the nāmadhātu ones are not exposed).
+ */
+export type SanadiId = 'nic' | 'san' | 'yan' | 'yan_luk';
+
+export type SandhiRule = {
+    /**
+     * End of the first word.
+     */
+    first: string;
+    result: string;
+    /**
+     * Start of the second word.
+     */
+    second: string;
+};
+
+export type ScannedLine = {
+    /**
+     * The pattern in gaṇas (य म त र ज भ न स, then ल / ग for the rest).
+     */
+    ganas: Array<string>;
+    matras: number;
+    /**
+     * `L` / `G` per syllable.
+     */
+    pattern: string;
+    syllables: Array<Syllable>;
+};
+
+export type Scansion = {
+    best?: null | MeterMatch;
+    lines: Array<ScannedLine>;
+    /**
+     * Other vṛttas the text is compatible with.
+     */
+    others: Array<MeterMatch>;
+};
+
 export type SearchResponse = {
     did_you_mean: Array<string>;
     forms: Array<FormAnalysis>;
@@ -145,6 +550,77 @@ export type SearchResponse = {
     mode: string;
     query: string;
     slp1: Array<string>;
+};
+
+export type Split = {
+    left: string;
+    /**
+     * The part is a word: in the dictionaries or generated by the grammar.
+     */
+    left_known: boolean;
+    right: string;
+    right_known: boolean;
+};
+
+export type SplitAtRequest = {
+    /**
+     * Varṇa position from `ChunkSplit.aksharas`: the words meet at this sound.
+     */
+    at: number;
+    /**
+     * One chunk (a word without spaces), Devanagari.
+     */
+    chunk: string;
+};
+
+/**
+ * A nominal stem (prātipadika): typed as is, or derived (kṛdanta, taddhitānta, samāsa).
+ */
+export type StemArgs = {
+    kind: 'basic';
+    stem: string;
+} | {
+    dhatu: DhatuArgs;
+    kind: 'krdanta';
+    /**
+     * vidyut kṛt label (SLP1), e.g. `kta`, `Satf~`.
+     */
+    krt: string;
+    lakara?: null | LakaraId;
+    prayoga?: null | PrayogaId;
+} | {
+    kind: 'taddhitanta';
+    stem: string;
+    /**
+     * vidyut taddhita label (SLP1), e.g. `aR`, `tva`.
+     */
+    taddhita: string;
+} | {
+    kind: 'samasa';
+    padas: Array<SamasaPada>;
+    samasa_type: SamasaKind;
+};
+
+export type StemRequest = {
+    stem: StemArgs;
+};
+
+export type Step = {
+    rule: RuleRef;
+    terms: Array<StepTerm>;
+};
+
+export type StepTerm = {
+    /**
+     * Changed by this step.
+     */
+    changed: boolean;
+    text: string;
+};
+
+export type SubantaRequest = {
+    linga: LingaId;
+    stem: StemArgs;
 };
 
 export type Suggestion = {
@@ -166,6 +642,106 @@ export type SutraDetail = {
     next?: string | null;
     prev?: string | null;
     sutra: Sutra;
+};
+
+export type Syllable = {
+    /**
+     * Guru (heavy, 2 mātrās); otherwise laghu.
+     */
+    guru: boolean;
+    text: string;
+};
+
+export type TaddhitaForm = {
+    forms: Array<string>;
+    gloss?: string | null;
+    label: string;
+    /**
+     * The gender to decline it in first (तल् → strī, त्व / ष्यञ् → napuṃsaka).
+     */
+    linga: LingaId;
+    /**
+     * vidyut taddhita label (SLP1) — pass back as `taddhita` in [`StemArgs::Taddhitanta`].
+     */
+    taddhita: string;
+};
+
+export type TaddhitaRequest = {
+    /**
+     * Devanagari stem.
+     */
+    stem: string;
+};
+
+export type TextRequest = {
+    /**
+     * Devanagari text.
+     */
+    text: string;
+};
+
+export type TinantaRequest = {
+    dhatu: DhatuArgs;
+    prayoga: PrayogaId;
+};
+
+export type VacanaId = 'eka' | 'dvi' | 'bahu';
+
+export type Varna = {
+    /**
+     * Position to pass to the split-at API.
+     */
+    at: number;
+    /**
+     * The sound in Devanagari (त्, अ, ः).
+     */
+    text: string;
+};
+
+export type VibhaktiId = 'prathama' | 'dvitiya' | 'trtiya' | 'caturthi' | 'panchami' | 'sasthi' | 'saptami' | 'sambodhana';
+
+export type WordAnalysis = {
+    split?: null | Reading;
+    /**
+     * The word, as a part (known / dictionary / analyses).
+     */
+    word: Part;
+};
+
+export type WordPick = {
+    pick?: null | JevPick;
+    word: string;
+};
+
+/**
+ * A word (or stem / root / phrase) to derive step by step.
+ */
+export type WordSpec = {
+    dhatu: DhatuArgs;
+    kind: 'tinanta';
+    lakara: LakaraId;
+    pada?: null | PadaId;
+    prayoga: PrayogaId;
+    purusha: PurushaId;
+    vacana: VacanaId;
+} | {
+    kind: 'subanta';
+    linga: LingaId;
+    stem: StemArgs;
+    vacana: VacanaId;
+    vibhakti: VibhaktiId;
+} | {
+    kind: 'stem';
+    stem: StemArgs;
+} | {
+    kind: 'stryanta';
+    stem: StemArgs;
+} | {
+    dhatu: DhatuArgs;
+    kind: 'dhatu';
+} | {
+    kind: 'vakya';
+    words: Array<string>;
 };
 
 export type DhatusListData = {
@@ -565,3 +1141,578 @@ export type SutrasGetResponses = {
 };
 
 export type SutrasGetResponse = SutrasGetResponses[keyof SutrasGetResponses];
+
+export type VidyutChandasData = {
+    body: TextRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/chandas';
+};
+
+export type VidyutChandasErrors = {
+    /**
+     * Empty / not Devanagari / too long
+     */
+    400: ErrorBody;
+};
+
+export type VidyutChandasError = VidyutChandasErrors[keyof VidyutChandasErrors];
+
+export type VidyutChandasResponses = {
+    /**
+     * Scansion and meter
+     */
+    200: Scansion;
+};
+
+export type VidyutChandasResponse = VidyutChandasResponses[keyof VidyutChandasResponses];
+
+export type VidyutDeriveData = {
+    body: WordSpec;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/derive';
+};
+
+export type VidyutDeriveErrors = {
+    /**
+     * Bad arguments
+     */
+    400: ErrorBody;
+};
+
+export type VidyutDeriveError = VidyutDeriveErrors[keyof VidyutDeriveErrors];
+
+export type VidyutDeriveResponses = {
+    /**
+     * Step-by-step derivations (one per result)
+     */
+    200: Array<Derivation>;
+};
+
+export type VidyutDeriveResponse = VidyutDeriveResponses[keyof VidyutDeriveResponses];
+
+export type VidyutDhatusData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Root in Devanagari (भू, एधँ), a meaning word, or a code (1.1, 01.0001)
+         */
+        q?: string;
+        /**
+         * Only this gaṇa (1-10)
+         */
+        gana?: number;
+    };
+    url: '/api/vidyut/dhatus';
+};
+
+export type VidyutDhatusErrors = {
+    /**
+     * Not Devanagari
+     */
+    400: ErrorBody;
+};
+
+export type VidyutDhatusError = VidyutDhatusErrors[keyof VidyutDhatusErrors];
+
+export type VidyutDhatusResponses = {
+    /**
+     * Matching roots of vidyut's Dhātupāṭha (max 60)
+     */
+    200: Array<RootInfo>;
+};
+
+export type VidyutDhatusResponse = VidyutDhatusResponses[keyof VidyutDhatusResponses];
+
+export type VidyutSiteDhatuData = {
+    body?: never;
+    path: {
+        /**
+         * Root id of the site's Dhātupāṭha (`/dhatu/{id}`)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/vidyut/dhatus/site/{id}';
+};
+
+export type VidyutSiteDhatuErrors = {
+    /**
+     * No such root, or vidyut has no matching root
+     */
+    404: ErrorBody;
+};
+
+export type VidyutSiteDhatuError = VidyutSiteDhatuErrors[keyof VidyutSiteDhatuErrors];
+
+export type VidyutSiteDhatuResponses = {
+    /**
+     * The same root in vidyut's Dhātupāṭha
+     */
+    200: RootInfo;
+};
+
+export type VidyutSiteDhatuResponse = VidyutSiteDhatuResponses[keyof VidyutSiteDhatuResponses];
+
+export type VidyutDhatuData = {
+    body?: never;
+    path: {
+        /**
+         * Dhātupāṭha code (01.0001 or 1.1)
+         */
+        code: string;
+    };
+    query?: never;
+    url: '/api/vidyut/dhatus/{code}';
+};
+
+export type VidyutDhatuErrors = {
+    /**
+     * Unknown code
+     */
+    404: ErrorBody;
+};
+
+export type VidyutDhatuError = VidyutDhatuErrors[keyof VidyutDhatuErrors];
+
+export type VidyutDhatuResponses = {
+    /**
+     * One root
+     */
+    200: RootDetail;
+};
+
+export type VidyutDhatuResponse = VidyutDhatuResponses[keyof VidyutDhatuResponses];
+
+export type VidyutJevAnalysesData = {
+    body: AnalysesRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/jev/analyses';
+};
+
+export type VidyutJevAnalysesErrors = {
+    /**
+     * Bad text
+     */
+    400: ErrorBody;
+    /**
+     * Jev failed
+     */
+    502: ErrorBody;
+    /**
+     * Jev not configured
+     */
+    503: ErrorBody;
+};
+
+export type VidyutJevAnalysesError = VidyutJevAnalysesErrors[keyof VidyutJevAnalysesErrors];
+
+export type VidyutJevAnalysesResponses = {
+    /**
+     * Jev's pick of each word's analysis in the context of the sentence (up to 24 ambiguous words)
+     */
+    200: Array<WordPick>;
+};
+
+export type VidyutJevAnalysesResponse = VidyutJevAnalysesResponses[keyof VidyutJevAnalysesResponses];
+
+export type VidyutJevJoinData = {
+    body: JoinRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/jev/join';
+};
+
+export type VidyutJevJoinErrors = {
+    /**
+     * Bad words
+     */
+    400: ErrorBody;
+    /**
+     * Jev failed
+     */
+    502: ErrorBody;
+    /**
+     * Jev not configured
+     */
+    503: ErrorBody;
+};
+
+export type VidyutJevJoinError = VidyutJevJoinErrors[keyof VidyutJevJoinErrors];
+
+export type VidyutJevJoinResponses = {
+    /**
+     * Jev's pick among the joined variants; null with < 2
+     */
+    200: null | JevPick;
+};
+
+export type VidyutJevJoinResponse = VidyutJevJoinResponses[keyof VidyutJevJoinResponses];
+
+export type VidyutJevMeterData = {
+    body: TextRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/jev/meter';
+};
+
+export type VidyutJevMeterErrors = {
+    /**
+     * Bad verse
+     */
+    400: ErrorBody;
+    /**
+     * Jev failed
+     */
+    502: ErrorBody;
+    /**
+     * Jev not configured
+     */
+    503: ErrorBody;
+};
+
+export type VidyutJevMeterError = VidyutJevMeterErrors[keyof VidyutJevMeterErrors];
+
+export type VidyutJevMeterResponses = {
+    /**
+     * Jev's pick among the matching meters (options = meter names); null with < 2
+     */
+    200: null | JevPick;
+};
+
+export type VidyutJevMeterResponse = VidyutJevMeterResponses[keyof VidyutJevMeterResponses];
+
+export type VidyutJevSplitData = {
+    body: TextRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/jev/split';
+};
+
+export type VidyutJevSplitErrors = {
+    /**
+     * Bad text
+     */
+    400: ErrorBody;
+    /**
+     * Jev failed
+     */
+    502: ErrorBody;
+    /**
+     * Jev not configured
+     */
+    503: ErrorBody;
+};
+
+export type VidyutJevSplitError = VidyutJevSplitErrors[keyof VidyutJevSplitErrors];
+
+export type VidyutJevSplitResponses = {
+    /**
+     * Jev's pick among each chunk's best readings
+     */
+    200: Array<ChunkPick>;
+};
+
+export type VidyutJevSplitResponse = VidyutJevSplitResponses[keyof VidyutJevSplitResponses];
+
+export type VidyutKrdantaData = {
+    body: KrdantaRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/krdanta';
+};
+
+export type VidyutKrdantaErrors = {
+    /**
+     * Bad root / upasarga
+     */
+    400: ErrorBody;
+};
+
+export type VidyutKrdantaError = VidyutKrdantaErrors[keyof VidyutKrdantaErrors];
+
+export type VidyutKrdantaResponses = {
+    /**
+     * Kṛdanta stems of the root, grouped
+     */
+    200: Array<KrtGroup>;
+};
+
+export type VidyutKrdantaResponse = VidyutKrdantaResponses[keyof VidyutKrdantaResponses];
+
+export type VidyutMetersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/meters';
+};
+
+export type VidyutMetersResponses = {
+    /**
+     * Meter catalogue
+     */
+    200: Array<MeterInfo>;
+};
+
+export type VidyutMetersResponse = VidyutMetersResponses[keyof VidyutMetersResponses];
+
+export type VidyutPadaData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * One Devanagari word (a form as written; a joined phrase is split).
+         */
+        w: string;
+    };
+    url: '/api/vidyut/pada';
+};
+
+export type VidyutPadaErrors = {
+    /**
+     * Empty / not Devanagari / more than one word
+     */
+    400: ErrorBody;
+    /**
+     * Database error
+     */
+    500: ErrorBody;
+};
+
+export type VidyutPadaError = VidyutPadaErrors[keyof VidyutPadaErrors];
+
+export type VidyutPadaResponses = {
+    /**
+     * What a word form can be (every analysis vidyut's grammar gives), or how it splits
+     */
+    200: WordAnalysis;
+};
+
+export type VidyutPadaResponse = VidyutPadaResponses[keyof VidyutPadaResponses];
+
+export type VidyutSamasaData = {
+    body: SamasaRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/samasa';
+};
+
+export type VidyutSamasaErrors = {
+    /**
+     * Bad members or no result
+     */
+    400: ErrorBody;
+};
+
+export type VidyutSamasaError = VidyutSamasaErrors[keyof VidyutSamasaErrors];
+
+export type VidyutSamasaResponses = {
+    /**
+     * Compound stem and its nominative
+     */
+    200: SamasaResult;
+};
+
+export type VidyutSamasaResponse = VidyutSamasaResponses[keyof VidyutSamasaResponses];
+
+export type VidyutSandhiJoinData = {
+    body: JoinRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/sandhi/join';
+};
+
+export type VidyutSandhiJoinErrors = {
+    /**
+     * Fewer than two words / not Devanagari
+     */
+    400: ErrorBody;
+};
+
+export type VidyutSandhiJoinError = VidyutSandhiJoinErrors[keyof VidyutSandhiJoinErrors];
+
+export type VidyutSandhiJoinResponses = {
+    /**
+     * The joined phrase (variants when sandhi is optional)
+     */
+    200: Array<string>;
+};
+
+export type VidyutSandhiJoinResponse = VidyutSandhiJoinResponses[keyof VidyutSandhiJoinResponses];
+
+export type VidyutSandhiRulesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/sandhi/rules';
+};
+
+export type VidyutSandhiRulesResponses = {
+    /**
+     * The sandhi rule table
+     */
+    200: Array<SandhiRule>;
+};
+
+export type VidyutSandhiRulesResponse = VidyutSandhiRulesResponses[keyof VidyutSandhiRulesResponses];
+
+export type VidyutSandhiSplitData = {
+    body: TextRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/sandhi/split';
+};
+
+export type VidyutSandhiSplitErrors = {
+    /**
+     * Empty / not Devanagari / too long
+     */
+    400: ErrorBody;
+    /**
+     * Database error
+     */
+    500: ErrorBody;
+};
+
+export type VidyutSandhiSplitError = VidyutSandhiSplitErrors[keyof VidyutSandhiSplitErrors];
+
+export type VidyutSandhiSplitResponses = {
+    /**
+     * Per chunk: best whole readings, syllables and two-word candidates
+     */
+    200: Array<ChunkSplit>;
+};
+
+export type VidyutSandhiSplitResponse = VidyutSandhiSplitResponses[keyof VidyutSandhiSplitResponses];
+
+export type VidyutSandhiSplitAtData = {
+    body: SplitAtRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/sandhi/split-at';
+};
+
+export type VidyutSandhiSplitAtErrors = {
+    /**
+     * Not one Devanagari chunk
+     */
+    400: ErrorBody;
+    /**
+     * Database error
+     */
+    500: ErrorBody;
+};
+
+export type VidyutSandhiSplitAtError = VidyutSandhiSplitAtErrors[keyof VidyutSandhiSplitAtErrors];
+
+export type VidyutSandhiSplitAtResponses = {
+    /**
+     * Splits with the junction at that sound, dictionary words first
+     */
+    200: Array<PinnedSplit>;
+};
+
+export type VidyutSandhiSplitAtResponse = VidyutSandhiSplitAtResponses[keyof VidyutSandhiSplitAtResponses];
+
+export type VidyutStryantaData = {
+    body: StemRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/stryanta';
+};
+
+export type VidyutStryantaErrors = {
+    /**
+     * Bad stem
+     */
+    400: ErrorBody;
+};
+
+export type VidyutStryantaError = VidyutStryantaErrors[keyof VidyutStryantaErrors];
+
+export type VidyutStryantaResponses = {
+    /**
+     * Feminine stems
+     */
+    200: Array<string>;
+};
+
+export type VidyutStryantaResponse = VidyutStryantaResponses[keyof VidyutStryantaResponses];
+
+export type VidyutSubantaData = {
+    body: SubantaRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/subanta';
+};
+
+export type VidyutSubantaErrors = {
+    /**
+     * Bad stem
+     */
+    400: ErrorBody;
+};
+
+export type VidyutSubantaError = VidyutSubantaErrors[keyof VidyutSubantaErrors];
+
+export type VidyutSubantaResponses = {
+    /**
+     * Declension table
+     */
+    200: Declension;
+};
+
+export type VidyutSubantaResponse = VidyutSubantaResponses[keyof VidyutSubantaResponses];
+
+export type VidyutTaddhitaData = {
+    body: TaddhitaRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/taddhita';
+};
+
+export type VidyutTaddhitaErrors = {
+    /**
+     * Bad stem
+     */
+    400: ErrorBody;
+};
+
+export type VidyutTaddhitaError = VidyutTaddhitaErrors[keyof VidyutTaddhitaErrors];
+
+export type VidyutTaddhitaResponses = {
+    /**
+     * Taddhitānta stems (common suffixes first)
+     */
+    200: Array<TaddhitaForm>;
+};
+
+export type VidyutTaddhitaResponse = VidyutTaddhitaResponses[keyof VidyutTaddhitaResponses];
+
+export type VidyutTinantaData = {
+    body: TinantaRequest;
+    path?: never;
+    query?: never;
+    url: '/api/vidyut/tinanta';
+};
+
+export type VidyutTinantaErrors = {
+    /**
+     * Bad root / upasarga, or no forms
+     */
+    400: ErrorBody;
+};
+
+export type VidyutTinantaError = VidyutTinantaErrors[keyof VidyutTinantaErrors];
+
+export type VidyutTinantaResponses = {
+    /**
+     * Every lakāra of the root in this prayoga, per pada
+     */
+    200: Conjugation;
+};
+
+export type VidyutTinantaResponse = VidyutTinantaResponses[keyof VidyutTinantaResponses];

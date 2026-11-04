@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentRouteRouteImport } from './routes/agent/route'
 import { Route as DhatuRouteImport } from './routes/dhatu'
 import { Route as SutraRouteImport } from './routes/sutra'
+import { Route as VidyutRouteImport } from './routes/vidyut'
 import { Route as AgentIndexRouteImport } from './routes/agent/index'
 import { Route as AgentChatIdRouteImport } from './routes/agent/$chatId'
 import { Route as DhatuIndexRouteImport } from './routes/dhatu.index'
@@ -22,6 +23,12 @@ import { Route as EntryIdRouteImport } from './routes/entry.$id'
 import { Route as ParadigmIdRouteImport } from './routes/paradigm.$id'
 import { Route as SutraIndexRouteImport } from './routes/sutra.index'
 import { Route as SutraIdRouteImport } from './routes/sutra.$id'
+import { Route as VidyutIndexRouteImport } from './routes/vidyut.index'
+import { Route as VidyutChandasRouteImport } from './routes/vidyut.chandas'
+import { Route as VidyutChedaRouteImport } from './routes/vidyut.cheda'
+import { Route as VidyutDhatuRouteImport } from './routes/vidyut.dhatu'
+import { Route as VidyutNamaRouteImport } from './routes/vidyut.nama'
+import { Route as VidyutSandhiRouteImport } from './routes/vidyut.sandhi'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +48,11 @@ const DhatuRoute = DhatuRouteImport.update({
 const SutraRoute = SutraRouteImport.update({
   id: '/sutra',
   path: '/sutra',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VidyutRoute = VidyutRouteImport.update({
+  id: '/vidyut',
+  path: '/vidyut',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentIndexRoute = AgentIndexRouteImport.update({
@@ -88,21 +100,58 @@ const SutraIdRoute = SutraIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => SutraRoute,
 } as any)
+const VidyutIndexRoute = VidyutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VidyutRoute,
+} as any)
+const VidyutChandasRoute = VidyutChandasRouteImport.update({
+  id: '/chandas',
+  path: '/chandas',
+  getParentRoute: () => VidyutRoute,
+} as any)
+const VidyutChedaRoute = VidyutChedaRouteImport.update({
+  id: '/cheda',
+  path: '/cheda',
+  getParentRoute: () => VidyutRoute,
+} as any)
+const VidyutDhatuRoute = VidyutDhatuRouteImport.update({
+  id: '/dhatu',
+  path: '/dhatu',
+  getParentRoute: () => VidyutRoute,
+} as any)
+const VidyutNamaRoute = VidyutNamaRouteImport.update({
+  id: '/nama',
+  path: '/nama',
+  getParentRoute: () => VidyutRoute,
+} as any)
+const VidyutSandhiRoute = VidyutSandhiRouteImport.update({
+  id: '/sandhi',
+  path: '/sandhi',
+  getParentRoute: () => VidyutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent': typeof AgentRouteRouteWithChildren
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
+  '/vidyut': typeof VidyutRouteWithChildren
   '/agent/$chatId': typeof AgentChatIdRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
+  '/vidyut/dhatu': typeof VidyutDhatuRoute
+  '/vidyut/nama': typeof VidyutNamaRoute
+  '/vidyut/sandhi': typeof VidyutSandhiRoute
   '/agent/': typeof AgentIndexRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
+  '/vidyut/': typeof VidyutIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,9 +161,15 @@ export interface FileRoutesByTo {
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
+  '/vidyut/dhatu': typeof VidyutDhatuRoute
+  '/vidyut/nama': typeof VidyutNamaRoute
+  '/vidyut/sandhi': typeof VidyutSandhiRoute
   '/agent': typeof AgentIndexRoute
   '/dhatu': typeof DhatuIndexRoute
   '/sutra': typeof SutraIndexRoute
+  '/vidyut': typeof VidyutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,15 +177,22 @@ export interface FileRoutesById {
   '/agent': typeof AgentRouteRouteWithChildren
   '/dhatu': typeof DhatuRouteWithChildren
   '/sutra': typeof SutraRouteWithChildren
+  '/vidyut': typeof VidyutRouteWithChildren
   '/agent/$chatId': typeof AgentChatIdRoute
   '/dhatu/$id': typeof DhatuIdRoute
   '/dict/$slug': typeof DictSlugRoute
   '/entry/$id': typeof EntryIdRoute
   '/paradigm/$id': typeof ParadigmIdRoute
   '/sutra/$id': typeof SutraIdRoute
+  '/vidyut/chandas': typeof VidyutChandasRoute
+  '/vidyut/cheda': typeof VidyutChedaRoute
+  '/vidyut/dhatu': typeof VidyutDhatuRoute
+  '/vidyut/nama': typeof VidyutNamaRoute
+  '/vidyut/sandhi': typeof VidyutSandhiRoute
   '/agent/': typeof AgentIndexRoute
   '/dhatu/': typeof DhatuIndexRoute
   '/sutra/': typeof SutraIndexRoute
+  '/vidyut/': typeof VidyutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,15 +201,22 @@ export interface FileRouteTypes {
     | '/agent'
     | '/dhatu'
     | '/sutra'
+    | '/vidyut'
     | '/agent/$chatId'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/vidyut/chandas'
+    | '/vidyut/cheda'
+    | '/vidyut/dhatu'
+    | '/vidyut/nama'
+    | '/vidyut/sandhi'
     | '/agent/'
     | '/dhatu/'
     | '/sutra/'
+    | '/vidyut/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,24 +226,37 @@ export interface FileRouteTypes {
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/vidyut/chandas'
+    | '/vidyut/cheda'
+    | '/vidyut/dhatu'
+    | '/vidyut/nama'
+    | '/vidyut/sandhi'
     | '/agent'
     | '/dhatu'
     | '/sutra'
+    | '/vidyut'
   id:
     | '__root__'
     | '/'
     | '/agent'
     | '/dhatu'
     | '/sutra'
+    | '/vidyut'
     | '/agent/$chatId'
     | '/dhatu/$id'
     | '/dict/$slug'
     | '/entry/$id'
     | '/paradigm/$id'
     | '/sutra/$id'
+    | '/vidyut/chandas'
+    | '/vidyut/cheda'
+    | '/vidyut/dhatu'
+    | '/vidyut/nama'
+    | '/vidyut/sandhi'
     | '/agent/'
     | '/dhatu/'
     | '/sutra/'
+    | '/vidyut/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,6 +264,7 @@ export interface RootRouteChildren {
   AgentRouteRoute: typeof AgentRouteRouteWithChildren
   DhatuRoute: typeof DhatuRouteWithChildren
   SutraRoute: typeof SutraRouteWithChildren
+  VidyutRoute: typeof VidyutRouteWithChildren
   DictSlugRoute: typeof DictSlugRoute
   EntryIdRoute: typeof EntryIdRoute
   ParadigmIdRoute: typeof ParadigmIdRoute
@@ -215,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/sutra'
       fullPath: '/sutra'
       preLoaderRoute: typeof SutraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vidyut': {
+      id: '/vidyut'
+      path: '/vidyut'
+      fullPath: '/vidyut'
+      preLoaderRoute: typeof VidyutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agent/': {
@@ -280,6 +370,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SutraIdRouteImport
       parentRoute: typeof SutraRoute
     }
+    '/vidyut/': {
+      id: '/vidyut/'
+      path: '/'
+      fullPath: '/vidyut/'
+      preLoaderRoute: typeof VidyutIndexRouteImport
+      parentRoute: typeof VidyutRoute
+    }
+    '/vidyut/chandas': {
+      id: '/vidyut/chandas'
+      path: '/chandas'
+      fullPath: '/vidyut/chandas'
+      preLoaderRoute: typeof VidyutChandasRouteImport
+      parentRoute: typeof VidyutRoute
+    }
+    '/vidyut/cheda': {
+      id: '/vidyut/cheda'
+      path: '/cheda'
+      fullPath: '/vidyut/cheda'
+      preLoaderRoute: typeof VidyutChedaRouteImport
+      parentRoute: typeof VidyutRoute
+    }
+    '/vidyut/dhatu': {
+      id: '/vidyut/dhatu'
+      path: '/dhatu'
+      fullPath: '/vidyut/dhatu'
+      preLoaderRoute: typeof VidyutDhatuRouteImport
+      parentRoute: typeof VidyutRoute
+    }
+    '/vidyut/nama': {
+      id: '/vidyut/nama'
+      path: '/nama'
+      fullPath: '/vidyut/nama'
+      preLoaderRoute: typeof VidyutNamaRouteImport
+      parentRoute: typeof VidyutRoute
+    }
+    '/vidyut/sandhi': {
+      id: '/vidyut/sandhi'
+      path: '/sandhi'
+      fullPath: '/vidyut/sandhi'
+      preLoaderRoute: typeof VidyutSandhiRouteImport
+      parentRoute: typeof VidyutRoute
+    }
   }
 }
 
@@ -321,11 +453,33 @@ const SutraRouteChildren: SutraRouteChildren = {
 
 const SutraRouteWithChildren = SutraRoute._addFileChildren(SutraRouteChildren)
 
+interface VidyutRouteChildren {
+  VidyutChandasRoute: typeof VidyutChandasRoute
+  VidyutChedaRoute: typeof VidyutChedaRoute
+  VidyutDhatuRoute: typeof VidyutDhatuRoute
+  VidyutNamaRoute: typeof VidyutNamaRoute
+  VidyutSandhiRoute: typeof VidyutSandhiRoute
+  VidyutIndexRoute: typeof VidyutIndexRoute
+}
+
+const VidyutRouteChildren: VidyutRouteChildren = {
+  VidyutChandasRoute: VidyutChandasRoute,
+  VidyutChedaRoute: VidyutChedaRoute,
+  VidyutDhatuRoute: VidyutDhatuRoute,
+  VidyutNamaRoute: VidyutNamaRoute,
+  VidyutSandhiRoute: VidyutSandhiRoute,
+  VidyutIndexRoute: VidyutIndexRoute,
+}
+
+const VidyutRouteWithChildren =
+  VidyutRoute._addFileChildren(VidyutRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentRouteRoute: AgentRouteRouteWithChildren,
   DhatuRoute: DhatuRouteWithChildren,
   SutraRoute: SutraRouteWithChildren,
+  VidyutRoute: VidyutRouteWithChildren,
   DictSlugRoute: DictSlugRoute,
   EntryIdRoute: EntryIdRoute,
   ParadigmIdRoute: ParadigmIdRoute,

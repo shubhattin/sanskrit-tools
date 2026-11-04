@@ -58,7 +58,8 @@ export function SearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const { props: lipiProps, enabled: lipiOn } = useLipiInput(text, setText, value.mode === 'sa');
+  // Devanagari typing follows the mode (Sanskrit on, English off); no separate toggle.
+  const { props: lipiProps } = useLipiInput(text, setText, value.mode === 'sa');
   const debounced = useDebounced(text, 180);
   const suggestOn = value.mode === 'sa' && open && debounced.trim().length > 0;
   const suggest = useQuery({ ...suggestQuery(debounced.trim()), enabled: suggestOn });
@@ -99,6 +100,11 @@ export function SearchBar({
 
   const showSuggest = suggestOn && (suggest.isPending || suggestions.length > 0);
 
+  const switchMode = () => {
+    setActive(-1);
+    onSubmit({ q: text.trim() || value.q, mode: value.mode === 'sa' ? 'en' : 'sa' });
+  };
+
   return (
     <div ref={boxRef} className="relative">
       <form
@@ -137,6 +143,13 @@ export function SearchBar({
               }
               if (e.key === 'Escape') {
                 setOpen(false);
+                return;
+              }
+              // ↑/↓ (when no suggestion list is open) and Alt+X / Alt+C switch the language.
+              const altToggle = e.altKey && ['x', 'c'].includes(e.key.toLowerCase());
+              if (altToggle || (!showSuggest && (e.key === 'ArrowUp' || e.key === 'ArrowDown'))) {
+                e.preventDefault();
+                switchMode();
                 return;
               }
               lipiProps.onKeyDown(e);
@@ -225,22 +238,12 @@ export function SearchBar({
           />
           <SearchOptions prefs={prefs} mode={value.mode} />
           <span
-            className="ml-auto hidden items-center gap-1.5 pr-1 text-[11px] leading-none text-muted-foreground sm:flex"
-            title="Alt+X toggles Devanagari typing"
+            className="ml-auto hidden items-center gap-1 pr-1 text-[11px] leading-none text-muted-foreground sm:flex"
+            title="↑ / ↓ switch between Sanskrit and English (Alt+X also works). With suggestions open, ↑ / ↓ move through them."
           >
-            {lipiOn ? (
-              <>
-                <span className="inline-flex h-5 items-center gap-1 rounded-md bg-muted px-1.5 leading-none">
-                  <span className="font-mono text-[11px]">a</span>
-                  <span aria-hidden>→</span>
-                  <span className="font-devanagari text-xs">अ</span>
-                </span>
-                <span className="leading-none">typing</span>
-              </>
-            ) : (
-              'Latin typing'
-            )}
-            <Kbd className="ml-1">Alt X</Kbd>
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd>
+            <span className="ml-0.5">switch language</span>
           </span>
         </div>
       </form>

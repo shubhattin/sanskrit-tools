@@ -141,6 +141,100 @@ export type AgentUITools = {
     input: { query: string };
     output: { total: number; sutras: { id: string; text: string }[] };
   };
+  vidyut_conjugate: {
+    input: {
+      root: string;
+      gana?: number;
+      prayoga?: VidyutPrayoga;
+      lakara?: VidyutLakara;
+      sanadi?: VidyutSanadi[];
+      upasargas?: string[];
+    };
+    output: {
+      root: VidyutRoot;
+      homonyms: VidyutRoot[];
+      stems: string[];
+      prayoga: VidyutPrayoga;
+      columns: string;
+      /** `rows`: "प्रथमपुरुषः: a | b | c". */
+      tables: { pada: string; lakara: VidyutLakara; rows: string[] }[];
+      page: string;
+    };
+  };
+  vidyut_decline: {
+    input: { stem: string; linga: VidyutLinga };
+    output: { stem: string; linga: VidyutLinga; columns: string; rows: string[]; page: string };
+  };
+  vidyut_krdantas: {
+    input: { root: string; gana?: number; sanadi?: VidyutSanadi[]; upasargas?: string[] };
+    output: {
+      root: VidyutRoot;
+      homonyms: VidyutRoot[];
+      groups: { group: string; items: string[] }[];
+      page: string;
+    };
+  };
+  vidyut_derivation: {
+    input: {
+      root?: string;
+      gana?: number;
+      sanadi?: VidyutSanadi[];
+      upasargas?: string[];
+      prayoga?: VidyutPrayoga;
+      lakara?: VidyutLakara;
+      purusha?: 'prathama' | 'madhyama' | 'uttama';
+      stem?: string;
+      linga?: VidyutLinga;
+      vibhakti?: string;
+      vacana?: 'eka' | 'dvi' | 'bahu';
+      form?: string;
+      analysis?: string;
+    };
+    output: {
+      results: string[];
+      form: string;
+      optional_rules: { rule: string; applied: boolean }[];
+      steps: { rule: string; sutra_id: string | null; text: string | null; result: string }[];
+      truncated: boolean;
+    };
+  };
+  vidyut_sandhi: {
+    input: { join?: string[]; split?: string };
+    output:
+      | { words: string[]; joined: string[]; page: string }
+      | {
+          note: string;
+          chunks: {
+            chunk: string;
+            readings: { reading: string; cheda: boolean; words: string[] }[];
+            splits: string[];
+          }[];
+          page: string;
+        };
+  };
+  vidyut_analyze: {
+    input: { text: string };
+    output: {
+      note: string;
+      chunks: {
+        chunk: string;
+        reading: string | null;
+        by: 'cheda' | 'optimizer' | null;
+        words: { word: string; in_dictionaries: boolean; analyses: string[] }[];
+        other_readings: string[];
+      }[];
+      page: string;
+    };
+  };
+  vidyut_meter: {
+    input: { verse: string };
+    output: {
+      meter: { name: string; kind: string; fit: string; note: string | null } | null;
+      lines: { syllables: string; pattern: string; ganas: string; matras: number }[];
+      also_compatible: string[];
+      page: string;
+    };
+  };
   get_sutra: {
     input: { id: string; commentaries?: string[] };
     output: {
@@ -151,6 +245,28 @@ export type AgentUITools = {
     };
   };
 };
+
+export type VidyutLakara =
+  | 'lat'
+  | 'lit'
+  | 'lut'
+  | 'lrt'
+  | 'lot'
+  | 'lan'
+  | 'vidhi_lin'
+  | 'ashir_lin'
+  | 'lun'
+  | 'lrn';
+export type VidyutPrayoga = 'kartari' | 'karmani' | 'bhave';
+export type VidyutLinga = 'pum' | 'stri' | 'napumsaka';
+export type VidyutSanadi = 'nic' | 'san' | 'yan' | 'yan_luk';
+export interface VidyutRoot {
+  code: string;
+  upadesha: string;
+  root: string;
+  artha: string;
+  gana: number;
+}
 
 export type AgentUIMessage = UIMessage<AgentMessageMetadata, never, AgentUITools>;
 

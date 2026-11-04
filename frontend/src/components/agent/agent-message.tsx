@@ -20,6 +20,7 @@ import {
   SearchSutrasStep
 } from './tools/dhatu-sutra-steps';
 import { UnknownToolStep } from './tools/web-sources';
+import { VidyutStep, isVidyutPart } from './tools/vidyut-steps';
 import { WebSearchStep } from './tools/web-search-step';
 
 function StepRow({ part, streaming }: { part: AgentPart; streaming: boolean }) {
@@ -44,6 +45,7 @@ function StepRow({ part, streaming }: { part: AgentPart; streaming: boolean }) {
 
 /** One typed `tool-*` part: a bespoke row per known tool, generic fallback otherwise. */
 function ToolStep({ part, streaming }: { part: AgentPart; streaming: boolean }) {
+  if (isVidyutPart(part)) return <VidyutStep part={part} streaming={streaming} />;
   switch (part.type) {
     case 'tool-web_search':
       return <WebSearchStep part={part} streaming={streaming} />;

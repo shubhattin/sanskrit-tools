@@ -31,7 +31,18 @@ sqlx = { version = "0.9", default-features = false, features = [
 chrono = { version = "0.4", features = ["serde"] }
 utoipa = { version = "5", features = ["axum_extras", "macros"] }
 utoipa-axum = "0.2"
-vidyut-lipi = "0.2"
+# Ambuda's vidyut (https://github.com/ambuda-org/vidyut) through our fork https://github.com/shubhattin/vidyut
+# (adds Kosha/Model::from_bytes + Chedaka::from_parts, fixes cheda's avyaya scoring). All crates
+# pinned to ONE git rev: vidyut-sandhi/cheda are not on crates.io, and the crates' shared types only
+# line up from one source. Data lives in src/vidyut/data (py-0.4.0 release, matches this rev).
+vidyut-lipi = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+vidyut-prakriya = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+vidyut-chandas = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+vidyut-sandhi = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+vidyut-kosha = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+vidyut-cheda = { git = "https://github.com/shubhattin/vidyut.git", rev = "6308897dd6b660b2b0cffb2b99df22eaec5b5dce" }
+# Pure-Rust zstd decoder for the embedded kosha / cheda data.
+ruzstd = "0.9"
 lipilekhika = "1.1.2"
 regex = "1"
 flate2 = "1"
@@ -76,3 +87,7 @@ opt-level = 3
 
 [profile.dev.package."*"]
 opt-level = 2
+
+# Under debug assertions vidyut-prakriya logs extra internal steps into `history()`.
+[profile.dev.package.vidyut-prakriya]
+debug-assertions = false

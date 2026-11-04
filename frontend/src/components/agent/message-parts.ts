@@ -17,7 +17,19 @@ export type StepPart =
   | AgentToolPart<'search_dhatus'>
   | AgentToolPart<'get_dhatu'>
   | AgentToolPart<'search_sutras'>
-  | AgentToolPart<'get_sutra'>;
+  | AgentToolPart<'get_sutra'>
+  | VidyutToolPart;
+
+export type VidyutToolName =
+  | 'vidyut_conjugate'
+  | 'vidyut_decline'
+  | 'vidyut_krdantas'
+  | 'vidyut_derivation'
+  | 'vidyut_analyze'
+  | 'vidyut_sandhi'
+  | 'vidyut_meter';
+
+export type VidyutToolPart = { [N in VidyutToolName]: AgentToolPart<N> }[VidyutToolName];
 
 export type PartGroup =
   | { kind: 'steps'; key: string; parts: AgentPart[] }

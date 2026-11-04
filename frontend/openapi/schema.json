@@ -642,10 +642,1020 @@
           }
         }
       }
+    },
+    "/api/vidyut/chandas": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.chandas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Scansion and meter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scansion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty / not Devanagari / too long",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/derive": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.derive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WordSpec"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Step-by-step derivations (one per result)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Derivation"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad arguments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/dhatus": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.dhatus",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Root in Devanagari (भू, एधँ), a meaning word, or a code (1.1, 01.0001)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "gana",
+            "in": "query",
+            "description": "Only this gaṇa (1-10)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching roots of vidyut's Dhātupāṭha (max 60)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RootInfo"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not Devanagari",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/dhatus/site/{id}": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.siteDhatu",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Root id of the site's Dhātupāṭha (`/dhatu/{id}`)",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The same root in vidyut's Dhātupāṭha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such root, or vidyut has no matching root",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/dhatus/{code}": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.dhatu",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Dhātupāṭha code (01.0001 or 1.1)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One root",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/analyses": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevAnalyses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick of each word's analysis in the context of the sentence (up to 24 ambiguous words)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordPick"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/join": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevJoin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among the joined variants; null with < 2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevPick"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad words",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/meter": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevMeter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among the matching meters (options = meter names); null with < 2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevPick"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad verse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/split": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevSplit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among each chunk's best readings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChunkPick"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/krdanta": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.krdanta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KrdantaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Kṛdanta stems of the root, grouped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KrtGroup"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad root / upasarga",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/meters": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.meters",
+        "responses": {
+          "200": {
+            "description": "Meter catalogue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MeterInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/pada": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.pada",
+        "parameters": [
+          {
+            "name": "w",
+            "in": "query",
+            "description": "One Devanagari word (a form as written; a joined phrase is split).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What a word form can be (every analysis vidyut's grammar gives), or how it splits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordAnalysis"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty / not Devanagari / more than one word",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/samasa": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.samasa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SamasaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Compound stem and its nominative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SamasaResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad members or no result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/sandhi/join": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.sandhiJoin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The joined phrase (variants when sandhi is optional)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fewer than two words / not Devanagari",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/sandhi/rules": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.sandhiRules",
+        "responses": {
+          "200": {
+            "description": "The sandhi rule table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SandhiRule"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/sandhi/split": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.sandhiSplit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Per chunk: best whole readings, syllables and two-word candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChunkSplit"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty / not Devanagari / too long",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/sandhi/split-at": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.sandhiSplitAt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitAtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Splits with the junction at that sound, dictionary words first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PinnedSplit"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not one Devanagari chunk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/stryanta": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.stryanta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Feminine stems",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad stem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/subanta": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.subanta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubantaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Declension table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Declension"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad stem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/taddhita": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.taddhita",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaddhitaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Taddhitānta stems (common suffixes first)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaddhitaForm"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad stem",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/tinanta": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.tinanta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TinantaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Every lakāra of the root in this prayoga, per pada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conjugation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad root / upasarga, or no forms",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Akshara": {
+        "type": "object",
+        "required": [
+          "varnas"
+        ],
+        "properties": {
+          "varnas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Varna"
+            }
+          }
+        }
+      },
+      "AnalysesRequest": {
+        "type": "object",
+        "required": [
+          "text",
+          "words"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The whole text (context)."
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The words of the chosen reading, in order (Devanagari, as `Part.text`)."
+          }
+        }
+      },
       "BrowseItem": {
         "type": "object",
         "required": [
@@ -688,6 +1698,153 @@
             "items": {
               "$ref": "#/components/schemas/BrowseItem"
             }
+          }
+        }
+      },
+      "ChunkPick": {
+        "type": "object",
+        "required": [
+          "chunk"
+        ],
+        "properties": {
+          "chunk": {
+            "type": "string"
+          },
+          "pick": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JevPick",
+                "description": "Jev's choice among the chunk's `readings` (options = their labels); none with < 2 readings."
+              }
+            ]
+          }
+        }
+      },
+      "ChunkSplit": {
+        "type": "object",
+        "required": [
+          "chunk",
+          "aksharas",
+          "readings",
+          "splits"
+        ],
+        "properties": {
+          "aksharas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Akshara"
+            },
+            "description": "The chunk as akṣaras of varṇas (`at` positions for `/sandhi/split-at`)."
+          },
+          "chunk": {
+            "type": "string"
+          },
+          "readings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reading"
+            },
+            "description": "The best whole readings (all words), best first: dictionary words, then fewest words."
+          },
+          "splits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Split"
+            },
+            "description": "Two-word candidates: both parts known first, then one, then the rest (each in split order)."
+          }
+        }
+      },
+      "Conjugation": {
+        "type": "object",
+        "required": [
+          "root",
+          "stems",
+          "prayoga",
+          "tables"
+        ],
+        "properties": {
+          "prayoga": {
+            "$ref": "#/components/schemas/PrayogaId"
+          },
+          "root": {
+            "$ref": "#/components/schemas/RootInfo"
+          },
+          "stems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The root after sanādi / upasarga (e.g. भावि for भू + णिच्)."
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PadaTables"
+            },
+            "description": "One set of tables per pada the root takes in this prayoga (ubhayapadī roots get both)."
+          }
+        }
+      },
+      "Declension": {
+        "type": "object",
+        "required": [
+          "stems",
+          "linga",
+          "forms"
+        ],
+        "properties": {
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "`forms[vibhakti][vacana]`, vibhaktis prathamā … saptamī then sambodhana."
+          },
+          "linga": {
+            "$ref": "#/components/schemas/LingaId"
+          },
+          "stems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The stem the table is built on (derived stems spelled out)."
+          }
+        }
+      },
+      "Derivation": {
+        "type": "object",
+        "required": [
+          "text",
+          "steps",
+          "optional_rules"
+        ],
+        "properties": {
+          "optional_rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionalRule"
+            },
+            "description": "The optional rules this result depends on (why a cell has several forms)."
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            }
+          },
+          "text": {
+            "type": "string"
           }
         }
       },
@@ -739,6 +1896,30 @@
           },
           "upadesha": {
             "type": "string"
+          }
+        }
+      },
+      "DhatuArgs": {
+        "type": "object",
+        "description": "A root from the Dhātupāṭha, optionally with sanādi suffixes (in order: `[nic, san]` is the\ndesiderative of the causative) and upasargas (Devanagari: `प्र`, `सम्`, `आ`).",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "sanadi": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SanadiId"
+            }
+          },
+          "upasargas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -967,6 +2148,14 @@
           }
         }
       },
+      "Fit": {
+        "type": "string",
+        "enum": [
+          "full",
+          "pada",
+          "prefix"
+        ]
+      },
       "FormAnalysis": {
         "type": "object",
         "required": [
@@ -1021,6 +2210,195 @@
           }
         }
       },
+      "JevPick": {
+        "type": "object",
+        "description": "Jev's answer to one question: the chosen option (index into the options given) and how sure.",
+        "required": [
+          "options",
+          "choice",
+          "probabilities"
+        ],
+        "properties": {
+          "choice": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The options as they were put to Jev."
+          },
+          "probabilities": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Probability per option (same order)."
+          }
+        }
+      },
+      "JoinRequest": {
+        "type": "object",
+        "required": [
+          "words"
+        ],
+        "properties": {
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Devanagari words, in order."
+          }
+        }
+      },
+      "KrdantaForm": {
+        "type": "object",
+        "required": [
+          "krt",
+          "label",
+          "forms",
+          "lingas",
+          "avyaya"
+        ],
+        "properties": {
+          "avyaya": {
+            "type": "boolean"
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gloss": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Short English description (curated suffixes only)."
+          },
+          "krt": {
+            "type": "string",
+            "description": "vidyut kṛt label (SLP1) — pass back as `krt` in [`StemArgs::Krdanta`]."
+          },
+          "label": {
+            "type": "string",
+            "description": "The suffix in Devanagari (`क्त`, `शतृ`)."
+          },
+          "lakara": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LakaraId"
+              }
+            ]
+          },
+          "lingas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LingaId"
+            },
+            "description": "Genders the stem is declined in (empty for indeclinables)."
+          },
+          "prayoga": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PrayogaId"
+              }
+            ]
+          }
+        }
+      },
+      "KrdantaRequest": {
+        "type": "object",
+        "required": [
+          "dhatu"
+        ],
+        "properties": {
+          "dhatu": {
+            "$ref": "#/components/schemas/DhatuArgs"
+          }
+        }
+      },
+      "KrtGroup": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KrdantaForm"
+            }
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "LakaraId": {
+        "type": "string",
+        "description": "Lakāra (tense / mood). The Vedic leṭ is left out.",
+        "enum": [
+          "lat",
+          "lit",
+          "lut",
+          "lrt",
+          "lot",
+          "lan",
+          "vidhi_lin",
+          "ashir_lin",
+          "lun",
+          "lrn"
+        ]
+      },
+      "LakaraTable": {
+        "type": "object",
+        "description": "`forms[purusha][vacana]` = the variants for that cell (puruṣa: prathama, madhyama, uttama;\nvacana: eka, dvi, bahu).",
+        "required": [
+          "lakara",
+          "forms"
+        ],
+        "properties": {
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "lakara": {
+            "$ref": "#/components/schemas/LakaraId"
+          }
+        }
+      },
       "Lang": {
         "type": "string",
         "enum": [
@@ -1028,6 +2406,272 @@
           "en",
           "hi"
         ]
+      },
+      "LingaId": {
+        "type": "string",
+        "enum": [
+          "pum",
+          "stri",
+          "napumsaka"
+        ]
+      },
+      "MeterInfo": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "padas",
+          "matras",
+          "syllables"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/MeterKind"
+          },
+          "matras": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "Jāti: mātrās per pāda."
+          },
+          "name": {
+            "type": "string"
+          },
+          "padas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeterPada"
+            },
+            "description": "Vṛtta: one entry per distinct pāda (samavṛttas have one)."
+          },
+          "syllables": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Syllables per pāda (vṛtta, anuṣṭubh)."
+          }
+        }
+      },
+      "MeterKind": {
+        "type": "string",
+        "enum": [
+          "vrtta",
+          "jati",
+          "anushtubh"
+        ]
+      },
+      "MeterMatch": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "fit"
+        ],
+        "properties": {
+          "fit": {
+            "$ref": "#/components/schemas/Fit"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MeterKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "e.g. \"vipulā\" for a śloka whose odd pāda leaves the common (pathyā) pattern."
+          }
+        }
+      },
+      "MeterPada": {
+        "type": "object",
+        "required": [
+          "pattern",
+          "ganas",
+          "yati"
+        ],
+        "properties": {
+          "ganas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pattern": {
+            "type": "string",
+            "description": "`L` / `G`, `.` for \"either\" (pāda-final syllables)."
+          },
+          "yati": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Caesura (yati) after these syllable counts."
+          }
+        }
+      },
+      "OptionalRule": {
+        "type": "object",
+        "required": [
+          "rule",
+          "applied"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean",
+            "description": "Whether this derivation applied the optional rule."
+          },
+          "rule": {
+            "$ref": "#/components/schemas/RuleRef"
+          }
+        }
+      },
+      "PadaId": {
+        "type": "string",
+        "enum": [
+          "parasmaipada",
+          "atmanepada"
+        ]
+      },
+      "PadaInfo": {
+        "type": "object",
+        "description": "One grammatical reading of a word form.",
+        "required": [
+          "kind",
+          "lemma",
+          "key"
+        ],
+        "properties": {
+          "dhatu": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Kṛdanta stems: the root and kṛt pratyaya (उद्भू, ल्युट्)."
+          },
+          "key": {
+            "type": "string",
+            "description": "One-line summary (`उद्भवन (उद्भू + ल्युट्) napumsaka prathama eka`): a stable key for the\nanalysis (Jev's option label) and the agent's view of it."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PadaKind"
+          },
+          "krt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lakara": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LakaraId"
+              }
+            ]
+          },
+          "lemma": {
+            "type": "string",
+            "description": "Prātipadika (subanta, avyaya) or dhātu (tiṅanta), Devanagari."
+          },
+          "linga": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LingaId"
+              }
+            ]
+          },
+          "prayoga": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PrayogaId"
+              }
+            ]
+          },
+          "purusha": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PurushaId"
+              }
+            ]
+          },
+          "vacana": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VacanaId"
+              }
+            ]
+          },
+          "vibhakti": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VibhaktiId"
+              }
+            ]
+          },
+          "word": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WordSpec",
+                "description": "The word to derive (`/derive`) or open in the generators; none for plain indeclinables and\nroots outside the Dhātupāṭha."
+              }
+            ]
+          }
+        }
+      },
+      "PadaKind": {
+        "type": "string",
+        "enum": [
+          "subanta",
+          "avyaya",
+          "tinanta"
+        ]
+      },
+      "PadaTables": {
+        "type": "object",
+        "required": [
+          "pada",
+          "lakaras"
+        ],
+        "properties": {
+          "lakaras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LakaraTable"
+            }
+          },
+          "pada": {
+            "$ref": "#/components/schemas/PadaId"
+          }
+        }
       },
       "Paradigm": {
         "type": "object",
@@ -1095,6 +2739,387 @@
           }
         }
       },
+      "Part": {
+        "type": "object",
+        "required": [
+          "text",
+          "known",
+          "dictionary",
+          "analyses"
+        ],
+        "properties": {
+          "analyses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PadaInfo"
+            },
+            "description": "What the form can be (vidyut's kosha), likeliest first; empty when the grammar has no such\nform."
+          },
+          "dictionary": {
+            "type": "boolean",
+            "description": "A headword or inflected form in the dictionaries."
+          },
+          "known": {
+            "type": "boolean",
+            "description": "A word: in the dictionaries or generated by the grammar (vidyut's kosha)."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "PinnedSplit": {
+        "type": "object",
+        "required": [
+          "left",
+          "right"
+        ],
+        "properties": {
+          "left": {
+            "$ref": "#/components/schemas/Part"
+          },
+          "right": {
+            "$ref": "#/components/schemas/Reading",
+            "description": "The rest, read as words by the optimizer."
+          }
+        }
+      },
+      "PrayogaId": {
+        "type": "string",
+        "enum": [
+          "kartari",
+          "karmani",
+          "bhave"
+        ]
+      },
+      "PurushaId": {
+        "type": "string",
+        "enum": [
+          "prathama",
+          "madhyama",
+          "uttama"
+        ]
+      },
+      "Reading": {
+        "type": "object",
+        "required": [
+          "parts",
+          "label",
+          "cheda"
+        ],
+        "properties": {
+          "cheda": {
+            "type": "boolean",
+            "description": "This is cheda's segmentation (vidyut's statistical segmenter)."
+          },
+          "label": {
+            "type": "string",
+            "description": "`तथा✓ + एव✓` (✓ = known): how the reading is shown to Jev, and its option label."
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Part"
+            }
+          }
+        }
+      },
+      "RootDetail": {
+        "type": "object",
+        "required": [
+          "root"
+        ],
+        "properties": {
+          "dhatu_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "This root's page on the site (`/dhatu/{id}`), when the site's Dhātupāṭha has it."
+          },
+          "root": {
+            "$ref": "#/components/schemas/RootInfo"
+          }
+        }
+      },
+      "RootInfo": {
+        "type": "object",
+        "description": "A root of vidyut's Dhātupāṭha.",
+        "required": [
+          "code",
+          "gana",
+          "number",
+          "aupadeshika",
+          "roots",
+          "artha"
+        ],
+        "properties": {
+          "artha": {
+            "type": "string"
+          },
+          "aupadeshika": {
+            "type": "string",
+            "description": "Aupadeśika form with it-markers and accents (e.g. `एधँ॒`)."
+          },
+          "code": {
+            "type": "string",
+            "description": "Dhātupāṭha code `GG.NNNN` (e.g. `01.0001`)."
+          },
+          "gana": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "roots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The root after it-lopa (e.g. `एध्`); several when it-lopa allows options."
+          }
+        }
+      },
+      "RuleRef": {
+        "type": "object",
+        "required": [
+          "source",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "e.g. `3.2.123`, `1.1.33.1` (vārttika), `2473` (Kaumudī)."
+          },
+          "source": {
+            "$ref": "#/components/schemas/RuleSource"
+          },
+          "sutra_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "This site's sūtra id (`3.2.123` → `3.2.123`, `1.1.1` → `1.1.001`) for Aṣṭādhyāyī rules and\nfor vārttikas / Kāśikā notes on one."
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Link for references outside the shipped texts."
+          }
+        }
+      },
+      "RuleSource": {
+        "type": "string",
+        "enum": [
+          "ashtadhyayi",
+          "varttika",
+          "dhatupatha",
+          "unadipatha",
+          "linganushasana",
+          "phit",
+          "kashika",
+          "kaumudi",
+          "other"
+        ]
+      },
+      "SamasaKind": {
+        "type": "string",
+        "enum": [
+          "tatpurusha",
+          "karmadharaya",
+          "dvigu",
+          "bahuvrihi",
+          "dvandva",
+          "samahara_dvandva",
+          "avyayibhava"
+        ]
+      },
+      "SamasaPada": {
+        "type": "object",
+        "description": "One member of a compound.",
+        "required": [
+          "stem"
+        ],
+        "properties": {
+          "linga": {
+            "$ref": "#/components/schemas/LingaId"
+          },
+          "stem": {
+            "type": "string",
+            "description": "Devanagari stem (`राजन्`), or an indeclinable for the first member of an avyayībhāva."
+          },
+          "vibhakti": {
+            "$ref": "#/components/schemas/VibhaktiId"
+          }
+        }
+      },
+      "SamasaRequest": {
+        "type": "object",
+        "required": [
+          "padas",
+          "samasa_type"
+        ],
+        "properties": {
+          "padas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SamasaPada"
+            }
+          },
+          "samasa_type": {
+            "$ref": "#/components/schemas/SamasaKind"
+          }
+        }
+      },
+      "SamasaResult": {
+        "type": "object",
+        "required": [
+          "stems",
+          "words"
+        ],
+        "properties": {
+          "stems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The compound stem(s)."
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SamasaWord"
+            },
+            "description": "Nominative in each gender the compound takes (dual for itaretara-dvandva; the indeclinable\nfor avyayībhāva)."
+          }
+        }
+      },
+      "SamasaWord": {
+        "type": "object",
+        "required": [
+          "linga",
+          "forms"
+        ],
+        "properties": {
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "linga": {
+            "$ref": "#/components/schemas/LingaId"
+          }
+        }
+      },
+      "SanadiId": {
+        "type": "string",
+        "description": "Sanādi pratyayas that make a new root from a root (the nāmadhātu ones are not exposed).",
+        "enum": [
+          "nic",
+          "san",
+          "yan",
+          "yan_luk"
+        ]
+      },
+      "SandhiRule": {
+        "type": "object",
+        "required": [
+          "first",
+          "second",
+          "result"
+        ],
+        "properties": {
+          "first": {
+            "type": "string",
+            "description": "End of the first word."
+          },
+          "result": {
+            "type": "string"
+          },
+          "second": {
+            "type": "string",
+            "description": "Start of the second word."
+          }
+        }
+      },
+      "ScannedLine": {
+        "type": "object",
+        "required": [
+          "syllables",
+          "pattern",
+          "ganas",
+          "matras"
+        ],
+        "properties": {
+          "ganas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The pattern in gaṇas (य म त र ज भ न स, then ल / ग for the rest)."
+          },
+          "matras": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "`L` / `G` per syllable."
+          },
+          "syllables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Syllable"
+            }
+          }
+        }
+      },
+      "Scansion": {
+        "type": "object",
+        "required": [
+          "lines",
+          "others"
+        ],
+        "properties": {
+          "best": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MeterMatch"
+              }
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScannedLine"
+            }
+          },
+          "others": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeterMatch"
+            },
+            "description": "Other vṛttas the text is compatible with."
+          }
+        }
+      },
       "SearchResponse": {
         "type": "object",
         "required": [
@@ -1135,6 +3160,224 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "Split": {
+        "type": "object",
+        "required": [
+          "left",
+          "right",
+          "left_known",
+          "right_known"
+        ],
+        "properties": {
+          "left": {
+            "type": "string"
+          },
+          "left_known": {
+            "type": "boolean",
+            "description": "The part is a word: in the dictionaries or generated by the grammar."
+          },
+          "right": {
+            "type": "string"
+          },
+          "right_known": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SplitAtRequest": {
+        "type": "object",
+        "required": [
+          "chunk",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "description": "Varṇa position from `ChunkSplit.aksharas`: the words meet at this sound.",
+            "minimum": 0
+          },
+          "chunk": {
+            "type": "string",
+            "description": "One chunk (a word without spaces), Devanagari."
+          }
+        }
+      },
+      "StemArgs": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "stem",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "basic"
+                ]
+              },
+              "stem": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "dhatu",
+              "krt",
+              "kind"
+            ],
+            "properties": {
+              "dhatu": {
+                "$ref": "#/components/schemas/DhatuArgs"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "krdanta"
+                ]
+              },
+              "krt": {
+                "type": "string",
+                "description": "vidyut kṛt label (SLP1), e.g. `kta`, `Satf~`."
+              },
+              "lakara": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LakaraId",
+                    "description": "Only for śatṛ / śānac (laṭ or lṛṭ)."
+                  }
+                ]
+              },
+              "prayoga": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PrayogaId",
+                    "description": "Only for śatṛ / śānac (karmaṇi śānac = present passive participle)."
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "stem",
+              "taddhita",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "taddhitanta"
+                ]
+              },
+              "stem": {
+                "type": "string"
+              },
+              "taddhita": {
+                "type": "string",
+                "description": "vidyut taddhita label (SLP1), e.g. `aR`, `tva`."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "padas",
+              "samasa_type",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "samasa"
+                ]
+              },
+              "padas": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SamasaPada"
+                }
+              },
+              "samasa_type": {
+                "$ref": "#/components/schemas/SamasaKind"
+              }
+            }
+          }
+        ],
+        "description": "A nominal stem (prātipadika): typed as is, or derived (kṛdanta, taddhitānta, samāsa)."
+      },
+      "StemRequest": {
+        "type": "object",
+        "required": [
+          "stem"
+        ],
+        "properties": {
+          "stem": {
+            "$ref": "#/components/schemas/StemArgs"
+          }
+        }
+      },
+      "Step": {
+        "type": "object",
+        "required": [
+          "rule",
+          "terms"
+        ],
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/RuleRef"
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StepTerm"
+            }
+          }
+        }
+      },
+      "StepTerm": {
+        "type": "object",
+        "required": [
+          "text",
+          "changed"
+        ],
+        "properties": {
+          "changed": {
+            "type": "boolean",
+            "description": "Changed by this step."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "SubantaRequest": {
+        "type": "object",
+        "required": [
+          "stem",
+          "linga"
+        ],
+        "properties": {
+          "linga": {
+            "$ref": "#/components/schemas/LingaId"
+          },
+          "stem": {
+            "$ref": "#/components/schemas/StemArgs"
           }
         }
       },
@@ -1217,6 +3460,337 @@
             "$ref": "#/components/schemas/Sutra"
           }
         }
+      },
+      "Syllable": {
+        "type": "object",
+        "required": [
+          "text",
+          "guru"
+        ],
+        "properties": {
+          "guru": {
+            "type": "boolean",
+            "description": "Guru (heavy, 2 mātrās); otherwise laghu."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "TaddhitaForm": {
+        "type": "object",
+        "required": [
+          "taddhita",
+          "label",
+          "forms",
+          "linga"
+        ],
+        "properties": {
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gloss": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "linga": {
+            "$ref": "#/components/schemas/LingaId",
+            "description": "The gender to decline it in first (तल् → strī, त्व / ष्यञ् → napuṃsaka)."
+          },
+          "taddhita": {
+            "type": "string",
+            "description": "vidyut taddhita label (SLP1) — pass back as `taddhita` in [`StemArgs::Taddhitanta`]."
+          }
+        }
+      },
+      "TaddhitaRequest": {
+        "type": "object",
+        "required": [
+          "stem"
+        ],
+        "properties": {
+          "stem": {
+            "type": "string",
+            "description": "Devanagari stem."
+          }
+        }
+      },
+      "TextRequest": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Devanagari text."
+          }
+        }
+      },
+      "TinantaRequest": {
+        "type": "object",
+        "required": [
+          "dhatu",
+          "prayoga"
+        ],
+        "properties": {
+          "dhatu": {
+            "$ref": "#/components/schemas/DhatuArgs"
+          },
+          "prayoga": {
+            "$ref": "#/components/schemas/PrayogaId"
+          }
+        }
+      },
+      "VacanaId": {
+        "type": "string",
+        "enum": [
+          "eka",
+          "dvi",
+          "bahu"
+        ]
+      },
+      "Varna": {
+        "type": "object",
+        "required": [
+          "text",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "description": "Position to pass to the split-at API.",
+            "minimum": 0
+          },
+          "text": {
+            "type": "string",
+            "description": "The sound in Devanagari (त्, अ, ः)."
+          }
+        }
+      },
+      "VibhaktiId": {
+        "type": "string",
+        "enum": [
+          "prathama",
+          "dvitiya",
+          "trtiya",
+          "caturthi",
+          "panchami",
+          "sasthi",
+          "saptami",
+          "sambodhana"
+        ]
+      },
+      "WordAnalysis": {
+        "type": "object",
+        "required": [
+          "word"
+        ],
+        "properties": {
+          "split": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Reading",
+                "description": "When the word is not one form: how it splits (cheda's reading, else the optimizer's best)."
+              }
+            ]
+          },
+          "word": {
+            "$ref": "#/components/schemas/Part",
+            "description": "The word, as a part (known / dictionary / analyses)."
+          }
+        }
+      },
+      "WordPick": {
+        "type": "object",
+        "required": [
+          "word"
+        ],
+        "properties": {
+          "pick": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JevPick",
+                "description": "Jev's choice among the word's analyses (options = `PadaInfo.key`); none with < 2."
+              }
+            ]
+          },
+          "word": {
+            "type": "string"
+          }
+        }
+      },
+      "WordSpec": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "dhatu",
+              "prayoga",
+              "lakara",
+              "purusha",
+              "vacana",
+              "kind"
+            ],
+            "properties": {
+              "dhatu": {
+                "$ref": "#/components/schemas/DhatuArgs"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "tinanta"
+                ]
+              },
+              "lakara": {
+                "$ref": "#/components/schemas/LakaraId"
+              },
+              "pada": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PadaId"
+                  }
+                ]
+              },
+              "prayoga": {
+                "$ref": "#/components/schemas/PrayogaId"
+              },
+              "purusha": {
+                "$ref": "#/components/schemas/PurushaId"
+              },
+              "vacana": {
+                "$ref": "#/components/schemas/VacanaId"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "stem",
+              "linga",
+              "vibhakti",
+              "vacana",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "subanta"
+                ]
+              },
+              "linga": {
+                "$ref": "#/components/schemas/LingaId"
+              },
+              "stem": {
+                "$ref": "#/components/schemas/StemArgs"
+              },
+              "vacana": {
+                "$ref": "#/components/schemas/VacanaId"
+              },
+              "vibhakti": {
+                "$ref": "#/components/schemas/VibhaktiId"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The prātipadika itself (kṛdanta, taddhitānta, samāsa).",
+            "required": [
+              "stem",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "stem"
+                ]
+              },
+              "stem": {
+                "$ref": "#/components/schemas/StemArgs"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Feminine stem.",
+            "required": [
+              "stem",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "stryanta"
+                ]
+              },
+              "stem": {
+                "$ref": "#/components/schemas/StemArgs"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "The root with its sanādi / upasargas.",
+            "required": [
+              "dhatu",
+              "kind"
+            ],
+            "properties": {
+              "dhatu": {
+                "$ref": "#/components/schemas/DhatuArgs"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "dhatu"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Words joined by sandhi.",
+            "required": [
+              "words",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "vakya"
+                ]
+              },
+              "words": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "description": "A word (or stem / root / phrase) to derive step by step."
       }
     }
   },
@@ -1240,6 +3814,10 @@
     {
       "name": "paradigms",
       "description": "Inflection tables"
+    },
+    {
+      "name": "vidyut",
+      "description": "Grammar tools on Ambuda's vidyut: word generation, meter, sandhi"
     }
   ]
 }
