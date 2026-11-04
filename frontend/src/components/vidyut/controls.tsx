@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,6 +73,31 @@ export function DevaTextarea({
   );
 }
 
+/**
+ * Arrow keys for a radio group (ARIA): ←/↑ and →/↓ move and select, Home / End jump. Put on the
+ * group; its `[role=radio]` buttons are the options (roving tabindex: only the checked one is
+ * tabbable).
+ */
+export function radioKeys(e: ReactKeyboardEvent<HTMLElement>) {
+  const keys = ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End'];
+  if (!keys.includes(e.key)) return;
+  const radios = [
+    ...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role=radio]:not(:disabled)')
+  ];
+  const at = radios.findIndex((r) => r === document.activeElement);
+  if (at < 0 || !radios.length) return;
+  e.preventDefault();
+  const next =
+    e.key === 'Home'
+      ? 0
+      : e.key === 'End'
+        ? radios.length - 1
+        : (at + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + radios.length) %
+          radios.length;
+  radios[next]!.focus();
+  radios[next]!.click();
+}
+
 /** Compact segmented control (radio group of pills). */
 export function Segmented<T extends string>({
   value,
@@ -93,6 +118,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
+      onKeyDown={radioKeys}
       className={cn('inline-flex flex-wrap gap-0.5 rounded-xl bg-muted p-0.5', className)}
     >
       {options.map((o) => {
@@ -103,15 +129,16 @@ export function Segmented<T extends string>({
             type="button"
             role="radio"
             aria-checked={on}
+            tabIndex={on ? 0 : -1}
             disabled={o.disabled}
             title={o.hint}
             onClick={() => onChange(o.id)}
             className={cn(
-              'rounded-[10px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-40',
+              'rounded-[10px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
               on
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-foreground/75 hover:text-foreground'
             )}
           >
             {o.label}

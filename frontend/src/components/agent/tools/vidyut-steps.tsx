@@ -4,6 +4,7 @@ import {
   AudioWaveformIcon,
   CombineIcon,
   GitBranchIcon,
+  ScanSearchIcon,
   ShapesIcon,
   SproutIcon,
   ZapIcon,
@@ -53,6 +54,12 @@ const META: Record<
     running: 'Deriving',
     done: 'Derived',
     error: 'Derivation failed'
+  },
+  'tool-vidyut_analyze': {
+    icon: ScanSearchIcon,
+    running: 'Analyzing',
+    done: 'Analyzed',
+    error: 'Analysis failed'
   },
   'tool-vidyut_sandhi': {
     icon: CombineIcon,
@@ -114,6 +121,8 @@ function describe(part: VidyutToolPart): string {
       return str(i.root);
     case 'tool-vidyut_derivation':
       return str(i.form) || str(i.root) || str(i.stem);
+    case 'tool-vidyut_analyze':
+      return str(i.text).split('\n')[0] ?? '';
     case 'tool-vidyut_sandhi':
       return list(i.join, ' + ') || str(i.split);
     case 'tool-vidyut_meter':
@@ -191,10 +200,31 @@ function Body({ part }: { part: VidyutToolPart }) {
             o.chunks.map((c) => (
               <div key={c.chunk}>
                 <p className="font-devanagari text-xs font-semibold">{c.chunk}</p>
-                <Rows rows={c.splits} />
+                <Rows rows={c.readings.map((r) => r.reading + (r.cheda ? ' · cheda' : ''))} />
               </div>
             ))
           )}
+          <PageLink href={o.page}>Open in Sandhi tool</PageLink>
+        </>
+      );
+    }
+    case 'tool-vidyut_analyze': {
+      const o = part.output;
+      return (
+        <>
+          {o.chunks.map((c) => (
+            <div key={c.chunk} className="flex flex-col gap-0.5">
+              {c.words.map((w, i) => (
+                <p key={i} className="font-devanagari text-xs leading-relaxed">
+                  <span className="font-semibold">{w.word}</span>
+                  <span className="text-muted-foreground">
+                    {' '}
+                    — {w.analyses[0] ?? 'not analysed'}
+                  </span>
+                </p>
+              ))}
+            </div>
+          ))}
           <PageLink href={o.page}>Open in Sandhi tool</PageLink>
         </>
       );

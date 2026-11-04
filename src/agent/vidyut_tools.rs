@@ -1,5 +1,5 @@
 //! The agent's grammar tools over [`crate::vidyut`] (Ambuda's vidyut): conjugation, declension,
-//! kṛdantas, step-by-step derivations, sandhi and meter. They call the same core as
+//! kṛdantas, step-by-step derivations, word analysis (kosha + cheda), sandhi and meter. They call the same core as
 //! `/api/vidyut/*` and return compact text rows for the model, plus a `page` link to the matching
 //! `/vidyut/*` tool on the site. Shapes: `docs/agent.md`.
 
@@ -11,6 +11,7 @@ use crate::vidyut::prakriya::{
   self, DhatuArgs, LakaraId, LingaId, PrayogaId, PurushaId, RootInfo, SanadiId, StemArgs, VacanaId,
   VibhaktiId, WordSpec,
 };
+use crate::vidyut::{kosha, sandhi};
 use axum::Json;
 use axum::extract::State;
 use schemars::JsonSchema;
@@ -267,12 +268,51 @@ pub(super) struct DerivationInput {
   linga: Option<LingaId>,
   vibhakti: Option<VibhaktiId>,
   vacana: Option<VacanaId>,
-  /// The form to explain when the cell has several (e.g. the second of two variants).
+  /// The form to explain. Alone (or with `analysis`), it is derived as vidyut_analyze reads it;
+  /// with root / stem, it picks among several results.
   form: Option<String>,
+  /// One of the form's analyses from vidyut_analyze (its text, e.g. "उद्भवन (उद्भू + ल्युट्)
+  /// napumsaka prathama eka"); default: the likeliest.
+  analysis: Option<String>,
+}
+
+/// A form's analysis (by its key, else the likeliest) as a derivable word.
+async fn spec_of_form(form: &str, analysis: Option<&str>) -> Result<WordSpec, String> {
+  let slp = crate::vidyut::to_slp1(form).map_err(|e| e.0)?;
+  let key = sandhi::word_key(&slp);
+  let analyses = tokio::task::spawn_blocking(move || {
+    kosha::load();
+    kosha::analyses(&key)
+  })
+  .await
+  .map_err(|e| e.to_string())?;
+  if analyses.is_empty() {
+    return Err(format!(
+      "vidyut's grammar has no form {form}: give root / stem instead"
+    ));
+  }
+  let chosen = match analysis {
+    Some(a) => analyses.iter().find(|x| x.key == a.trim()).ok_or_else(|| {
+      let keys: Vec<&str> = analyses.iter().map(|x| x.key.as_str()).collect();
+      format!(
+        "no such analysis of {form}; it can be: {}",
+        keys.join(" | ")
+      )
+    })?,
+    None => &analyses[0],
+  };
+  chosen.word.clone().ok_or_else(|| {
+    format!(
+      "{} has nothing to derive (a plain indeclinable or root outside the Dhātupāṭha)",
+      chosen.key
+    )
+  })
 }
 
 pub(super) async fn derivation(_: ToolCtx, i: DerivationInput) -> Result<Value, String> {
-  let spec = if let Some(root) = &i.root {
+  let spec = if let (None, None, Some(form)) = (&i.root, &i.stem, &i.form) {
+    spec_of_form(&deva(form), i.analysis.as_deref()).await?
+  } else if let Some(root) = &i.root {
     let (root, _) = resolve_root(root, i.gana)?;
     WordSpec::Tinanta {
       dhatu: DhatuArgs {
@@ -294,7 +334,7 @@ pub(super) async fn derivation(_: ToolCtx, i: DerivationInput) -> Result<Value, 
       vacana: i.vacana.ok_or("give the vacana")?,
     }
   } else {
-    return Err("give a root (verb form) or a stem (noun form)".into());
+    return Err("give a root (verb form), a stem (noun form), or a form (+ analysis)".into());
   };
   let ds = prakriya::derive(&spec).map_err(|e| e.0)?;
   let want = i.form.as_deref().map(deva);
@@ -379,11 +419,88 @@ pub(super) async fn sandhi(ctx: ToolCtx, input: SandhiInput) -> Result<Value, St
           )
         })
         .collect();
-      json!({ "chunk": c["chunk"], "splits": splits })
+      let readings: Vec<Value> = c["readings"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .take(3)
+        .map(|r| {
+          // What each word is (vidyut's kosha: the likeliest analysis).
+          let words: Vec<String> = r["parts"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|p| {
+              let key = p["analyses"].get(0)?["key"].as_str()?;
+              Some(format!("{} = {key}", p["text"].as_str()?))
+            })
+            .collect();
+          json!({ "reading": r["label"], "cheda": r["cheda"], "words": words })
+        })
+        .collect();
+      json!({ "chunk": c["chunk"], "readings": readings, "splits": splits })
     })
     .collect();
   Ok(json!({
-    "note": "Phonetic candidates; ✓ = found in the dictionaries. Both parts ✓ come first.",
+    "note": "readings: best whole readings (all words), best first; cheda = the reading of \
+             vidyut's statistical segmenter; words = each known form's likeliest analysis. splits: \
+             two-word phonetic candidates. ✓ = a dictionary word or a form the grammar generates.",
+    "chunks": chunks,
+    "page": format!("/vidyut/sandhi?tab=split&q={text}"),
+  }))
+}
+
+// --- vidyut_analyze ------------------------------------------------------------------------------
+
+#[derive(Deserialize, JsonSchema)]
+pub(super) struct AnalyzeInput {
+  /// A word, phrase or verse (any script); sandhi is undone first.
+  text: String,
+}
+
+/// Parses text word by word: each chunk's best reading (cheda's, else the optimizer's), every
+/// analysis of each word, and the other readings.
+pub(super) async fn analyze(ctx: ToolCtx, input: AnalyzeInput) -> Result<Value, String> {
+  let text = deva(&input.text);
+  let Json(chunks) = routes::vidyut::sandhi_split(
+    State(ctx.state),
+    Json(routes::vidyut::TextRequest { text: text.clone() }),
+  )
+  .await
+  .map_err(|e| e.1)?;
+  let chunks: Vec<Value> = chunks
+    .iter()
+    .map(|c| {
+      let best = c.readings.iter().find(|r| r.cheda).or(c.readings.first());
+      let words: Vec<Value> = best
+        .into_iter()
+        .flat_map(|r| &r.parts)
+        .map(|p| {
+          json!({
+            "word": p.text,
+            "in_dictionaries": p.dictionary,
+            "analyses": p.analyses.iter().take(5).map(|a| &a.key).collect::<Vec<_>>(),
+          })
+        })
+        .collect();
+      json!({
+        "chunk": c.chunk,
+        "reading": best.map(|r| &r.label),
+        "by": best.map(|r| if r.cheda { "cheda" } else { "optimizer" }),
+        "words": words,
+        "other_readings": c.readings.iter()
+          .filter(|r| Some(&r.label) != best.map(|b| &b.label))
+          .take(3)
+          .map(|r| &r.label)
+          .collect::<Vec<_>>(),
+      })
+    })
+    .collect();
+  Ok(json!({
+    "note": "Per chunk: the likeliest reading (cheda = vidyut's statistical segmenter) and each \
+             word's analyses from Pāṇini's grammar, likeliest first (stem (root + kṛt) gender case \
+             number; verbs: root lakāra person number voice). Pick the analysis that fits the \
+             sentence. vidyut_derivation with `form` + `analysis` explains one. ✓ = known word.",
     "chunks": chunks,
     "page": format!("/vidyut/sandhi?tab=split&q={text}"),
   }))
@@ -423,6 +540,22 @@ pub(super) async fn meter(_: ToolCtx, input: MeterInput) -> Result<Value, String
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[tokio::test]
+  async fn derives_a_form_from_its_analysis() {
+    let spec = spec_of_form("उद्भवनम्", None).await.unwrap();
+    assert!(matches!(
+      spec,
+      WordSpec::Subanta {
+        stem: StemArgs::Krdanta { .. },
+        ..
+      }
+    ));
+    let d = prakriya::derive(&spec).unwrap();
+    assert_eq!(d[0].text, "उद्भवनम्");
+    let err = spec_of_form("गच्छति", Some("nonsense")).await.unwrap_err();
+    assert!(err.contains("गम् lat prathama eka kartari"), "{err}");
+  }
 
   #[test]
   fn reads_any_script_and_resolves_roots() {

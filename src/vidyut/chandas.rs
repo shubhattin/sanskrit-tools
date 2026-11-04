@@ -174,7 +174,19 @@ fn padya_match(name: &str, m: MatchType) -> Option<MeterMatch> {
 /// (5th laghu, 6th guru, 7th laghu); odd pādas are pathyā (5 L, 6 G, 7 G) or else a vipulā.
 fn anushtubh(rows: &[Vec<Akshara>]) -> Option<MeterMatch> {
   let flat: Vec<Weight> = rows.iter().flatten().map(|a| a.weight()).collect();
-  if flat.is_empty() || flat.len() % 16 != 0 {
+  if flat.is_empty() || !flat.len().is_multiple_of(8) {
+    return None;
+  }
+  // A lone pāda can be odd or even: only the shared 5th laghu / 6th guru is checked.
+  if flat.len() == 8 {
+    return (flat[4] == Weight::L && flat[5] == Weight::G).then(|| MeterMatch {
+      name: ANUSHTUBH.into(),
+      kind: MeterKind::Anushtubh,
+      fit: Fit::Pada,
+      note: None,
+    });
+  }
+  if !flat.len().is_multiple_of(16) {
     return None;
   }
   let mut vipula = false;
@@ -216,14 +228,8 @@ pub fn identify(text: &str) -> Result<Scansion> {
     .padya()
     .as_ref()
     .and_then(|p| padya_match(p.name(), m.match_type()));
-  // A full śloka beats a partial vṛtta match (short vṛttas match the start of anything).
-  if let Some(a) = anushtubh(rows) {
-    if best.as_ref().is_none_or(|b| b.fit != Fit::Full) {
-      best = Some(a);
-    }
-  }
   let all = c.classify_all(&joined);
-  let others = all
+  let mut others = all
     .padyas()
     .iter()
     .zip(all.match_types())
@@ -236,6 +242,18 @@ pub fn identify(text: &str) -> Result<Scansion> {
       }
       acc
     });
+  // Anuṣṭubh is checked here: it beats a partial vṛtta match (short vṛttas match the start of
+  // anything), and otherwise stays a candidate.
+  if let Some(a) = anushtubh(rows) {
+    if best.as_ref().is_none_or(|b| b.fit != Fit::Full) {
+      if let Some(b) = best.take() {
+        others.insert(0, b);
+      }
+      best = Some(a);
+    } else {
+      others.insert(0, a);
+    }
+  }
   Ok(Scansion {
     lines: rows.iter().map(|r| scanned(r)).collect(),
     best,
@@ -344,6 +362,9 @@ mod tests {
     let s = identify(gita).unwrap();
     assert_eq!(s.best.unwrap().name, "अनुष्टुप्");
     assert!(identify("abc").is_err());
+    let pada = identify("वागर्थाविव सम्पृक्तौ").unwrap();
+    assert_eq!(pada.best.unwrap().name, "अनुष्टुप्");
+    assert!(!pada.others.is_empty());
     assert!(meters().len() > 140);
   }
 }

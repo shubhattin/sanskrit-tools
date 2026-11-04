@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/empty';
 import { DevaInput, ErrorNote, LoadingBlock, Segmented } from '@/components/vidyut/controls';
 import { FormButton } from '@/components/vidyut/derivation';
+import { FormSuggestions } from '@/components/vidyut/words';
 import { FormsTable } from '@/components/vidyut/forms-table';
 import { searchString } from '@/lib/search-params';
 import {
@@ -126,6 +127,8 @@ function NamaTool() {
         </p>
       ) : null}
 
+      {stem && !search.from ? <FormSuggestions text={stem} tool="nama" /> : null}
+
       {!stemArgs || !stem ? (
         <Empty className="border border-dashed">
           <EmptyHeader>
@@ -148,16 +151,16 @@ function NamaTool() {
         >
           <TabsList className="h-auto flex-wrap">
             <TabsTrigger value="sup">
-              Declension <span className="font-devanagari text-xs opacity-70">सुबन्तम्</span>
+              Declension <span className="font-devanagari text-xs">सुबन्तम्</span>
             </TabsTrigger>
             <TabsTrigger value="stri">
-              Feminine <span className="font-devanagari text-xs opacity-70">स्त्रीप्रत्ययः</span>
+              Feminine <span className="font-devanagari text-xs">स्त्रीप्रत्ययः</span>
             </TabsTrigger>
             <TabsTrigger value="tad">
-              Taddhita <span className="font-devanagari text-xs opacity-70">तद्धितः</span>
+              Taddhita <span className="font-devanagari text-xs">तद्धितः</span>
             </TabsTrigger>
             <TabsTrigger value="sam">
-              Compound <span className="font-devanagari text-xs opacity-70">समासः</span>
+              Compound <span className="font-devanagari text-xs">समासः</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="sup" className="pt-2">

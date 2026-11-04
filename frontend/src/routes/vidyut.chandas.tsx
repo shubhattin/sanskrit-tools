@@ -1,7 +1,7 @@
 import { Fragment, useDeferredValue, useEffect, useRef, useState } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AudioWaveformIcon, SearchIcon } from 'lucide-react';
+import { ArrowRightIcon, AudioWaveformIcon, CombineIcon, SearchIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +20,14 @@ import {
   SectionLabel
 } from '@/components/vidyut/controls';
 import { searchString } from '@/lib/search-params';
-import { chandasQuery, metersQuery, type MeterInfo, type MeterMatch } from '@/lib/vidyut/api';
+import {
+  chandasQuery,
+  jevMeterQuery,
+  metersQuery,
+  type MeterInfo,
+  type MeterMatch
+} from '@/lib/vidyut/api';
+import { JevBadge, JevPending, jevProbability } from '@/components/vidyut/jev';
 import { devaNum } from '@/lib/vidyut/labels';
 import { cn } from '@/lib/utils';
 
@@ -73,10 +80,10 @@ function ChandasTool() {
     >
       <TabsList>
         <TabsTrigger value="scan">
-          Scan a verse <span className="font-devanagari text-xs opacity-70">छन्दोज्ञानम्</span>
+          Scan a verse <span className="font-devanagari text-xs">छन्दोज्ञानम्</span>
         </TabsTrigger>
         <TabsTrigger value="meters">
-          Meters <span className="font-devanagari text-xs opacity-70">वृत्तानि</span>
+          Meters <span className="font-devanagari text-xs">वृत्तानि</span>
         </TabsTrigger>
       </TabsList>
       <TabsContent value="scan" className="pt-2">
@@ -131,6 +138,10 @@ function Scan({
     setText(verse ?? '');
   }
   const q = useQuery({ ...chandasQuery(verse ?? ''), enabled: !!verse });
+  // Several candidate meters: let Jev weigh them (the server sends their patterns along).
+  const candidates = q.data ? (q.data.best ? 1 : 0) + q.data.others.length : 0;
+  const jev = useQuery({ ...jevMeterQuery(verse ?? ''), enabled: !!verse && candidates > 1 });
+  const jevName = jev.data ? jev.data.options[jev.data.choice] : undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -186,6 +197,24 @@ function Scan({
                 <Badge variant="secondary">{KIND[q.data.best.kind]}</Badge>
                 <Badge variant="outline">{FIT[q.data.best.fit]}</Badge>
                 {q.data.best.note ? <Badge variant="outline">{q.data.best.note}</Badge> : null}
+                {jevName === q.data.best.name ? (
+                  <JevBadge p={jevProbability(jev.data, q.data.best.name)} />
+                ) : jevName ? (
+                  <button
+                    type="button"
+                    onClick={() => onMeter(jevName)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs ring-1 ring-violet-500/30 hover:bg-violet-500/15"
+                  >
+                    <JevBadge
+                      p={jevProbability(jev.data, jevName)}
+                      className="bg-transparent px-0 ring-0"
+                    />
+                    <span>suggests</span>
+                    <span className="font-devanagari text-sm font-semibold">{jevName}</span>
+                  </button>
+                ) : jev.isFetching ? (
+                  <JevPending what="the candidates" />
+                ) : null}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -235,6 +264,22 @@ function Scan({
             ))}
           </div>
 
+          <Link
+            to="/vidyut/sandhi"
+            search={{
+              tab: 'split',
+              q: verse
+                .replace(/[।॥|०-९0-9]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+            }}
+            className="inline-flex items-center gap-1.5 self-start rounded-full border px-3 py-1 text-sm font-medium transition-colors hover:border-amber-500/40 hover:bg-amber-500/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <CombineIcon className="size-4 text-amber-600 dark:text-amber-400" aria-hidden />
+            Read its words: sandhi, stems and cases
+            <ArrowRightIcon className="size-3.5 text-muted-foreground" aria-hidden />
+          </Link>
+
           {q.data.others.length > 0 ? (
             <div className="flex flex-wrap items-center gap-1.5 text-sm">
               <span className="text-xs text-muted-foreground">Also compatible</span>
@@ -243,10 +288,18 @@ function Scan({
                   key={o.name}
                   type="button"
                   onClick={() => onMeter(o.name)}
-                  className="rounded-full border px-2.5 py-0.5 font-devanagari text-xs hover:border-primary/50"
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-devanagari text-xs hover:border-primary/50',
+                    jevName === o.name && 'border-violet-500/50 bg-violet-500/10'
+                  )}
                   title={FIT[o.fit]}
                 >
                   {o.name}
+                  {jev.data ? (
+                    <span className="font-sans text-[10px] text-muted-foreground tabular-nums">
+                      {Math.round((jevProbability(jev.data, o.name) ?? 0) * 100)}%
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>

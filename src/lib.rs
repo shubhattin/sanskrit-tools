@@ -4,6 +4,7 @@ pub mod auth;
 pub mod db_url;
 pub mod entities;
 pub mod import;
+pub mod jev;
 pub mod openapi;
 pub mod routes;
 pub mod state;

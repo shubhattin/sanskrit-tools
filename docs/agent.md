@@ -172,7 +172,9 @@ type AgentUITools = {
     input: { root?: string; gana?: number; sanadi?: SanadiId[]; upasargas?: string[];
              prayoga?: PrayogaId; lakara?: LakaraId; purusha?: PurushaId;   // verb form
              stem?: string; linga?: LingaId; vibhakti?: VibhaktiId;          // noun form
-             vacana?: VacanaId; form?: string };                            // form: pick a variant
+             vacana?: VacanaId;
+             form?: string;       // with root / stem: pick a variant; alone: derive the form
+             analysis?: string }; // as vidyut_analyze reads it (one of its analyses; default 1st)
     output: { results: string[]; form: string;
               optional_rules: { rule: string; applied: boolean }[];
               steps: { rule: string; sutra_id: string | null; text: string | null;
@@ -182,8 +184,23 @@ type AgentUITools = {
   vidyut_sandhi: {
     input: { join?: string[]; split?: string };
     output: { words: string[]; joined: string[]; page: string }
-          | { note: string; chunks: { chunk: string; splits: string[] }[]; page: string };
-                                                    // splits: "तथा✓ + एव✓" (✓ = in the dictionaries), max 12
+          | { note: string; chunks: { chunk: string;
+                readings: { reading: string;      // "तथा✓ + एव✓" (✓ = dictionary or kosha word)
+                            cheda: boolean;       // cheda's segmentation
+                            words: string[] }[];  // "उद्भवनम् = उद्भवन (उद्भू + ल्युट्) napumsaka prathama eka"
+                splits: string[] }[];             // two-word, max 12
+              page: string };  // readings: best 3 whole readings
+  };
+  vidyut_analyze: {
+    input: { text: string };   // word, phrase or verse, any script
+    output: { note: string;
+              chunks: { chunk: string;
+                reading: string | null;              // best: cheda's, else the optimizer's
+                by: 'cheda' | 'optimizer' | null;
+                words: { word: string; in_dictionaries: boolean;
+                         analyses: string[] }[];     // max 5, likeliest first (PadaInfo.key)
+                other_readings: string[] }[];       // max 3
+              page: string };
   };
   vidyut_meter: {
     input: { verse: string };

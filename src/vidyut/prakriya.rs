@@ -119,7 +119,7 @@ fn engine() -> &'static Engine {
 
 /// A suffix's name as grammars write it: aupadeśika without the nasalization mark of its
 /// it-vowel (`Satf~` → शतृ, `Ramu~l` → णमुल्).
-fn suffix_label(slp1: &str) -> String {
+pub(crate) fn suffix_label(slp1: &str) -> String {
   to_deva(&slp1.replace('~', ""))
 }
 
@@ -146,6 +146,11 @@ fn texts(ps: &[Prakriya]) -> Vec<String> {
     .collect()
 }
 
+/// A kṛdanta's stem in SLP1 (ud + BU + lyuw → `udBavana`).
+pub fn krdanta_stem(k: &Krdanta) -> Option<String> {
+  engine().fast.derive_krdantas(k).first().map(|p| p.text())
+}
+
 // ---------------------------------------------------------------------------------------------
 // Category ids
 // ---------------------------------------------------------------------------------------------
@@ -160,6 +165,11 @@ macro_rules! id_enum {
     pub enum $name { $($v),* }
     impl $name {
       pub const ALL: &'static [$name] = &[$($name::$v),*];
+      /// The id of a vidyut value (`None` for values not exposed, e.g. leṭ).
+      pub fn of(t: $target) -> Option<Self> {
+        $(if t == $t { return Some($name::$v); })*
+        None
+      }
     }
     impl From<$name> for $target {
       fn from(v: $name) -> $target {
@@ -257,6 +267,51 @@ fn root_by_code(code: &str) -> Option<&'static Root> {
     .map(|&i| &e.roots[i])
 }
 
+/// The arguments that rebuild a vidyut dhātu (e.g. one from the kosha): its Dhātupāṭha code,
+/// sanādi pratyayas and upasargas. `None` for nāmadhātus and roots outside the Dhātupāṭha.
+pub fn dhatu_args(d: &Dhatu) -> Option<DhatuArgs> {
+  let Dhatu::Mula(m) = d else { return None };
+  let root = engine().roots.iter().find(|r| match &r.dhatu {
+    Dhatu::Mula(x) => {
+      x.aupadeshika() == m.aupadeshika() && x.gana() == m.gana() && x.antargana() == m.antargana()
+    }
+    _ => false,
+  })?;
+  let sanadi = m
+    .sanadi()
+    .iter()
+    .map(|&s| SanadiId::of(s))
+    .collect::<Option<Vec<_>>>()?;
+  Some(DhatuArgs {
+    code: root.code.clone(),
+    sanadi,
+    upasargas: m.prefixes().iter().map(|p| to_deva(p)).collect(),
+  })
+}
+
+/// A dhātu with upasargas or sanādi pratyayas for display, part by part: `सम् + अव + इ`,
+/// `गम् + णिच्` (not the fused सम॑वइ / derived stem गामि). `None` for a bare root.
+pub fn dhatu_label(d: &Dhatu) -> Option<String> {
+  let Dhatu::Mula(m) = d else { return None };
+  if m.sanadi().is_empty() && m.prefixes().is_empty() {
+    return None;
+  }
+  let args = dhatu_args(d)?;
+  let root = root_by_code(&args.code)?;
+  let mut parts: Vec<String> = m.prefixes().iter().map(|p| to_deva(p)).collect();
+  parts.push(to_deva(root.clean.first()?));
+  parts.extend(args.sanadi.iter().map(|s| {
+    match s {
+      SanadiId::Nic => "णिच्",
+      SanadiId::San => "सन्",
+      SanadiId::Yan => "यङ्",
+      SanadiId::YanLuk => "यङ्लुक्",
+    }
+    .to_string()
+  }));
+  Some(parts.join(" + "))
+}
+
 pub fn root(code: &str) -> Option<RootInfo> {
   root_by_code(code).map(RootInfo::of)
 }
@@ -288,7 +343,7 @@ pub fn search_roots(q: &str, gana: Option<u8>, limit: usize) -> Result<Vec<RootI
     .filter(|(_, r)| in_gana(r))
     .filter_map(|(i, r)| {
       let up = letters(&r.aupadeshika);
-      let rank = if r.clean.iter().any(|c| *c == key) {
+      let rank = if r.clean.contains(&key) {
         0
       } else if up == key {
         1
@@ -378,7 +433,7 @@ const UPASARGAS: &[&str] = &[
 
 /// A root from the Dhātupāṭha, optionally with sanādi suffixes (in order: `[nic, san]` is the
 /// desiderative of the causative) and upasargas (Devanagari: `प्र`, `सम्`, `आ`).
-#[derive(Deserialize, Serialize, ToSchema, Clone, Debug)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, Debug, PartialEq)]
 pub struct DhatuArgs {
   pub code: String,
   #[serde(default)]
@@ -435,7 +490,7 @@ fn parse_taddhita(s: &str) -> Result<Taddhita> {
 }
 
 /// One member of a compound.
-#[derive(Deserialize, Serialize, ToSchema, Clone, Debug)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, Debug, PartialEq)]
 pub struct SamasaPada {
   /// Devanagari stem (`राजन्`), or an indeclinable for the first member of an avyayībhāva.
   pub stem: String,
@@ -453,7 +508,7 @@ fn default_linga() -> LingaId {
 }
 
 /// A nominal stem (prātipadika): typed as is, or derived (kṛdanta, taddhitānta, samāsa).
-#[derive(Deserialize, Serialize, ToSchema, Clone, Debug)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, Debug, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum StemArgs {
   Basic {
@@ -1057,7 +1112,7 @@ fn spaced(p: &Prakriya, words: &[String]) -> String {
 // ---------------------------------------------------------------------------------------------
 
 /// A word (or stem / root / phrase) to derive step by step.
-#[derive(Deserialize, Serialize, ToSchema, Clone, Debug)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, Debug, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum WordSpec {
   Tinanta {

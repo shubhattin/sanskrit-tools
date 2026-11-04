@@ -2,6 +2,11 @@
 
 import * as z from 'zod';
 
+export const zAnalysesRequest = z.object({
+    text: z.string(),
+    words: z.array(z.string())
+});
+
 export const zBrowseItem = z.object({
     headword: z.string(),
     id: z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
@@ -65,6 +70,21 @@ export const zFormAnalysis = z.object({
     paradigm_ids: z.array(z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })),
     root: z.string().nullish(),
     source: z.string()
+});
+
+/**
+ * Jev's answer to one question: the chosen option (index into the options given) and how sure.
+ */
+export const zJevPick = z.object({
+    choice: z.int().gte(0),
+    confidence: z.number().nullish(),
+    options: z.array(z.string()),
+    probabilities: z.array(z.number())
+});
+
+export const zChunkPick = z.object({
+    chunk: z.string(),
+    pick: zJevPick.nullish()
 });
 
 export const zJoinRequest = z.object({
@@ -183,6 +203,12 @@ export const zMeterInfo = z.object({
 });
 
 export const zPadaId = z.enum(['parasmaipada', 'atmanepada']);
+
+export const zPadaKind = z.enum([
+    'subanta',
+    'avyaya',
+    'tinanta'
+]);
 
 export const zPadaTables = z.object({
     lakaras: z.array(zLakaraTable),
@@ -350,9 +376,9 @@ export const zSplit = z.object({
     right_known: z.boolean()
 });
 
-export const zChunkSplit = z.object({
-    chunk: z.string(),
-    splits: z.array(zSplit)
+export const zSplitAtRequest = z.object({
+    at: z.int().gte(0),
+    chunk: z.string()
 });
 
 export const zStepTerm = z.object({
@@ -437,6 +463,15 @@ export const zVacanaId = z.enum([
     'bahu'
 ]);
 
+export const zVarna = z.object({
+    at: z.int().gte(0),
+    text: z.string()
+});
+
+export const zAkshara = z.object({
+    varnas: z.array(zVarna)
+});
+
 export const zVibhaktiId = z.enum([
     'prathama',
     'dvitiya',
@@ -498,6 +533,11 @@ export const zSubantaRequest = z.object({
     stem: zStemArgs
 });
 
+export const zWordPick = z.object({
+    pick: zJevPick.nullish(),
+    word: z.string()
+});
+
 /**
  * A word (or stem / root / phrase) to derive step by step.
  */
@@ -535,6 +575,54 @@ export const zWordSpec = z.union([
         words: z.array(z.string())
     })
 ]);
+
+/**
+ * One grammatical reading of a word form.
+ */
+export const zPadaInfo = z.object({
+    dhatu: z.string().nullish(),
+    key: z.string(),
+    kind: zPadaKind,
+    krt: z.string().nullish(),
+    lakara: zLakaraId.nullish(),
+    lemma: z.string(),
+    linga: zLingaId.nullish(),
+    prayoga: zPrayogaId.nullish(),
+    purusha: zPurushaId.nullish(),
+    vacana: zVacanaId.nullish(),
+    vibhakti: zVibhaktiId.nullish(),
+    word: zWordSpec.nullish()
+});
+
+export const zPart = z.object({
+    analyses: z.array(zPadaInfo),
+    dictionary: z.boolean(),
+    known: z.boolean(),
+    text: z.string()
+});
+
+export const zReading = z.object({
+    cheda: z.boolean(),
+    label: z.string(),
+    parts: z.array(zPart)
+});
+
+export const zChunkSplit = z.object({
+    aksharas: z.array(zAkshara),
+    chunk: z.string(),
+    readings: z.array(zReading),
+    splits: z.array(zSplit)
+});
+
+export const zPinnedSplit = z.object({
+    left: zPart,
+    right: zReading
+});
+
+export const zWordAnalysis = z.object({
+    split: zReading.nullish(),
+    word: zPart
+});
 
 export const zDhatusListQuery = z.object({
     q: z.string().optional(),
@@ -687,6 +775,34 @@ export const zVidyutDhatuPath = z.object({
  */
 export const zVidyutDhatuResponse = zRootDetail;
 
+export const zVidyutJevAnalysesBody = zAnalysesRequest;
+
+/**
+ * Jev's pick of each word's analysis in the context of the sentence (up to 24 ambiguous words)
+ */
+export const zVidyutJevAnalysesResponse = z.array(zWordPick);
+
+export const zVidyutJevJoinBody = zJoinRequest;
+
+/**
+ * Jev's pick among the joined variants; null with < 2
+ */
+export const zVidyutJevJoinResponse = zJevPick.nullable();
+
+export const zVidyutJevMeterBody = zTextRequest;
+
+/**
+ * Jev's pick among the matching meters (options = meter names); null with < 2
+ */
+export const zVidyutJevMeterResponse = zJevPick.nullable();
+
+export const zVidyutJevSplitBody = zTextRequest;
+
+/**
+ * Jev's pick among each chunk's best readings
+ */
+export const zVidyutJevSplitResponse = z.array(zChunkPick);
+
 export const zVidyutKrdantaBody = zKrdantaRequest;
 
 /**
@@ -698,6 +814,15 @@ export const zVidyutKrdantaResponse = z.array(zKrtGroup);
  * Meter catalogue
  */
 export const zVidyutMetersResponse = z.array(zMeterInfo);
+
+export const zVidyutPadaQuery = z.object({
+    w: z.string()
+});
+
+/**
+ * What a word form can be (every analysis vidyut's grammar gives), or how it splits
+ */
+export const zVidyutPadaResponse = zWordAnalysis;
 
 export const zVidyutSamasaBody = zSamasaRequest;
 
@@ -721,9 +846,16 @@ export const zVidyutSandhiRulesResponse = z.array(zSandhiRule);
 export const zVidyutSandhiSplitBody = zTextRequest;
 
 /**
- * Two-word split candidates per chunk
+ * Per chunk: best whole readings, syllables and two-word candidates
  */
 export const zVidyutSandhiSplitResponse = z.array(zChunkSplit);
+
+export const zVidyutSandhiSplitAtBody = zSplitAtRequest;
+
+/**
+ * Splits with the junction at that sound, dictionary words first
+ */
+export const zVidyutSandhiSplitAtResponse = z.array(zPinnedSplit);
 
 export const zVidyutStryantaBody = zStemRequest;
 

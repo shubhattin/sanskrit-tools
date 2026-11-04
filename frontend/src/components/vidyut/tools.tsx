@@ -7,6 +7,7 @@ export const TOOLS = [
     label: 'Dhātu',
     deva: 'धातुरूपाणि',
     icon: SproutIcon,
+    short: 'Conjugations, participles and derivations of any root',
     blurb:
       'Conjugate any root of the Dhātupāṭha in every lakāra and prayoga, with causative, desiderative and upasargas, and form its participles, gerunds and infinitives.'
   },
@@ -15,6 +16,7 @@ export const TOOLS = [
     label: 'Nāma',
     deva: 'शब्दरूपाणि',
     icon: ShapesIcon,
+    short: 'Declensions, feminines, taddhitas and compounds of any stem',
     blurb:
       'Decline a noun stem in any gender, form its feminine, its taddhita derivatives, and compounds with other stems.'
   },
@@ -23,6 +25,7 @@ export const TOOLS = [
     label: 'Chandas',
     deva: 'छन्दः',
     icon: AudioWaveformIcon,
+    short: 'Scansion and meter of a verse',
     blurb:
       'Scan a verse into laghu and guru syllables and gaṇas, find its meter, and browse the meters of the Vṛttaratnākara.'
   },
@@ -31,8 +34,9 @@ export const TOOLS = [
     label: 'Sandhi',
     deva: 'सन्धिः',
     icon: CombineIcon,
+    short: 'Join words, split text and read each word’s grammar',
     blurb:
-      'Join words with the rules of sandhi, see the ways a joined word can be split, and look up the rule table.'
+      'Join words with the rules of sandhi, or split a joined text into words and see what each one is (stem, case, number or root, tense, person), with its derivation.'
   }
 ] as const;
 

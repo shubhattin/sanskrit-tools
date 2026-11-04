@@ -1,6 +1,7 @@
 // Devanagari names for the grammatical categories the vidyut API uses as ids.
 import type {
   LakaraId,
+  PadaInfo,
   LingaId,
   PadaId,
   PrayogaId,
@@ -142,4 +143,45 @@ export function devaNum(n: number | string): string {
 export function padCode(number: string): string {
   const [g, n] = number.split('.');
   return `${(g ?? '').padStart(2, '0')}.${(n ?? '').padStart(4, '0')}`;
+}
+
+const VACANA_SHORT: Record<VacanaId, string> = { eka: 'एक॰', dvi: 'द्वि॰', bahu: 'बहु॰' };
+const PURUSHA_SHORT: Record<PurushaId, string> = {
+  prathama: 'प्रथम॰',
+  madhyama: 'मध्यम॰',
+  uttama: 'उत्तम॰'
+};
+const VIBHAKTI_LABEL = Object.fromEntries(VIBHAKTIS.map((v) => [v.id, v.label])) as Record<
+  VibhaktiId,
+  string
+>;
+const LINGA_SHORT = Object.fromEntries(LINGAS.map((l) => [l.id, l.short])) as Record<
+  LingaId,
+  string
+>;
+
+/** A word's stem with its kṛt origin: `उद्भवन (उद्भू + ल्युट्)`. */
+export function padaLemma(a: PadaInfo): string {
+  return a.dhatu && a.krt ? `${a.lemma} (${a.dhatu} + ${a.krt})` : a.lemma;
+}
+
+/** A form's grammar in brief: `नपुं प्रथमा एक॰`, `लट् प्रथम॰ एक॰`, `अव्ययम्`. */
+export function padaTags(a: PadaInfo): string {
+  if (a.kind === 'avyaya') return 'अव्ययम्';
+  if (a.kind === 'tinanta')
+    return [
+      a.lakara ? LAKARA_LABEL[a.lakara] : null,
+      a.purusha ? PURUSHA_SHORT[a.purusha] : null,
+      a.vacana ? VACANA_SHORT[a.vacana] : null,
+      a.prayoga && a.prayoga !== 'kartari' ? PRAYOGAS.find((p) => p.id === a.prayoga)?.label : null
+    ]
+      .filter(Boolean)
+      .join(' ');
+  return [
+    a.linga ? LINGA_SHORT[a.linga] : null,
+    a.vibhakti ? VIBHAKTI_LABEL[a.vibhakti] : null,
+    a.vacana ? VACANA_SHORT[a.vacana] : null
+  ]
+    .filter(Boolean)
+    .join(' ');
 }

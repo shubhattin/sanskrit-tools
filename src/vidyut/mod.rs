@@ -15,6 +15,7 @@
 //! files at runtime (Vercel functions ship only the binary).
 
 pub mod chandas;
+pub mod kosha;
 pub mod prakriya;
 pub mod sandhi;
 

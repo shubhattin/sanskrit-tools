@@ -11,6 +11,7 @@ export const Route = createFileRoute('/vidyut')({
 function VidyutLayout() {
   const { pathname } = useLocation();
   const onIndex = pathname === '/vidyut' || pathname === '/vidyut/';
+  const tool = TOOLS.find((t) => pathname.startsWith(t.to));
   return (
     <DerivationProvider>
       <div className="flex flex-col gap-5">
@@ -38,7 +39,7 @@ function VidyutLayout() {
                       'flex shrink-0 items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-sm font-medium transition-colors',
                       active
                         ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        : 'text-foreground/80 hover:text-foreground'
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
@@ -49,6 +50,15 @@ function VidyutLayout() {
             </nav>
           )}
         </div>
+        {tool ? (
+          <header className="-mt-1 flex flex-col gap-0.5">
+            <h1 className="flex flex-wrap items-baseline gap-x-2.5 text-2xl font-bold tracking-tight">
+              <span className="font-devanagari">{tool.deva}</span>
+              <span className="text-base font-medium text-muted-foreground">{tool.label}</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">{tool.short}</p>
+          </header>
+        ) : null}
         <Outlet />
         {onIndex ? null : <AmbudaCredit className="mt-4 border-t pt-4" />}
       </div>

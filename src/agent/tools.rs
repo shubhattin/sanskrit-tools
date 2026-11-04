@@ -153,15 +153,27 @@ pub fn agent_tools(ctx: &ToolCtx) -> AgentTools {
     ctx,
     "vidyut_derivation",
     "Step-by-step Pāṇinian derivation (prakriyā) of one verb form (root + lakāra, puruṣa, \
-     vacana) or noun form (stem + liṅga, vibhakti, vacana): each step's sūtra (with sutra_id for \
+     vacana), noun form (stem + liṅga, vibhakti, vacana), or any `form` as vidyut_analyze reads \
+     it (+ `analysis` to choose one; covers kṛdantas): each step's sūtra (with sutra_id for \
      /sutra links), its text, and the result. Use to explain how a form arises.",
     vt::derivation,
+  );
+  t.add::<vt::AnalyzeInput, _, _>(
+    ctx,
+    "vidyut_analyze",
+    "Parse Sanskrit text word by word with Pāṇini's grammar (vidyut's kosha of every generated \
+     form + cheda segmenter): undoes sandhi, then gives each word's possible analyses (stem or \
+     kṛdanta root + suffix, gender, case, number; verbs: root, lakāra, person, number), \
+     likeliest first. Use for forms the dictionaries don't list (उद्भवनम्, गमयिष्यति) and to \
+     parse sentences or verses.",
+    vt::analyze,
   );
   t.add::<vt::SandhiInput, _, _>(
     ctx,
     "vidyut_sandhi",
     "Sandhi: `join` words with the grammar's rules (रामः + अस्ति → रामोऽस्ति), or `split` a \
-     joined word into phonetic candidates, marking parts found in the dictionaries.",
+     joined word or phrase: best whole readings (incl. cheda's) with each word's analysis, and \
+     two-word phonetic candidates.",
     vt::sandhi,
   );
   t.add::<vt::MeterInput, _, _>(

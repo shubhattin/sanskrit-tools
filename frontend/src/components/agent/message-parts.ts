@@ -25,6 +25,7 @@ export type VidyutToolName =
   | 'vidyut_decline'
   | 'vidyut_krdantas'
   | 'vidyut_derivation'
+  | 'vidyut_analyze'
   | 'vidyut_sandhi'
   | 'vidyut_meter';
 

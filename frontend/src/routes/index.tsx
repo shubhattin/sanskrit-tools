@@ -41,6 +41,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/components/ui/empty';
+import { GrammarCard } from '@/components/vidyut/grammar-card';
 import { cn } from '@/lib/utils';
 
 interface SearchSearch {
@@ -438,7 +439,11 @@ function Results({
 
         {groups.length > 1 ? <MobileSectionStrip groups={groups} active={active} /> : null}
 
-        {data.forms.length > 0 ? <FormsCard forms={data.forms as FormAnalysis[]} /> : null}
+        {data.forms.length > 0 ? (
+          <FormsCard forms={data.forms as FormAnalysis[]} />
+        ) : mode === 'sa' ? (
+          <GrammarCard q={q} onPick={onPick} />
+        ) : null}
 
         {nothingFound ? (
           <Empty className="rounded-2xl border border-dashed">

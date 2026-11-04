@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DhatusGetData, DhatusGetErrors, DhatusGetResponses, DhatusListData, DhatusListErrors, DhatusListResponses, DictionariesBrowseData, DictionariesBrowseErrors, DictionariesBrowseResponses, DictionariesListData, DictionariesListErrors, DictionariesListResponses, EntriesGetData, EntriesGetErrors, EntriesGetResponses, ParadigmsGetData, ParadigmsGetErrors, ParadigmsGetResponses, ParadigmsListData, ParadigmsListErrors, ParadigmsListResponses, SearchQueryData, SearchQueryErrors, SearchQueryResponses, SearchSuggestData, SearchSuggestErrors, SearchSuggestResponses, SutrasGetData, SutrasGetErrors, SutrasGetResponses, SutrasListData, SutrasListErrors, SutrasListResponses, VidyutChandasData, VidyutChandasErrors, VidyutChandasResponses, VidyutDeriveData, VidyutDeriveErrors, VidyutDeriveResponses, VidyutDhatuData, VidyutDhatuErrors, VidyutDhatuResponses, VidyutDhatusData, VidyutDhatusErrors, VidyutDhatusResponses, VidyutKrdantaData, VidyutKrdantaErrors, VidyutKrdantaResponses, VidyutMetersData, VidyutMetersResponses, VidyutSamasaData, VidyutSamasaErrors, VidyutSamasaResponses, VidyutSandhiJoinData, VidyutSandhiJoinErrors, VidyutSandhiJoinResponses, VidyutSandhiRulesData, VidyutSandhiRulesResponses, VidyutSandhiSplitData, VidyutSandhiSplitErrors, VidyutSandhiSplitResponses, VidyutSiteDhatuData, VidyutSiteDhatuErrors, VidyutSiteDhatuResponses, VidyutStryantaData, VidyutStryantaErrors, VidyutStryantaResponses, VidyutSubantaData, VidyutSubantaErrors, VidyutSubantaResponses, VidyutTaddhitaData, VidyutTaddhitaErrors, VidyutTaddhitaResponses, VidyutTinantaData, VidyutTinantaErrors, VidyutTinantaResponses } from './types.gen';
+import type { DhatusGetData, DhatusGetErrors, DhatusGetResponses, DhatusListData, DhatusListErrors, DhatusListResponses, DictionariesBrowseData, DictionariesBrowseErrors, DictionariesBrowseResponses, DictionariesListData, DictionariesListErrors, DictionariesListResponses, EntriesGetData, EntriesGetErrors, EntriesGetResponses, ParadigmsGetData, ParadigmsGetErrors, ParadigmsGetResponses, ParadigmsListData, ParadigmsListErrors, ParadigmsListResponses, SearchQueryData, SearchQueryErrors, SearchQueryResponses, SearchSuggestData, SearchSuggestErrors, SearchSuggestResponses, SutrasGetData, SutrasGetErrors, SutrasGetResponses, SutrasListData, SutrasListErrors, SutrasListResponses, VidyutChandasData, VidyutChandasErrors, VidyutChandasResponses, VidyutDeriveData, VidyutDeriveErrors, VidyutDeriveResponses, VidyutDhatuData, VidyutDhatuErrors, VidyutDhatuResponses, VidyutDhatusData, VidyutDhatusErrors, VidyutDhatusResponses, VidyutJevAnalysesData, VidyutJevAnalysesErrors, VidyutJevAnalysesResponses, VidyutJevJoinData, VidyutJevJoinErrors, VidyutJevJoinResponses, VidyutJevMeterData, VidyutJevMeterErrors, VidyutJevMeterResponses, VidyutJevSplitData, VidyutJevSplitErrors, VidyutJevSplitResponses, VidyutKrdantaData, VidyutKrdantaErrors, VidyutKrdantaResponses, VidyutMetersData, VidyutMetersResponses, VidyutPadaData, VidyutPadaErrors, VidyutPadaResponses, VidyutSamasaData, VidyutSamasaErrors, VidyutSamasaResponses, VidyutSandhiJoinData, VidyutSandhiJoinErrors, VidyutSandhiJoinResponses, VidyutSandhiRulesData, VidyutSandhiRulesResponses, VidyutSandhiSplitAtData, VidyutSandhiSplitAtErrors, VidyutSandhiSplitAtResponses, VidyutSandhiSplitData, VidyutSandhiSplitErrors, VidyutSandhiSplitResponses, VidyutSiteDhatuData, VidyutSiteDhatuErrors, VidyutSiteDhatuResponses, VidyutStryantaData, VidyutStryantaErrors, VidyutStryantaResponses, VidyutSubantaData, VidyutSubantaErrors, VidyutSubantaResponses, VidyutTaddhitaData, VidyutTaddhitaErrors, VidyutTaddhitaResponses, VidyutTinantaData, VidyutTinantaErrors, VidyutTinantaResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -141,6 +141,50 @@ export class Vidyut extends HeyApiClient {
         return (options.client ?? this.client).get<VidyutDhatuResponses, VidyutDhatuErrors, ThrowOnError>({ url: '/api/vidyut/dhatus/{code}', ...options });
     }
     
+    public jevAnalyses<ThrowOnError extends boolean = false>(options: Options<VidyutJevAnalysesData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutJevAnalysesResponses, VidyutJevAnalysesErrors, ThrowOnError>({
+            url: '/api/vidyut/jev/analyses',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public jevJoin<ThrowOnError extends boolean = false>(options: Options<VidyutJevJoinData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutJevJoinResponses, VidyutJevJoinErrors, ThrowOnError>({
+            url: '/api/vidyut/jev/join',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public jevMeter<ThrowOnError extends boolean = false>(options: Options<VidyutJevMeterData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutJevMeterResponses, VidyutJevMeterErrors, ThrowOnError>({
+            url: '/api/vidyut/jev/meter',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public jevSplit<ThrowOnError extends boolean = false>(options: Options<VidyutJevSplitData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutJevSplitResponses, VidyutJevSplitErrors, ThrowOnError>({
+            url: '/api/vidyut/jev/split',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
     public krdanta<ThrowOnError extends boolean = false>(options: Options<VidyutKrdantaData, ThrowOnError>) {
         return (options.client ?? this.client).post<VidyutKrdantaResponses, VidyutKrdantaErrors, ThrowOnError>({
             url: '/api/vidyut/krdanta',
@@ -154,6 +198,10 @@ export class Vidyut extends HeyApiClient {
     
     public meters<ThrowOnError extends boolean = false>(options?: Options<VidyutMetersData, ThrowOnError>) {
         return (options?.client ?? this.client).get<VidyutMetersResponses, unknown, ThrowOnError>({ url: '/api/vidyut/meters', ...options });
+    }
+    
+    public pada<ThrowOnError extends boolean = false>(options: Options<VidyutPadaData, ThrowOnError>) {
+        return (options.client ?? this.client).get<VidyutPadaResponses, VidyutPadaErrors, ThrowOnError>({ url: '/api/vidyut/pada', ...options });
     }
     
     public samasa<ThrowOnError extends boolean = false>(options: Options<VidyutSamasaData, ThrowOnError>) {
@@ -185,6 +233,17 @@ export class Vidyut extends HeyApiClient {
     public sandhiSplit<ThrowOnError extends boolean = false>(options: Options<VidyutSandhiSplitData, ThrowOnError>) {
         return (options.client ?? this.client).post<VidyutSandhiSplitResponses, VidyutSandhiSplitErrors, ThrowOnError>({
             url: '/api/vidyut/sandhi/split',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public sandhiSplitAt<ThrowOnError extends boolean = false>(options: Options<VidyutSandhiSplitAtData, ThrowOnError>) {
+        return (options.client ?? this.client).post<VidyutSandhiSplitAtResponses, VidyutSandhiSplitAtErrors, ThrowOnError>({
+            url: '/api/vidyut/sandhi/split-at',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

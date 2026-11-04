@@ -188,6 +188,7 @@ export type AgentUITools = {
       vibhakti?: string;
       vacana?: 'eka' | 'dvi' | 'bahu';
       form?: string;
+      analysis?: string;
     };
     output: {
       results: string[];
@@ -201,7 +202,29 @@ export type AgentUITools = {
     input: { join?: string[]; split?: string };
     output:
       | { words: string[]; joined: string[]; page: string }
-      | { note: string; chunks: { chunk: string; splits: string[] }[]; page: string };
+      | {
+          note: string;
+          chunks: {
+            chunk: string;
+            readings: { reading: string; cheda: boolean; words: string[] }[];
+            splits: string[];
+          }[];
+          page: string;
+        };
+  };
+  vidyut_analyze: {
+    input: { text: string };
+    output: {
+      note: string;
+      chunks: {
+        chunk: string;
+        reading: string | null;
+        by: 'cheda' | 'optimizer' | null;
+        words: { word: string; in_dictionaries: boolean; analyses: string[] }[];
+        other_readings: string[];
+      }[];
+      page: string;
+    };
   };
   vidyut_meter: {
     input: { verse: string };

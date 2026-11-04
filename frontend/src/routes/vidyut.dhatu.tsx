@@ -15,6 +15,7 @@ import {
   Segmented,
   SectionLabel
 } from '@/components/vidyut/controls';
+import { FormSuggestions } from '@/components/vidyut/words';
 import { FormButton } from '@/components/vidyut/derivation';
 import { FormsTable } from '@/components/vidyut/forms-table';
 import { searchString } from '@/lib/search-params';
@@ -141,6 +142,16 @@ function RootPicker({ hasRoot, onPick }: { hasRoot: boolean; onPick: (r: RootInf
           className="self-start"
         />
       </div>
+      {q ? (
+        <FormSuggestions
+          text={q}
+          tool="dhatu"
+          onPick={() => {
+            setText('');
+            setGana(0);
+          }}
+        />
+      ) : null}
       {browsing ? (
         roots.isPending ? (
           <LoadingBlock rows={2} label="Searching roots" />
@@ -216,7 +227,7 @@ function RootWorkspace({
       <Card className="py-0">
         <CardContent className="flex flex-col gap-3 p-4">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="font-devanagari text-3xl font-bold">{r.aupadeshika}</h1>
+            <h2 className="font-devanagari text-3xl font-bold">{r.aupadeshika}</h2>
             <span className="font-devanagari text-lg text-muted-foreground">
               {r.roots.join(' / ')} · {r.artha}
             </span>
@@ -270,10 +281,10 @@ function RootWorkspace({
       <Tabs value={tab} onValueChange={(v) => set({ tab: v === 'krt' ? 'krt' : undefined })}>
         <TabsList>
           <TabsTrigger value="tin">
-            Conjugation <span className="font-devanagari text-xs opacity-70">तिङन्तम्</span>
+            Conjugation <span className="font-devanagari text-xs">तिङन्तम्</span>
           </TabsTrigger>
           <TabsTrigger value="krt">
-            Kṛdanta <span className="font-devanagari text-xs opacity-70">कृदन्तम्</span>
+            Kṛdanta <span className="font-devanagari text-xs">कृदन्तम्</span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="tin" className="pt-2">
@@ -356,7 +367,7 @@ function Conjugations({
             label: (
               <>
                 <span className="font-devanagari">{p.label}</span>{' '}
-                <span className="text-[11px] opacity-60">{p.hint}</span>
+                <span className="text-[11px] font-normal">{p.hint}</span>
               </>
             )
           }))}
@@ -457,7 +468,7 @@ function Krdantas({ dhatu }: { dhatu: DhatuArgs }) {
             className={cn('rounded-xl border bg-card', other && 'lg:col-span-2')}
             aria-label={g.label}
           >
-            <h2 className="border-b px-3 py-2 text-sm font-semibold">{g.label}</h2>
+            <h3 className="border-b px-3 py-2 text-sm font-semibold">{g.label}</h3>
             <ul className={cn('divide-y', other && 'lg:grid lg:grid-cols-2 lg:divide-y-0')}>
               {items.map((k) => {
                 const stem = {

@@ -864,6 +864,266 @@
         }
       }
     },
+    "/api/vidyut/jev/analyses": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevAnalyses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick of each word's analysis in the context of the sentence (up to 24 ambiguous words)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordPick"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/join": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevJoin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among the joined variants; null with < 2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevPick"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad words",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/meter": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevMeter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among the matching meters (options = meter names); null with < 2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevPick"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad verse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/jev/split": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.jevSplit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Jev's pick among each chunk's best readings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChunkPick"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Jev failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Jev not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/vidyut/krdanta": {
       "post": {
         "tags": [
@@ -923,6 +1183,57 @@
                   "items": {
                     "$ref": "#/components/schemas/MeterInfo"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/pada": {
+      "get": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.pada",
+        "parameters": [
+          {
+            "name": "w",
+            "in": "query",
+            "description": "One Devanagari word (a form as written; a joined phrase is split).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What a word form can be (every analysis vidyut's grammar gives), or how it splits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordAnalysis"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty / not Devanagari / more than one word",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
                 }
               }
             }
@@ -1054,7 +1365,7 @@
         },
         "responses": {
           "200": {
-            "description": "Two-word split candidates per chunk",
+            "description": "Per chunk: best whole readings, syllables and two-word candidates",
             "content": {
               "application/json": {
                 "schema": {
@@ -1068,6 +1379,59 @@
           },
           "400": {
             "description": "Empty / not Devanagari / too long",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vidyut/sandhi/split-at": {
+      "post": {
+        "tags": [
+          "vidyut"
+        ],
+        "operationId": "vidyut.sandhiSplitAt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitAtRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Splits with the junction at that sound, dictionary words first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PinnedSplit"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not one Devanagari chunk",
             "content": {
               "application/json": {
                 "schema": {
@@ -1258,6 +1622,40 @@
   },
   "components": {
     "schemas": {
+      "Akshara": {
+        "type": "object",
+        "required": [
+          "varnas"
+        ],
+        "properties": {
+          "varnas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Varna"
+            }
+          }
+        }
+      },
+      "AnalysesRequest": {
+        "type": "object",
+        "required": [
+          "text",
+          "words"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The whole text (context)."
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The words of the chosen reading, in order (Devanagari, as `Part.text`)."
+          }
+        }
+      },
       "BrowseItem": {
         "type": "object",
         "required": [
@@ -1303,22 +1701,60 @@
           }
         }
       },
-      "ChunkSplit": {
+      "ChunkPick": {
         "type": "object",
         "required": [
-          "chunk",
-          "splits"
+          "chunk"
         ],
         "properties": {
           "chunk": {
             "type": "string"
+          },
+          "pick": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JevPick",
+                "description": "Jev's choice among the chunk's `readings` (options = their labels); none with < 2 readings."
+              }
+            ]
+          }
+        }
+      },
+      "ChunkSplit": {
+        "type": "object",
+        "required": [
+          "chunk",
+          "aksharas",
+          "readings",
+          "splits"
+        ],
+        "properties": {
+          "aksharas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Akshara"
+            },
+            "description": "The chunk as akṣaras of varṇas (`at` positions for `/sandhi/split-at`)."
+          },
+          "chunk": {
+            "type": "string"
+          },
+          "readings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reading"
+            },
+            "description": "The best whole readings (all words), best first: dictionary words, then fewest words."
           },
           "splits": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Split"
             },
-            "description": "Both parts known first, then one part known, then the rest (each in split order)."
+            "description": "Two-word candidates: both parts known first, then one, then the rest (each in split order)."
           }
         }
       },
@@ -1774,6 +2210,43 @@
           }
         }
       },
+      "JevPick": {
+        "type": "object",
+        "description": "Jev's answer to one question: the chosen option (index into the options given) and how sure.",
+        "required": [
+          "options",
+          "choice",
+          "probabilities"
+        ],
+        "properties": {
+          "choice": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The options as they were put to Jev."
+          },
+          "probabilities": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Probability per option (same order)."
+          }
+        }
+      },
       "JoinRequest": {
         "type": "object",
         "required": [
@@ -2068,6 +2541,120 @@
           "atmanepada"
         ]
       },
+      "PadaInfo": {
+        "type": "object",
+        "description": "One grammatical reading of a word form.",
+        "required": [
+          "kind",
+          "lemma",
+          "key"
+        ],
+        "properties": {
+          "dhatu": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Kṛdanta stems: the root and kṛt pratyaya (उद्भू, ल्युट्)."
+          },
+          "key": {
+            "type": "string",
+            "description": "One-line summary (`उद्भवन (उद्भू + ल्युट्) napumsaka prathama eka`): a stable key for the\nanalysis (Jev's option label) and the agent's view of it."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PadaKind"
+          },
+          "krt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lakara": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LakaraId"
+              }
+            ]
+          },
+          "lemma": {
+            "type": "string",
+            "description": "Prātipadika (subanta, avyaya) or dhātu (tiṅanta), Devanagari."
+          },
+          "linga": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LingaId"
+              }
+            ]
+          },
+          "prayoga": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PrayogaId"
+              }
+            ]
+          },
+          "purusha": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PurushaId"
+              }
+            ]
+          },
+          "vacana": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VacanaId"
+              }
+            ]
+          },
+          "vibhakti": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VibhaktiId"
+              }
+            ]
+          },
+          "word": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WordSpec",
+                "description": "The word to derive (`/derive`) or open in the generators; none for plain indeclinables and\nroots outside the Dhātupāṭha."
+              }
+            ]
+          }
+        }
+      },
+      "PadaKind": {
+        "type": "string",
+        "enum": [
+          "subanta",
+          "avyaya",
+          "tinanta"
+        ]
+      },
       "PadaTables": {
         "type": "object",
         "required": [
@@ -2152,6 +2739,51 @@
           }
         }
       },
+      "Part": {
+        "type": "object",
+        "required": [
+          "text",
+          "known",
+          "dictionary",
+          "analyses"
+        ],
+        "properties": {
+          "analyses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PadaInfo"
+            },
+            "description": "What the form can be (vidyut's kosha), likeliest first; empty when the grammar has no such\nform."
+          },
+          "dictionary": {
+            "type": "boolean",
+            "description": "A headword or inflected form in the dictionaries."
+          },
+          "known": {
+            "type": "boolean",
+            "description": "A word: in the dictionaries or generated by the grammar (vidyut's kosha)."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "PinnedSplit": {
+        "type": "object",
+        "required": [
+          "left",
+          "right"
+        ],
+        "properties": {
+          "left": {
+            "$ref": "#/components/schemas/Part"
+          },
+          "right": {
+            "$ref": "#/components/schemas/Reading",
+            "description": "The rest, read as words by the optimizer."
+          }
+        }
+      },
       "PrayogaId": {
         "type": "string",
         "enum": [
@@ -2167,6 +2799,30 @@
           "madhyama",
           "uttama"
         ]
+      },
+      "Reading": {
+        "type": "object",
+        "required": [
+          "parts",
+          "label",
+          "cheda"
+        ],
+        "properties": {
+          "cheda": {
+            "type": "boolean",
+            "description": "This is cheda's segmentation (vidyut's statistical segmenter)."
+          },
+          "label": {
+            "type": "string",
+            "description": "`तथा✓ + एव✓` (✓ = known): how the reading is shown to Jev, and its option label."
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Part"
+            }
+          }
+        }
       },
       "RootDetail": {
         "type": "object",
@@ -2521,13 +3177,31 @@
           },
           "left_known": {
             "type": "boolean",
-            "description": "The part is a headword or a known inflected form in the dictionaries."
+            "description": "The part is a word: in the dictionaries or generated by the grammar."
           },
           "right": {
             "type": "string"
           },
           "right_known": {
             "type": "boolean"
+          }
+        }
+      },
+      "SplitAtRequest": {
+        "type": "object",
+        "required": [
+          "chunk",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "description": "Varṇa position from `ChunkSplit.aksharas`: the words meet at this sound.",
+            "minimum": 0
+          },
+          "chunk": {
+            "type": "string",
+            "description": "One chunk (a word without spaces), Devanagari."
           }
         }
       },
@@ -2884,6 +3558,24 @@
           "bahu"
         ]
       },
+      "Varna": {
+        "type": "object",
+        "required": [
+          "text",
+          "at"
+        ],
+        "properties": {
+          "at": {
+            "type": "integer",
+            "description": "Position to pass to the split-at API.",
+            "minimum": 0
+          },
+          "text": {
+            "type": "string",
+            "description": "The sound in Devanagari (त्, अ, ः)."
+          }
+        }
+      },
       "VibhaktiId": {
         "type": "string",
         "enum": [
@@ -2896,6 +3588,51 @@
           "saptami",
           "sambodhana"
         ]
+      },
+      "WordAnalysis": {
+        "type": "object",
+        "required": [
+          "word"
+        ],
+        "properties": {
+          "split": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Reading",
+                "description": "When the word is not one form: how it splits (cheda's reading, else the optimizer's best)."
+              }
+            ]
+          },
+          "word": {
+            "$ref": "#/components/schemas/Part",
+            "description": "The word, as a part (known / dictionary / analyses)."
+          }
+        }
+      },
+      "WordPick": {
+        "type": "object",
+        "required": [
+          "word"
+        ],
+        "properties": {
+          "pick": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JevPick",
+                "description": "Jev's choice among the word's analyses (options = `PadaInfo.key`); none with < 2."
+              }
+            ]
+          },
+          "word": {
+            "type": "string"
+          }
+        }
       },
       "WordSpec": {
         "oneOf": [

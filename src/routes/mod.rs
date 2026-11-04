@@ -48,6 +48,11 @@ impl ApiError {
   pub fn not_found(msg: impl Into<String>) -> Self {
     ApiError(StatusCode::NOT_FOUND, msg.into())
   }
+  pub fn internal(msg: impl Into<String>) -> Self {
+    let msg = msg.into();
+    eprintln!("internal error: {msg}");
+    ApiError(StatusCode::INTERNAL_SERVER_ERROR, "internal error".into())
+  }
 }
 
 impl From<DbErr> for ApiError {

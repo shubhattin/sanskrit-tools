@@ -3,7 +3,12 @@
 import { queryOptions } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/client';
 import type {
+  ChunkPick,
   ChunkSplit,
+  JevPick,
+  PinnedSplit,
+  WordAnalysis,
+  WordPick,
   Conjugation,
   Declension,
   Derivation,
@@ -25,7 +30,16 @@ import type {
 } from '@/lib/api/generated/types.gen';
 
 export type {
+  ChunkPick,
   ChunkSplit,
+  JevPick,
+  WordAnalysis,
+  WordPick,
+  PadaInfo,
+  Part,
+  PinnedSplit,
+  Reading,
+  Akshara,
   Conjugation,
   Declension,
   Derivation,
@@ -190,5 +204,60 @@ export function sandhiRulesQuery() {
     queryKey: ['vidyut', 'sandhi-rules'],
     queryFn: () => fetchJson<SandhiRule[]>(`${BASE}/sandhi/rules`),
     ...FOREVER
+  });
+}
+
+/** What one word form can be (every analysis), or how it splits. */
+export function padaQuery(word: string) {
+  return queryOptions({
+    queryKey: ['vidyut', 'pada', word],
+    queryFn: () => fetchJson<WordAnalysis>(`${BASE}/pada?w=${encodeURIComponent(word)}`),
+    ...FOREVER
+  });
+}
+
+/** Splits with the junction pinned at one sound (`at` from `ChunkSplit.syllables`). */
+export function splitAtQuery(chunk: string, at: number) {
+  return queryOptions({
+    queryKey: ['vidyut', 'split-at', chunk, at],
+    queryFn: () => post<PinnedSplit[]>('/sandhi/split-at', { chunk, at }),
+    ...FOREVER
+  });
+}
+
+// Jev (TypeSafe's decision model): picks among the candidates the grammar leaves open. Failures
+// (e.g. no key on the server) just hide the pick, so no retries.
+const JEV = { ...FOREVER, retry: false } as const;
+
+export function jevSplitQuery(text: string) {
+  return queryOptions({
+    queryKey: ['vidyut', 'jev', 'split', text],
+    queryFn: () => post<ChunkPick[]>('/jev/split', { text }),
+    ...JEV
+  });
+}
+
+export function jevMeterQuery(text: string) {
+  return queryOptions({
+    queryKey: ['vidyut', 'jev', 'meter', text],
+    queryFn: () => post<JevPick | null>('/jev/meter', { text }),
+    ...JEV
+  });
+}
+
+export function jevJoinQuery(words: string[]) {
+  return queryOptions({
+    queryKey: ['vidyut', 'jev', 'join', words],
+    queryFn: () => post<JevPick | null>('/jev/join', { words }),
+    ...JEV
+  });
+}
+
+/** Jev's pick of each word's analysis, in the context of the whole text. */
+export function jevAnalysesQuery(text: string, words: string[]) {
+  return queryOptions({
+    queryKey: ['vidyut', 'jev', 'analyses', text, words],
+    queryFn: () => post<WordPick[]>('/jev/analyses', { text, words }),
+    ...JEV
   });
 }
